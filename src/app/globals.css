@@ -1,0 +1,90 @@
+/* Bootstrap + custom theme overrides */
+:root {
+  --rs-primary: #0d6efd;
+  --rs-primary-dark: #0b5ed7;
+  --rs-accent: #198754;
+  --rs-bg: #f8f9fa;
+  --rs-card: #ffffff;
+  --rs-text: #212529;
+  --rs-muted: #6c757d;
+  --rs-border: #dee2e6;
+}
+
+[data-bs-theme="dark"] {
+  --rs-bg: #121212;
+  --rs-card: #1e1e1e;
+  --rs-text: #e9ecef;
+  --rs-muted: #adb5bd;
+  --rs-border: #343a40;
+}
+
+body {
+  background-color: var(--rs-bg);
+  color: var(--rs-text);
+  min-height: 100vh;
+  transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+.card {
+  background-color: var(--rs-card);
+  border-color: var(--rs-border);
+  color: var(--rs-text);
+}
+
+.navbar {
+  border-bottom: 1px solid var(--rs-border);
+}
+
+.footer {
+  border-top: 1px solid var(--rs-border);
+  margin-top: auto;
+}
+
+.hero-section {
+  background: linear-gradient(135deg, #0d6efd 0%, #6610f2 100%);
+  color: white;
+  border-radius: 1rem;
+  padding: 3rem 2rem;
+}
+
+.stat-card {
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+.stat-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.1);
+}
+
+.package-card.selected {
+  border-color: var(--rs-primary);
+  box-shadow: 0 0 0 0.2rem rgba(13, 110, 253, 0.25);
+}
+
+.timer-display {
+  font-size: 2.5rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.screenshot-dropzone {
+  border: 2px dashed var(--rs-border);
+  border-radius: 0.5rem;
+  padding: 2rem;
+  text-align: center;
+  cursor: pointer;
+  transition: border-color 0.2s, background-color 0.2s;
+}
+.screenshot-dropzone:hover,
+.screenshot-dropzone.active {
+  border-color: var(--rs-primary);
+  background-color: rgba(13, 110, 253, 0.05);
+}
+
+.badge-status-pending { background-color: #ffc107; color: #000; }
+.badge-status-approved { background-color: #198754; }
+.badge-status-rejected { background-color: #dc3545; }
+.badge-status-completed { background-color: #0d6efd; }
+
+.btn, .form-control, .form-select, .nav-link, .dropdown-menu {
+  transition: background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease;
+}
