@@ -42,9 +42,9 @@ export default function EarnPage() {
 
         if (tasksRes.error) throw tasksRes.error
         setTasks((tasksRes.data as TaskWithCampaign[]) || [])
-        setCompletedTaskIds(new Set((subsRes.data || []).map((s: any) => s.task_id)))
-      } catch (err: any) {
-        setError(err.message || 'Failed to load tasks')
+        setCompletedTaskIds(new Set((subsRes.data || []).map((s: { task_id: string }) => s.task_id)))
+      } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : 'Failed to load tasks')
       } finally {
         setLoading(false)
       }
@@ -120,8 +120,8 @@ export default function EarnPage() {
 
       setSubmitted(true)
       setCompletedTaskIds((prev) => new Set(prev).add(activeTask.id))
-    } catch (err: any) {
-      setError(err.message || 'Failed to submit proof')
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : 'Failed to submit proof')
     } finally {
       setSubmitting(false)
     }

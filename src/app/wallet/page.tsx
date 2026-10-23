@@ -42,8 +42,8 @@ export default function WalletPage() {
       setProfile(pRes.data as Profile)
       setTransactions((tRes.data as Transaction[]) || [])
       setWithdrawals((wRes.data as Withdrawal[]) || [])
-    } catch (err: any) {
-      setError(err.message)
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : 'Error')
     } finally {
       setLoading(false)
     }
@@ -103,8 +103,8 @@ export default function WalletPage() {
       setAmount('')
       setAddress('')
       await load()
-    } catch (err: any) {
-      setError(err.message || 'Withdrawal failed')
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : 'Withdrawal failed')
     } finally {
       setSubmitting(false)
     }

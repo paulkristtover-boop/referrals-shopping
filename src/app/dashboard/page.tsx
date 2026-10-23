@@ -40,8 +40,8 @@ export default function DashboardPage() {
         setProfile(profileRes.data as Profile)
         setCampaigns((campaignsRes.data as Campaign[]) || [])
         setSubmissions((submissionsRes.data as TaskSubmission[]) || [])
-      } catch (err: any) {
-        setError(err.message || 'Failed to load dashboard')
+      } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : 'Failed to load dashboard')
       } finally {
         setLoading(false)
       }
@@ -127,9 +127,9 @@ export default function DashboardPage() {
               <p className="text-muted">
                 Buy a referral package, submit your link, and get real users interacting with it.
               </p>
-              <Button as={Link as any} href="/promote" variant="primary">
+              <Link href="/promote" className="btn btn-primary">
                 Create Campaign
-              </Button>
+              </Link>
             </Card.Body>
           </Card>
         </Col>
@@ -141,9 +141,9 @@ export default function DashboardPage() {
               <p className="text-muted">
                 Complete simple tasks (visit links + submit screenshot) and get paid.
               </p>
-              <Button as={Link as any} href="/earn" variant="success">
+              <Link href="/earn" className="btn btn-success">
                 View Tasks
-              </Button>
+              </Link>
             </Card.Body>
           </Card>
         </Col>

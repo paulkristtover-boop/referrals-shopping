@@ -42,8 +42,8 @@ export default function PromotePage() {
         if (pkgRes.error) throw pkgRes.error
         setPackages((pkgRes.data as Package[]) || [])
         setMyCampaigns((campRes.data as Campaign[]) || [])
-      } catch (err: any) {
-        setError(err.message)
+      } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : "Error")
       } finally {
         setLoading(false)
       }
@@ -82,8 +82,8 @@ export default function PromotePage() {
       setCampaignId(data.id)
       setDepositRef(ref)
       setStep('payment')
-    } catch (err: any) {
-      setError(err.message || 'Failed to create campaign')
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : 'Failed to create campaign')
     } finally {
       setSubmitting(false)
     }
@@ -124,8 +124,8 @@ export default function PromotePage() {
         'Payment marked. An admin will verify the on-chain transfer and approve your campaign. Tasks will go live after approval.'
       )
       setStep('done')
-    } catch (err: any) {
-      setError(err.message || 'Failed to update campaign')
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : 'Failed to update campaign')
     } finally {
       setSubmitting(false)
     }

@@ -1,5 +1,5 @@
 import Link from 'next/link'
-import { Container, Row, Col, Button, Card } from 'react-bootstrap'
+import { Container, Row, Col, Card } from 'react-bootstrap'
 
 export default function HomePage() {
   return (
@@ -11,12 +11,12 @@ export default function HomePage() {
           Your go-to solution for getting real referrals to your shopping platform or affiliate programs.
         </p>
         <div className="d-flex gap-3 justify-content-center flex-wrap">
-          <Button as={Link as any} href="/promote" variant="light" size="lg" className="fw-semibold">
+          <Link href="/promote" className="btn btn-light btn-lg fw-semibold">
             <i className="bi bi-megaphone me-2"></i>Promote Your Link
-          </Button>
-          <Button as={Link as any} href="/earn" variant="outline-light" size="lg">
+          </Link>
+          <Link href="/earn" className="btn btn-outline-light btn-lg">
             <i className="bi bi-cash-coin me-2"></i>Earn from Tasks
-          </Button>
+          </Link>
         </div>
       </section>
 
@@ -114,9 +114,9 @@ export default function HomePage() {
           </Col>
         </Row>
         <div className="text-center mt-4">
-          <Button as={Link as any} href="/promote" variant="primary" size="lg">
+          <Link href="/promote" className="btn btn-primary btn-lg">
             Start Promoting
-          </Button>
+          </Link>
         </div>
       </section>
 

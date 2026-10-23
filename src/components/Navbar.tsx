@@ -116,9 +116,9 @@ export default function Navbar() {
             ) : (
               <>
                 <Nav.Link as={Link} href="/login">Login</Nav.Link>
-                <Button as={Link as any} href="/register" variant="primary" size="sm">
+                <Link href="/register" className="btn btn-primary btn-sm">
                   Register
-                </Button>
+                </Link>
               </>
             )}
           </Nav>

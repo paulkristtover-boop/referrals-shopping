@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useState, useCallback } from 'react'
-import { Container, Tabs, Tab, Table, Badge, Button, Card, Spinner, Alert, Form } from 'react-bootstrap'
+import { Container, Tabs, Tab, Table, Badge, Button, Card, Spinner, Alert } from 'react-bootstrap'
 import { createClient } from '@/lib/supabase/client'
 import type { Campaign, TaskSubmission, Withdrawal } from '@/lib/types'
 
@@ -37,8 +37,8 @@ export default function AdminPage() {
       setCampaigns((cRes.data as Campaign[]) || [])
       setSubmissions((sRes.data as TaskSubmission[]) || [])
       setWithdrawals((wRes.data as Withdrawal[]) || [])
-    } catch (err: any) {
-      setError(err.message)
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : 'Error')
     } finally {
       setLoading(false)
     }
@@ -57,8 +57,8 @@ export default function AdminPage() {
       if (error) throw error
       setMessage('Campaign approved and task created')
       await load()
-    } catch (err: any) {
-      setError(err.message)
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : 'Error')
     } finally {
       setActionLoading(null)
     }
@@ -77,8 +77,8 @@ export default function AdminPage() {
       if (error) throw error
       setMessage('Campaign rejected')
       await load()
-    } catch (err: any) {
-      setError(err.message)
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : 'Error')
     } finally {
       setActionLoading(null)
     }
@@ -93,8 +93,8 @@ export default function AdminPage() {
       if (error) throw error
       setMessage('Submission approved — user balance credited')
       await load()
-    } catch (err: any) {
-      setError(err.message)
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : 'Error')
     } finally {
       setActionLoading(null)
     }
@@ -113,8 +113,8 @@ export default function AdminPage() {
       if (error) throw error
       setMessage('Submission rejected')
       await load()
-    } catch (err: any) {
-      setError(err.message)
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : 'Error')
     } finally {
       setActionLoading(null)
     }
@@ -136,8 +136,8 @@ export default function AdminPage() {
       if (error) throw error
       setMessage('Withdrawal marked as paid')
       await load()
-    } catch (err: any) {
-      setError(err.message)
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : 'Error')
     } finally {
       setActionLoading(null)
     }
@@ -186,11 +186,11 @@ export default function AdminPage() {
                         </a>
                       </td>
                       <td className="small">
-                        {(c as any).profiles?.email || c.user_id.slice(0, 8)}
+                        {(c as Campaign & { profiles?: { email?: string } }).profiles?.email || c.user_id.slice(0, 8)}
                       </td>
-                      <td className="small">{(c as any).packages?.name}</td>
+                      <td className="small">{(c as Campaign & { packages?: { name?: string; price_usd?: number } }).packages?.name}</td>
                       <td className="small">
-                        ${Number(c.paid_amount || (c as any).packages?.price_usd || 0).toFixed(0)}
+                        ${Number(c.paid_amount || (c as Campaign & { packages?: { name?: string; price_usd?: number } }).packages?.price_usd || 0).toFixed(0)}
                         {c.crypto_currency && ` · ${c.crypto_currency}`}
                       </td>
                       <td>
@@ -258,12 +258,12 @@ export default function AdminPage() {
                   {submissions.map((s) => (
                     <tr key={s.id}>
                       <td className="small">
-                        {(s as any).tasks?.campaigns?.title || s.task_id.slice(0, 8)}
+                        {(s as TaskSubmission & { tasks?: { reward_amount?: number; campaigns?: { title?: string } } }).tasks?.campaigns?.title || s.task_id.slice(0, 8)}
                         <div className="text-muted">
-                          Reward: ${Number((s as any).tasks?.reward_amount || 0).toFixed(2)}
+                          Reward: ${Number((s as TaskSubmission & { tasks?: { reward_amount?: number; campaigns?: { title?: string } } }).tasks?.reward_amount || 0).toFixed(2)}
                         </div>
                       </td>
-                      <td className="small">{(s as any).profiles?.email || s.user_id.slice(0, 8)}</td>
+                      <td className="small">{(s as TaskSubmission & { profiles?: { email?: string } }).profiles?.email || s.user_id.slice(0, 8)}</td>
                       <td>
                         {s.screenshot_url ? (
                           <a href={s.screenshot_url} target="_blank" rel="noreferrer">
@@ -337,7 +337,7 @@ export default function AdminPage() {
                   )}
                   {withdrawals.map((w) => (
                     <tr key={w.id}>
-                      <td className="small">{(w as any).profiles?.email || w.user_id.slice(0, 8)}</td>
+                      <td className="small">{(w as Withdrawal & { profiles?: { email?: string } }).profiles?.email || w.user_id.slice(0, 8)}</td>
                       <td>${Number(w.amount).toFixed(2)}</td>
                       <td>{w.crypto_currency}</td>
                       <td className="small font-monospace text-break" style={{ maxWidth: 140 }}>
