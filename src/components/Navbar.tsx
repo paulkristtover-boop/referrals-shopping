@@ -74,6 +74,9 @@ export default function Navbar() {
                 <Nav.Link as={Link} href="/earn" active={isActive('/earn')}>
                   Earn
                 </Nav.Link>
+                <Nav.Link as={Link} href="/guide" active={isActive('/guide')}>
+                  Guide
+                </Nav.Link>
                 <Nav.Link as={Link} href="/wallet" active={isActive('/wallet')}>
                   Wallet
                 </Nav.Link>
@@ -115,6 +118,7 @@ export default function Navbar() {
               </NavDropdown>
             ) : (
               <>
+                <Nav.Link as={Link} href="/guide">Guide</Nav.Link>
                 <Nav.Link as={Link} href="/login">Login</Nav.Link>
                 <Link href="/register" className="btn btn-primary btn-sm">
                   Register

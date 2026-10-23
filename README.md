@@ -1,100 +1,103 @@
-# Referrals Shopping
+# Referrals Shopping — simple guide
 
-Full-stack referral promotion & earning platform.
+This is a **website** (not a Telegram bot).
 
-- **Promote**: Buy packages (TRX / SOL / TON) → submit link → mark paid → admin approves → tasks created
-- **Earn**: Complete tasks (visit + wait + screenshot upload) → admin reviews → get paid → withdraw
+People can:
 
-## Stack
+1. **Promote** — pay with crypto (TRX / SOL / TON), submit their link, get real people to click it  
+2. **Earn** — do small tasks (open a link, wait a few seconds, upload a screenshot), get paid, withdraw  
 
-- Next.js 15 (App Router)
-- React Bootstrap 5 + Bootstrap Icons
-- Light / Dark theme toggle
-- Supabase (Auth, Postgres, Storage, RLS, RPC)
-- Vercel ready
+Admin approves payments and task proofs.
 
-## Quick Start
+---
 
-1. **Install**
-   ```bash
-   cd referrals-shopping
-   npm install
-   ```
+## Pages (what you see)
 
-2. **Supabase project**
-   - Create project at https://supabase.com
-   - Copy URL + anon key into `.env.local`:
-     ```
-     NEXT_PUBLIC_SUPABASE_URL=...
-     NEXT_PUBLIC_SUPABASE_ANON_KEY=...
-     NEXT_PUBLIC_DEPOSIT_TRX=TYourAddress
-     NEXT_PUBLIC_DEPOSIT_SOL=YourSOLAddress
-     NEXT_PUBLIC_DEPOSIT_TON=EQYourTONAddress
-     ```
+| URL | Who | What it does |
+|-----|-----|----------------|
+| `/` | Everyone | Home — explain product + package prices |
+| `/login` `/register` | Everyone | Create account / sign in |
+| `/terms` | Everyone | Terms |
+| `/dashboard` | Logged in | Overview: balance, your campaigns, recent tasks |
+| `/promote` | Logged in | Choose package → paste link → pay crypto → mark “I paid” |
+| `/earn` | Logged in | List of tasks → wait timer → upload screenshot |
+| `/wallet` | Logged in | Balance + request withdrawal |
+| `/admin` | Admin only | Approve campaigns, submissions, withdrawals |
 
-3. **Run schema**
-   - Supabase → SQL Editor → paste **entire** `supabase/schema.sql` → Run
-   - This creates tables, RLS, seed packages, storage policies, and admin RPCs
+---
 
-4. **Storage**
-   - The schema tries to create bucket `screenshots`. If it fails, create it manually in Storage (public).
+## User flow (plain English)
 
-5. **Start**
-   ```bash
-   npm run dev
-   ```
-   Open http://localhost:3000
+### Promote
+1. Register → accept terms  
+2. Open **Promote**  
+3. Pick a package (e.g. 1000 referrals for $50)  
+4. Paste the link you want people to visit  
+5. Send crypto to the shown address  
+6. Click **I have paid**  
+7. Admin checks payment → approves → tasks go live for earners  
 
-6. **Become admin**
-   ```sql
-   update public.profiles set role = 'admin' where email = 'your@email.com';
-   ```
+### Earn
+1. Register  
+2. Open **Earn**  
+3. Pick a task → open the link → wait the timer  
+4. Take a screenshot → upload  
+5. Admin approves → money is added to your balance  
+6. **Wallet** → request withdrawal  
 
-## Features implemented
+---
 
-| Feature | Status |
-|---------|--------|
-| Auth (login / register + terms) | ✅ |
-| Middleware (protect routes, admin-only `/admin`) | ✅ |
-| Theme toggle | ✅ |
-| Dashboard (live balance, campaigns, submissions) | ✅ |
-| Promote (packages from DB → create campaign → payment UI → mark paid) | ✅ |
-| Earn (live tasks → timer → screenshot upload to Storage → submit) | ✅ |
-| Admin (approve/reject campaigns via RPC → creates tasks; approve submissions → credits balance) | ✅ |
-| Wallet (balance, withdraw request, history) | ✅ |
-| Crypto deposit addresses (env-configurable) | ✅ |
+## Tech (for you / Vercel)
 
-## Payment flow (MVP)
+- Next.js 15 + Bootstrap (light/dark theme)  
+- Supabase = database + login + screenshot storage  
+- Deploy on Vercel  
 
-1. User selects package + enters link → campaign created (`pending_payment`)
-2. User sees platform deposit address + reference → sends TRX/SOL/TON
-3. User clicks **I have paid** → status becomes `pending_approval`
-4. Admin verifies on-chain transfer → clicks **Approve**
-5. RPC `admin_approve_campaign` sets status `approved` and inserts a `tasks` row with reward + max_completions = package referrals count
-6. Earn users see the task, complete it, upload screenshot
-7. Admin approves submission → user balance credited via `admin_approve_submission`
+### One-time setup
 
-## Project structure
+1. Supabase project → run `supabase/schema.sql` in SQL Editor  
+2. Copy URL + anon key into Vercel env (or `.env.local`):
 
 ```
-src/
-  middleware.ts          # Auth + admin protection
-  app/
-    (auth)/login, register
-    dashboard, promote, earn, wallet, admin, terms
-  components/            Navbar (auth-aware), Footer
-  contexts/              ThemeContext
-  lib/
-    types.ts
-    config.ts            # Deposit addresses
-    supabase/            client, server, middleware helpers
-supabase/
-  schema.sql             # Full schema + RPCs + storage
+NEXT_PUBLIC_SUPABASE_URL=
+NEXT_PUBLIC_SUPABASE_ANON_KEY=
+NEXT_PUBLIC_DEPOSIT_TRX=
+NEXT_PUBLIC_DEPOSIT_SOL=
+NEXT_PUBLIC_DEPOSIT_TON=
 ```
 
-## Next optional improvements
+3. Make yourself admin:
 
-- On-chain payment listeners (TRON / Solana / TON APIs)
-- Email notifications on approval
-- Rate limits / anti-fraud for tasks
-- Payout fee / minimum withdrawal
+```sql
+update public.profiles set role = 'admin' where email = 'your@email.com';
+```
+
+4. Vercel → Project Settings → **Node.js Version = 20.x** (required)
+
+5. Push code → site goes live  
+
+---
+
+## Folder map
+
+```
+src/app/          ← pages (what users open)
+  page.tsx        ← home
+  login/ register/
+  dashboard/ promote/ earn/ wallet/ admin/
+src/components/   ← Navbar, Footer
+src/lib/          ← Supabase + types
+supabase/         ← database SQL
+```
+
+---
+
+## Local (optional)
+
+```bash
+npm install
+cp .env.example .env.local   # fill keys
+npm run dev
+```
+
+Open http://localhost:3000

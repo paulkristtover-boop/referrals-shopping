@@ -17,6 +17,9 @@ export default function HomePage() {
           <Link href="/earn" className="btn btn-outline-light btn-lg">
             <i className="bi bi-cash-coin me-2"></i>Earn from Tasks
           </Link>
+          <Link href="/guide" className="btn btn-outline-light btn-lg">
+            <i className="bi bi-book me-2"></i>How it works
+          </Link>
         </div>
       </section>
 
