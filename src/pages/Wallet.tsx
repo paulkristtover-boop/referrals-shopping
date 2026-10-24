@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Alert, Button, Card, Form, Table, Spinner } from 'react-bootstrap'
+import { ListFilters, ListPagination, paginate } from '../components/ListControls'
 import { useAuth } from '../contexts/AuthContext'
 import { supabase, supabaseConfigured } from '../lib/supabase'
 
@@ -14,6 +15,10 @@ export default function Wallet() {
   const [err, setErr] = useState<string | null>(null)
   const [msg, setMsg] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
+  const [search, setSearch] = useState('')
+  const [status, setStatus] = useState('all')
+  const [page, setPage] = useState(1)
+  const [pageSize, setPageSize] = useState(10)
 
   const load = async () => {
     await refreshProfile()
@@ -92,20 +97,50 @@ export default function Wallet() {
           </Form>
         </Card.Body>
       </Card>
-      <h4>History</h4>
-      <Table size="sm" responsive>
-        <thead><tr><th>Amount</th><th>Chain</th><th>Status</th><th>Date</th></tr></thead>
-        <tbody>
-          {list.map((w) => (
-            <tr key={w.id}>
-              <td>${Number(w.amount).toFixed(2)}</td>
-              <td>{w.crypto_chain.toUpperCase()}</td>
-              <td>{w.status}</td>
-              <td className="small">{new Date(w.created_at).toLocaleString()}</td>
-            </tr>
-          ))}
-        </tbody>
-      </Table>
+      <h4 className="fw-bold">History</h4>
+      <ListFilters
+        search={search}
+        onSearch={(v) => { setSearch(v); setPage(1) }}
+        placeholder="Address, chain…"
+        status={status}
+        onStatus={(v) => { setStatus(v); setPage(1) }}
+        statusOptions={[
+          { value: 'all', label: 'All' },
+          { value: 'pending', label: 'Pending' },
+          { value: 'paid', label: 'Paid' },
+          { value: 'rejected', label: 'Rejected' },
+        ]}
+        pageSize={pageSize}
+        onPageSize={(n) => { setPageSize(n); setPage(1) }}
+      />
+      {(() => {
+        const q = search.trim().toLowerCase()
+        const filtered = list.filter((w) => {
+          if (status !== 'all' && w.status !== status) return false
+          if (!q) return true
+          return w.wallet_address.toLowerCase().includes(q) || w.crypto_chain.toLowerCase().includes(q)
+        })
+        const pg = paginate(filtered, page, pageSize)
+        return (
+          <>
+            <Table size="sm" responsive>
+              <thead><tr><th>Amount</th><th>Chain</th><th>Status</th><th>Date</th></tr></thead>
+              <tbody>
+                {pg.slice.map((w) => (
+                  <tr key={w.id}>
+                    <td>${Number(w.amount).toFixed(2)}</td>
+                    <td>{w.crypto_chain.toUpperCase()}</td>
+                    <td>{w.status}</td>
+                    <td className="small">{new Date(w.created_at).toLocaleString()}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </Table>
+            {pg.slice.length === 0 && <div className="empty-state">No withdrawals match filters.</div>}
+            <ListPagination page={pg.page} totalPages={pg.totalPages} total={pg.total} onPage={setPage} />
+          </>
+        )
+      })()}
     </>
   )
 }

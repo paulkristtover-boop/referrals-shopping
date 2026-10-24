@@ -1,5 +1,6 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { Alert, Button, Card, Form, Spinner } from 'react-bootstrap'
+import { ListFilters, ListPagination, paginate } from '../components/ListControls'
 import { useAuth } from '../contexts/AuthContext'
 import { supabase, supabaseConfigured } from '../lib/supabase'
 import type { Task } from '../lib/types'
@@ -13,6 +14,10 @@ export default function Earn() {
   const [msg, setMsg] = useState<string | null>(null)
   const [timers, setTimers] = useState<Record<string, number>>({})
   const [ready, setReady] = useState<Record<string, boolean>>({})
+  const [search, setSearch] = useState('')
+  const [filterDone, setFilterDone] = useState('all')
+  const [page, setPage] = useState(1)
+  const [pageSize, setPageSize] = useState(10)
 
   const load = async () => {
     if (!supabaseConfigured) {
@@ -30,7 +35,11 @@ export default function Earn() {
     setLoading(false)
   }
 
-  useEffect(() => { void load() }, [user?.id])
+  useEffect(() => {
+    void load()
+  }, [user?.id])
+
+  useEffect(() => setPage(1), [search, filterDone, pageSize])
 
   const startTimer = (id: string, sec: number) => {
     if (timers[id] !== undefined) return
@@ -74,20 +83,58 @@ export default function Earn() {
     }
   }
 
-  if (loading) return <div className="text-center py-5"><Spinner /></div>
+  const filtered = useMemo(() => {
+    const q = search.trim().toLowerCase()
+    return tasks.filter((x) => {
+      const isDone = done.has(x.id)
+      if (filterDone === 'open' && isDone) return false
+      if (filterDone === 'done' && !isDone) return false
+      if (q && !(x.campaigns?.title || '').toLowerCase().includes(q)) return false
+      return true
+    })
+  }, [tasks, done, search, filterDone])
+
+  const pg = paginate(filtered, page, pageSize)
+
+  if (loading) {
+    return (
+      <div className="text-center py-5">
+        <Spinner />
+      </div>
+    )
+  }
 
   return (
     <>
-      <h1 className="mb-3">Earn from tasks</h1>
+      <h1 className="mb-3 fw-bold">Earn from tasks</h1>
+      <p className="text-muted">Open the link, wait the timer, then upload a screenshot.</p>
       {err && <Alert variant="danger">{err}</Alert>}
       {msg && <Alert variant="success">{msg}</Alert>}
       {tasks.length === 0 && <Alert variant="info">No active tasks right now.</Alert>}
-      {tasks.map((t) => {
+
+      {tasks.length > 0 && (
+        <ListFilters
+          search={search}
+          onSearch={setSearch}
+          placeholder="Search campaign title…"
+          status={filterDone}
+          onStatus={setFilterDone}
+          statusOptions={[
+            { value: 'all', label: 'All tasks' },
+            { value: 'open', label: 'Available' },
+            { value: 'done', label: 'Submitted' },
+          ]}
+          pageSize={pageSize}
+          onPageSize={setPageSize}
+        />
+      )}
+
+      {pg.slice.map((t) => {
         const isDone = done.has(t.id)
         const left = timers[t.id]
         const canSubmit = ready[t.id]
         return (
-          <Card key={t.id} className="mb-3 shadow-sm">
+          <Card key={t.id} className="mb-3 shadow-sm rs-card rs-card-static">
             <Card.Body>
               <div className="d-flex justify-content-between flex-wrap gap-2">
                 <div>
@@ -135,6 +182,13 @@ export default function Earn() {
           </Card>
         )
       })}
+
+      {tasks.length > 0 && pg.slice.length === 0 && (
+        <div className="empty-state">No tasks match your filters.</div>
+      )}
+      {tasks.length > 0 && (
+        <ListPagination page={pg.page} totalPages={pg.totalPages} total={pg.total} onPage={setPage} />
+      )}
     </>
   )
 }

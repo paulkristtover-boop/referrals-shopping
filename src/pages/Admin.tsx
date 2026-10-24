@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { Alert, Badge, Button, Form, Nav, Spinner, Table, Row, Col, Modal } from 'react-bootstrap'
 import { supabase, supabaseConfigured } from '../lib/supabase'
 import type { Package } from '../lib/types'
+import { ListFilters, ListPagination, paginate } from '../components/ListControls'
 
 type TabKey = 'overview' | 'campaigns' | 'submissions' | 'withdrawals' | 'packages' | 'users'
 
@@ -17,6 +18,52 @@ export default function Admin() {
   const [err, setErr] = useState<string | null>(null)
   const [pkgForm, setPkgForm] = useState({ name: '', category: 'regular', referrals: 1000, price_usd: 50 })
   const [showPkg, setShowPkg] = useState(false)
+  const [showPkg, setShowPkg] = useState(false)
+  const [search, setSearch] = useState('')
+  const [status, setStatus] = useState('all')
+  const [page, setPage] = useState(1)
+  const [pageSize, setPageSize] = useState(10)
+
+  // reset page when tab/filter changes
+  useEffect(() => { setPage(1) }, [tab, search, status, pageSize])
+
+  const q = search.trim().toLowerCase()
+  const match = (s: unknown) => String(s ?? '').toLowerCase().includes(q)
+
+  const filteredCampaigns = campaigns.filter((c) => {
+    if (status !== 'all' && String(c.status) !== status) return false
+    if (!q) return true
+    return match(c.title) || match((c.profiles as { email?: string })?.email) || match(c.pay_code) || match(c.tx_hash) || match(c.payment_note)
+  })
+  const filteredSubs = subs.filter((s) => {
+    if (status !== 'all' && String(s.status) !== status) return false
+    if (!q) return true
+    return match((s.profiles as { email?: string })?.email) || match((s.tasks as { campaigns?: { title?: string } })?.campaigns?.title)
+  })
+  const filteredWd = withdrawals.filter((w) => {
+    if (status !== 'all' && String(w.status) !== status) return false
+    if (!q) return true
+    return match((w.profiles as { email?: string })?.email) || match(w.wallet_address)
+  })
+  const filteredPkg = packages.filter((p) => {
+    if (status === 'active' && (p as Package & { active?: boolean }).active === false) return false
+    if (status === 'inactive' && (p as Package & { active?: boolean }).active !== false) return false
+    if (!q) return true
+    return match(p.name) || match(p.category)
+  })
+  const filteredUsers = users.filter((u) => {
+    if (status === 'admin' && u.role !== 'admin') return false
+    if (status === 'user' && u.role === 'admin') return false
+    if (!q) return true
+    return match(u.email) || match(u.full_name)
+  })
+
+  const campPage = paginate(filteredCampaigns, page, pageSize)
+  const subPage = paginate(filteredSubs, page, pageSize)
+  const wdPage = paginate(filteredWd, page, pageSize)
+  const pkgPage = paginate(filteredPkg, page, pageSize)
+  const userPage = paginate(filteredUsers, page, pageSize)
+
 
   const load = async () => {
     if (!supabaseConfigured) {
@@ -219,12 +266,30 @@ export default function Admin() {
           )}
 
           {tab === 'campaigns' && (
+            <>
+            <ListFilters
+              search={search}
+              onSearch={setSearch}
+              placeholder="Email, title, pay code, TX…"
+              status={status}
+              onStatus={setStatus}
+              statusOptions={[
+                { value: 'all', label: 'All statuses' },
+                { value: 'pending_payment', label: 'Pending payment' },
+                { value: 'pending_approval', label: 'Pending approval' },
+                { value: 'approved', label: 'Approved' },
+                { value: 'rejected', label: 'Rejected' },
+                { value: 'expired', label: 'Expired' },
+              ]}
+              pageSize={pageSize}
+              onPageSize={setPageSize}
+            />
             <Table size="sm" responsive hover>
               <thead>
                 <tr><th>User</th><th>Title</th><th>Package</th><th>Chain</th><th>Status</th><th></th></tr>
               </thead>
               <tbody>
-                {campaigns.map((c) => (
+                {campPage.slice.map((c) => (
                   <tr key={String(c.id)}>
                     <td className="small">{String((c.profiles as { email?: string })?.email || '')}</td>
                     <td>
@@ -246,15 +311,33 @@ export default function Admin() {
                 ))}
               </tbody>
             </Table>
+            <ListPagination page={campPage.page} totalPages={campPage.totalPages} total={campPage.total} onPage={setPage} />
+            </>
           )}
 
           {tab === 'submissions' && (
+            <>
+            <ListFilters
+              search={search}
+              onSearch={setSearch}
+              placeholder="Email, campaign…"
+              status={status}
+              onStatus={setStatus}
+              statusOptions={[
+                { value: 'all', label: 'All statuses' },
+                { value: 'pending', label: 'Pending' },
+                { value: 'approved', label: 'Approved' },
+                { value: 'rejected', label: 'Rejected' },
+              ]}
+              pageSize={pageSize}
+              onPageSize={setPageSize}
+            />
             <Table size="sm" responsive hover>
               <thead>
                 <tr><th>User</th><th>Campaign</th><th>Reward</th><th>Shot</th><th>Status</th><th></th></tr>
               </thead>
               <tbody>
-                {subs.map((s) => (
+                {subPage.slice.map((s) => (
                   <tr key={String(s.id)}>
                     <td className="small">{String((s.profiles as { email?: string })?.email || '')}</td>
                     <td className="small">{String((s.tasks as { campaigns?: { title?: string } })?.campaigns?.title || '')}</td>
@@ -273,15 +356,33 @@ export default function Admin() {
                 ))}
               </tbody>
             </Table>
+            <ListPagination page={subPage.page} totalPages={subPage.totalPages} total={subPage.total} onPage={setPage} />
+            </>
           )}
 
           {tab === 'withdrawals' && (
+            <>
+            <ListFilters
+              search={search}
+              onSearch={setSearch}
+              placeholder="Email, address…"
+              status={status}
+              onStatus={setStatus}
+              statusOptions={[
+                { value: 'all', label: 'All statuses' },
+                { value: 'pending', label: 'Pending' },
+                { value: 'paid', label: 'Paid' },
+                { value: 'rejected', label: 'Rejected' },
+              ]}
+              pageSize={pageSize}
+              onPageSize={setPageSize}
+            />
             <Table size="sm" responsive hover>
               <thead>
                 <tr><th>User</th><th>Amount</th><th>Chain</th><th>Address</th><th>Status</th><th></th></tr>
               </thead>
               <tbody>
-                {withdrawals.map((w) => (
+                {wdPage.slice.map((w) => (
                   <tr key={String(w.id)}>
                     <td className="small">{String((w.profiles as { email?: string })?.email || '')}</td>
                     <td>${Number(w.amount).toFixed(2)}</td>
@@ -306,6 +407,8 @@ export default function Admin() {
                 ))}
               </tbody>
             </Table>
+            <ListPagination page={wdPage.page} totalPages={wdPage.totalPages} total={wdPage.total} onPage={setPage} />
+            </>
           )}
 
           {tab === 'packages' && (
@@ -314,12 +417,26 @@ export default function Admin() {
                 <h5 className="mb-0 fw-bold">Packages</h5>
                 <Button size="sm" onClick={() => setShowPkg(true)}>+ Add package</Button>
               </div>
+              <ListFilters
+                search={search}
+                onSearch={setSearch}
+                placeholder="Name, category…"
+                status={status}
+                onStatus={setStatus}
+                statusOptions={[
+                  { value: 'all', label: 'All' },
+                  { value: 'active', label: 'Active' },
+                  { value: 'inactive', label: 'Inactive' },
+                ]}
+                pageSize={pageSize}
+                onPageSize={setPageSize}
+              />
               <Table size="sm" responsive hover>
                 <thead>
                   <tr><th>Name</th><th>Category</th><th>Referrals</th><th>Price</th><th>Active</th><th></th></tr>
                 </thead>
                 <tbody>
-                  {packages.map((p) => (
+                  {pkgPage.slice.map((p) => (
                     <tr key={p.id}>
                       <td>{p.name}</td>
                       <td>{p.category}</td>
@@ -339,6 +456,7 @@ export default function Admin() {
                   ))}
                 </tbody>
               </Table>
+              <ListPagination page={pkgPage.page} totalPages={pkgPage.totalPages} total={pkgPage.total} onPage={setPage} />
               <Modal show={showPkg} onHide={() => setShowPkg(false)} centered>
                 <Modal.Header closeButton><Modal.Title>New package</Modal.Title></Modal.Header>
                 <Form onSubmit={savePackage}>
@@ -373,12 +491,27 @@ export default function Admin() {
           )}
 
           {tab === 'users' && (
+            <>
+            <ListFilters
+              search={search}
+              onSearch={setSearch}
+              placeholder="Email, name…"
+              status={status}
+              onStatus={setStatus}
+              statusOptions={[
+                { value: 'all', label: 'All roles' },
+                { value: 'user', label: 'Users' },
+                { value: 'admin', label: 'Admins' },
+              ]}
+              pageSize={pageSize}
+              onPageSize={setPageSize}
+            />
             <Table size="sm" responsive hover>
               <thead>
                 <tr><th>Email</th><th>Name</th><th>Balance</th><th>Role</th><th></th></tr>
               </thead>
               <tbody>
-                {users.map((u) => (
+                {userPage.slice.map((u) => (
                   <tr key={String(u.id)}>
                     <td className="small">{String(u.email || '')}</td>
                     <td>{String(u.full_name || '—')}</td>
@@ -395,6 +528,8 @@ export default function Admin() {
                 ))}
               </tbody>
             </Table>
+            <ListPagination page={userPage.page} totalPages={userPage.totalPages} total={userPage.total} onPage={setPage} />
+            </>
           )}
         </div>
       </div>

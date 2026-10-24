@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Alert, Button, Card, Form, Spinner, Badge } from 'react-bootstrap'
+import { ListFilters, ListPagination, paginate } from '../components/ListControls'
 import { useAuth } from '../contexts/AuthContext'
 import { deposits, supabase, supabaseConfigured } from '../lib/supabase'
 import type { Campaign, Package } from '../lib/types'
@@ -201,6 +202,10 @@ export default function Promote() {
   const [err, setErr] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
   const [creating, setCreating] = useState(false)
+  const [search, setSearch] = useState('')
+  const [statusFilter, setStatusFilter] = useState('all')
+  const [page, setPage] = useState(1)
+  const [pageSize, setPageSize] = useState(10)
 
   const load = async () => {
     if (!supabaseConfigured) {
@@ -340,7 +345,36 @@ export default function Promote() {
       </Card>
 
       <h4 className="fw-bold">Your orders</h4>
-      {campaigns.map((c) => {
+      {campaigns.length > 0 && (
+        <ListFilters
+          search={search}
+          onSearch={(v) => { setSearch(v); setPage(1) }}
+          placeholder="Title, URL…"
+          status={statusFilter}
+          onStatus={(v) => { setStatusFilter(v); setPage(1) }}
+          statusOptions={[
+            { value: 'all', label: 'All statuses' },
+            { value: 'pending_payment', label: 'Awaiting payment' },
+            { value: 'pending_approval', label: 'Checking / submitted' },
+            { value: 'approved', label: 'Approved' },
+            { value: 'rejected', label: 'Rejected' },
+            { value: 'expired', label: 'Expired' },
+          ]}
+          pageSize={pageSize}
+          onPageSize={(n) => { setPageSize(n); setPage(1) }}
+        />
+      )}
+      {(() => {
+        const q = search.trim().toLowerCase()
+        const filtered = campaigns.filter((c) => {
+          if (statusFilter !== 'all' && c.status !== statusFilter) return false
+          if (!q) return true
+          return c.title.toLowerCase().includes(q) || c.target_url.toLowerCase().includes(q)
+        })
+        const pg = paginate(filtered, page, pageSize)
+        return (
+          <>
+      {pg.slice.map((c) => {
         const order = orders.find((o) => o.campaign_id === c.id)
         return (
           <Card key={c.id} className="rs-card rs-card-static mb-3">
@@ -369,6 +403,11 @@ export default function Promote() {
           </Card>
         )
       })}
+      {pg.slice.length === 0 && campaigns.length > 0 && <div className="empty-state">No orders match filters.</div>}
+      <ListPagination page={pg.page} totalPages={pg.totalPages} total={pg.total} onPage={setPage} />
+          </>
+        )
+      })()}
       {campaigns.length === 0 && <div className="empty-state">No orders yet.</div>}
     </>
   )

@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Alert, Button, Card, Form, Badge, Spinner } from 'react-bootstrap'
+import { ListFilters, ListPagination, paginate } from '../components/ListControls'
 import { Link } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
 import { supabase, supabaseConfigured } from '../lib/supabase'
@@ -21,6 +22,10 @@ export default function Support() {
   const [err, setErr] = useState<string | null>(null)
   const [msg, setMsg] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
+  const [search, setSearch] = useState('')
+  const [status, setStatus] = useState('all')
+  const [page, setPage] = useState(1)
+  const [pageSize, setPageSize] = useState(10)
 
   const load = async () => {
     if (!user || !supabaseConfigured) return
@@ -94,27 +99,56 @@ export default function Support() {
       </Card>
 
       <h5 className="fw-bold">Your tickets</h5>
-      {tickets.length === 0 ? (
-        <div className="empty-state">No tickets yet.</div>
-      ) : (
-        tickets.map((t) => (
-          <Card key={t.id} className="rs-card rs-card-static mb-3">
-            <Card.Body>
-              <div className="d-flex justify-content-between gap-2 flex-wrap">
-                <strong>{t.subject}</strong>
-                <Badge bg={t.status === 'open' ? 'warning' : t.status === 'closed' ? 'secondary' : 'info'}>{t.status}</Badge>
-              </div>
-              <p className="small text-muted mb-1">{new Date(t.created_at).toLocaleString()}</p>
-              <p className="mb-2">{t.message}</p>
-              {t.admin_reply && (
-                <Alert variant="light" className="mb-0 border">
-                  <strong>Admin reply:</strong> {t.admin_reply}
-                </Alert>
-              )}
-            </Card.Body>
-          </Card>
-        ))
+      {tickets.length > 0 && (
+        <ListFilters
+          search={search}
+          onSearch={(v) => { setSearch(v); setPage(1) }}
+          placeholder="Subject or message…"
+          status={status}
+          onStatus={(v) => { setStatus(v); setPage(1) }}
+          statusOptions={[
+            { value: 'all', label: 'All' },
+            { value: 'open', label: 'Open' },
+            { value: 'replied', label: 'Replied' },
+            { value: 'closed', label: 'Closed' },
+          ]}
+          pageSize={pageSize}
+          onPageSize={(n) => { setPageSize(n); setPage(1) }}
+        />
       )}
+      {(() => {
+        const q = search.trim().toLowerCase()
+        const filtered = tickets.filter((tk) => {
+          if (status !== 'all' && tk.status !== status) return false
+          if (!q) return true
+          return tk.subject.toLowerCase().includes(q) || tk.message.toLowerCase().includes(q)
+        })
+        const pg = paginate(filtered, page, pageSize)
+        if (tickets.length === 0) return <div className="empty-state">No tickets yet.</div>
+        return (
+          <>
+            {pg.slice.map((tk) => (
+              <Card key={tk.id} className="rs-card rs-card-static mb-3">
+                <Card.Body>
+                  <div className="d-flex justify-content-between gap-2 flex-wrap">
+                    <strong>{tk.subject}</strong>
+                    <Badge bg={tk.status === 'open' ? 'warning' : tk.status === 'closed' ? 'secondary' : 'info'}>{tk.status}</Badge>
+                  </div>
+                  <p className="small text-muted mb-1">{new Date(tk.created_at).toLocaleString()}</p>
+                  <p className="mb-2">{tk.message}</p>
+                  {tk.admin_reply && (
+                    <Alert variant="light" className="mb-0 border">
+                      <strong>Admin reply:</strong> {tk.admin_reply}
+                    </Alert>
+                  )}
+                </Card.Body>
+              </Card>
+            ))}
+            {pg.slice.length === 0 && <div className="empty-state">No tickets match filters.</div>}
+            <ListPagination page={pg.page} totalPages={pg.totalPages} total={pg.total} onPage={setPage} />
+          </>
+        )
+      })()}
     </div>
   )
 }
