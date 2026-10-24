@@ -1,0 +1,11 @@
+.hero-section {
+  background: linear-gradient(135deg, #0d6efd 0%, #6610f2 100%);
+  color: #fff;
+  border-radius: 1rem;
+  padding: 3rem 1.5rem;
+  margin-bottom: 2rem;
+}
+[data-bs-theme="dark"] .hero-section {
+  background: linear-gradient(135deg, #0a58ca 0%, #520dc2 100%);
+}
+.package-card ul { margin-bottom: 0; }
