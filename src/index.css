@@ -280,3 +280,10 @@ body {
   letter-spacing: 0.06em;
   font-weight: 700;
 }
+
+.pay-box img {
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.08);
+}
+.pay-box .font-monospace:hover {
+  border-color: var(--bs-primary) !important;
+}

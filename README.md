@@ -69,3 +69,13 @@ update profiles set role = 'admin' where email = 'you@example.com';
 ```
 
 Open **/admin** for campaigns, proofs, payouts, packages, and users.
+
+## Payments (no Vercel Cron)
+
+Hobby plan has no per-minute cron. Detection runs in the browser:
+
+- Auto-check every ~12 seconds while the 15-minute window is open
+- Manual **Check now** button
+- Server endpoint: `GET /api/payments/check?orderId=...`
+
+Still set `SUPABASE_SERVICE_ROLE_KEY` and deposit/API keys for the check API.

@@ -39,9 +39,28 @@ function useCountdown(expiresAt?: string | null) {
   return { left, label: `${m}:${s.toString().padStart(2, '0')}` }
 }
 
+
+function CopyBtn({ value, label = 'Copy' }: { value: string; label?: string }) {
+  const [ok, setOk] = useState(false)
+  const copy = async () => {
+    try {
+      await navigator.clipboard.writeText(value)
+      setOk(true)
+      setTimeout(() => setOk(false), 1500)
+    } catch {
+      /* ignore */
+    }
+  }
+  return (
+    <Button size="sm" variant={ok ? 'success' : 'outline-secondary'} onClick={() => void copy()}>
+      <i className={`bi ${ok ? 'bi-check-lg' : 'bi-clipboard'} me-1`} />
+      {ok ? 'Copied' : label}
+    </Button>
+  )
+}
+
 function PaymentPanel({
   order,
-  campaignId,
   onUpdated,
 }: {
   order: PayOrder
@@ -51,66 +70,120 @@ function PaymentPanel({
   const { left, label } = useCountdown(order.expires_at)
   const [checking, setChecking] = useState(false)
   const [note, setNote] = useState<string | null>(null)
+  const [auto, setAuto] = useState(true)
 
-  const check = async () => {
-    setChecking(true)
-    setNote(null)
+  const chain = order.crypto_chain.toUpperCase()
+  const addr = order.deposit_address || deposits[order.crypto_chain as 'trx' | 'sol' | 'ton'] || ''
+  const amountStr = Number(order.amount_crypto).toFixed(6)
+  // QR encodes amount + address hint as plain text address (universal)
+  const qrPayload = addr
+  const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=180x180&margin=8&data=${encodeURIComponent(qrPayload)}`
+
+  const check = async (silent = false) => {
+    if (!silent) setChecking(true)
+    if (!silent) setNote(null)
     try {
       const res = await fetch(`/api/payments/check?orderId=${encodeURIComponent(order.id)}`)
       const data = await res.json()
       if (data.status === 'confirmed') {
-        setNote(`Payment detected! TX: ${data.tx}`)
+        setNote(`Payment detected automatically. TX: ${String(data.tx || '').slice(0, 18)}…`)
+        setAuto(false)
         onUpdated()
       } else if (data.status === 'expired') {
-        setNote('Payment window expired. Create a new order.')
+        setNote('Payment window expired. Create a new order with a new unique amount.')
+        setAuto(false)
         onUpdated()
-      } else {
-        setNote('Not seen on-chain yet. Send the exact amount, then check again (or wait for auto-check).')
+      } else if (!silent) {
+        setNote('Watching the blockchain… payment not seen yet. Keep this page open.')
       }
     } catch {
-      setNote('Check failed — try again shortly.')
+      if (!silent) setNote('Network issue while checking. Retrying…')
     } finally {
-      setChecking(false)
+      if (!silent) setChecking(false)
     }
   }
 
-  // Auto-poll every 20s while window open
+  // Looks automatic: poll every 12s while window open
   useEffect(() => {
-    if (order.status !== 'awaiting_payment' || left <= 0) return
-    const id = setInterval(() => {
-      void check()
-    }, 20000)
+    if (!auto || order.status !== 'awaiting_payment' || left <= 0) return
+    void check(true)
+    const id = setInterval(() => void check(true), 12000)
     return () => clearInterval(id)
-  }, [order.id, order.status, left])
-
-  const chain = order.crypto_chain.toUpperCase()
-  const addr = order.deposit_address || deposits[order.crypto_chain as 'trx' | 'sol' | 'ton'] || ''
+  }, [order.id, order.status, left, auto])
 
   return (
     <div className="pay-box mt-3">
-      <div className="d-flex justify-content-between flex-wrap gap-2 mb-2">
-        <strong>Pay exactly this amount ({chain})</strong>
+      <div className="d-flex justify-content-between flex-wrap gap-2 mb-3">
+        <strong>Send exact amount ({chain})</strong>
         {left > 0 ? (
-          <Badge bg="warning" text="dark">
-            Time left {label}
+          <Badge bg="warning" text="dark" className="d-flex align-items-center gap-1">
+            <span className="spinner-grow spinner-grow-sm" style={{ width: 8, height: 8 }} />
+            Auto-check · {label}
           </Badge>
         ) : (
           <Badge bg="danger">Expired</Badge>
         )}
       </div>
-      <div className="pay-code mb-2">
-        {Number(order.amount_crypto).toFixed(6)} {chain}
+
+      <div className="row g-3 align-items-start">
+        <div className="col-auto text-center">
+          {addr ? (
+            <img
+              src={qrUrl}
+              width={180}
+              height={180}
+              alt="Payment address QR"
+              className="rounded border bg-white p-1"
+              style={{ maxWidth: '100%' }}
+            />
+          ) : (
+            <div className="text-muted small">No deposit address set</div>
+          )}
+          <div className="small text-muted mt-1">Scan to get address</div>
+        </div>
+        <div className="col">
+          <div className="small text-muted">Amount (must match exactly)</div>
+          <div className="d-flex flex-wrap align-items-center gap-2 mb-3">
+            <span className="pay-code">{amountStr} {chain}</span>
+            <CopyBtn value={amountStr} label="Copy amount" />
+          </div>
+
+          <div className="small text-muted">Deposit address</div>
+          <div
+            className="font-monospace small p-2 rounded border mb-2 user-select-all"
+            style={{ wordBreak: 'break-all', cursor: 'pointer', background: 'var(--bs-body-bg)' }}
+            title="Click to copy"
+            onClick={() => void navigator.clipboard.writeText(addr)}
+          >
+            {addr || '—'}
+          </div>
+          <CopyBtn value={addr} label="Copy address" />
+
+          <div className="small text-muted mt-3">Pay code</div>
+          <div className="d-flex flex-wrap align-items-center gap-2">
+            <span className="pay-code" style={{ fontSize: '1rem' }}>{order.pay_code}</span>
+            <CopyBtn value={order.pay_code} label="Copy code" />
+          </div>
+        </div>
       </div>
-      <div className="small text-muted mb-1">Send only this exact amount so our worker can match your payment.</div>
-      <div className="small text-muted">To address:</div>
-      <code className="d-block mb-2 user-select-all">{addr}</code>
-      <div className="small text-muted">Pay code: <span className="pay-code" style={{ fontSize: '0.95rem' }}>{order.pay_code}</span></div>
+
       {left > 0 && order.status === 'awaiting_payment' && (
-        <Button className="mt-3" size="sm" variant="success" disabled={checking} onClick={() => void check()}>
-          {checking ? 'Checking chain…' : 'I paid — check blockchain'}
-        </Button>
+        <div className="mt-3 d-flex flex-wrap gap-2 align-items-center">
+          <Button size="sm" variant="success" disabled={checking} onClick={() => void check(false)}>
+            {checking ? (
+              <>
+                <Spinner size="sm" className="me-1" /> Checking chain…
+              </>
+            ) : (
+              <>
+                <i className="bi bi-broadcast me-1" /> Check now
+              </>
+            )}
+          </Button>
+          <span className="small text-muted">Auto-checks every few seconds while the timer runs</span>
+        </div>
       )}
-      {note && <p className="small mt-2 mb-0">{note}</p>}
+      {note && <Alert variant="info" className="mt-3 mb-0 py-2 small">{note}</Alert>}
     </div>
   )
 }
