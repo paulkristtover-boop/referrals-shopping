@@ -25,8 +25,26 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setProfile(null)
       return
     }
-    const { data } = await supabase.from('profiles').select('*').eq('id', user.id).single()
-    setProfile((data as Profile) || null)
+    const { data, error } = await supabase.from('profiles').select('*').eq('id', user.id).maybeSingle()
+    if (error) {
+      console.warn('profile load', error.message)
+      return
+    }
+    if (data) {
+      setProfile(data as Profile)
+      return
+    }
+    // Create profile if trigger did not run
+    const { data: created, error: insErr } = await supabase
+      .from('profiles')
+      .insert({
+        id: user.id,
+        email: user.email,
+        full_name: (user.user_metadata as { full_name?: string })?.full_name ?? null,
+      })
+      .select('*')
+      .single()
+    if (!insErr && created) setProfile(created as Profile)
   }
 
   useEffect(() => {

@@ -5,6 +5,14 @@ import { useAuth } from '../contexts/AuthContext'
 import { supabase, supabaseConfigured } from '../lib/supabase'
 import type { Campaign, Submission } from '../lib/types'
 
+function errMsg(e: unknown): string {
+  if (!e) return 'Failed to load'
+  if (typeof e === 'string') return e
+  if (e instanceof Error) return e.message || 'Failed to load'
+  const o = e as { message?: string; error_description?: string; details?: string; code?: string }
+  return o.message || o.error_description || o.details || 'Failed to load'
+}
+
 export default function Dashboard() {
   const { user, profile, refreshProfile } = useAuth()
   const [campaigns, setCampaigns] = useState<Campaign[]>([])
@@ -19,33 +27,41 @@ export default function Dashboard() {
       if (!supabaseConfigured) setError('Configure Supabase env vars on Vercel.')
       return
     }
+
     ;(async () => {
+      setError(null)
       try {
-        const [c, s] = await Promise.all([
-          supabase
-            .from('campaigns')
-            .select('*, packages(name, price_usd)')
-            .eq('user_id', user.id)
-            .order('created_at', { ascending: false })
-            .limit(10),
-          supabase
-            .from('task_submissions')
-            .select('*')
-            .eq('user_id', user.id)
-            .order('created_at', { ascending: false })
-            .limit(10),
-        ])
-        if (c.error) throw c.error
-        if (s.error) throw s.error
-        setCampaigns((c.data as Campaign[]) || [])
-        setSubs((s.data as Submission[]) || [])
+        // Simple selects first (avoid join failures if FK not exposed)
+        const cRes = await supabase
+          .from('campaigns')
+          .select('*')
+          .eq('user_id', user.id)
+          .order('created_at', { ascending: false })
+          .limit(10)
+
+        if (cRes.error) throw cRes.error
+
+        const sRes = await supabase
+          .from('task_submissions')
+          .select('*')
+          .eq('user_id', user.id)
+          .order('created_at', { ascending: false })
+          .limit(10)
+
+        if (sRes.error) throw sRes.error
+
+        setCampaigns((cRes.data as Campaign[]) || [])
+        setSubs((sRes.data as Submission[]) || [])
       } catch (e: unknown) {
-        const message = e instanceof Error ? e.message : 'Failed to load'
-        setError(
-          message.includes('relation') || message.includes('schema')
-            ? 'Database tables missing. Run supabase/schema.sql in the Supabase SQL Editor.'
-            : message
-        )
+        const message = errMsg(e)
+        const lower = message.toLowerCase()
+        if (lower.includes('relation') || lower.includes('does not exist') || lower.includes('schema cache')) {
+          setError('Database tables missing or incomplete. In Supabase → SQL Editor, run the full supabase/schema.sql (or supabase/fix_rls.sql), then refresh.')
+        } else if (lower.includes('row-level security') || lower.includes('rls') || lower.includes('policy') || lower.includes('recursion')) {
+          setError('RLS policy error. Run supabase/fix_rls.sql in the Supabase SQL Editor, then refresh this page.')
+        } else {
+          setError(message)
+        }
       } finally {
         setLoading(false)
       }
@@ -69,48 +85,72 @@ export default function Dashboard() {
         </div>
       </div>
 
-      {error && <Alert variant="warning">{error}</Alert>}
+      {error && (
+        <Alert variant="warning">
+          <strong>Could not load data:</strong> {error}
+        </Alert>
+      )}
 
       <Row className="g-3 mb-4">
         <Col md={4}>
           <div className="stat-card">
             <div className="text-muted small">Balance</div>
             <div className="stat-value">${Number(profile?.balance ?? 0).toFixed(2)}</div>
-            <Link to="/wallet" className="btn btn-sm btn-outline-primary mt-2">Wallet</Link>
+            <Link to="/wallet" className="btn btn-sm btn-outline-primary mt-2">
+              Wallet
+            </Link>
           </div>
         </Col>
         <Col md={4}>
           <Card className="rs-card h-100 text-center p-3">
-            <div className="mb-2 text-primary fs-3"><i className="bi bi-megaphone-fill" /></div>
+            <div className="mb-2 text-primary fs-3">
+              <i className="bi bi-megaphone-fill" />
+            </div>
             <h5>Promote</h5>
             <p className="small text-muted">Buy clicks for your link</p>
-            <Link to="/promote" className="btn btn-primary">Open Promote</Link>
+            <Link to="/promote" className="btn btn-primary">
+              Open Promote
+            </Link>
           </Card>
         </Col>
         <Col md={4}>
           <Card className="rs-card h-100 text-center p-3">
-            <div className="mb-2 text-success fs-3"><i className="bi bi-cash-coin" /></div>
+            <div className="mb-2 text-success fs-3">
+              <i className="bi bi-cash-coin" />
+            </div>
             <h5>Earn</h5>
             <p className="small text-muted">Complete tasks & get paid</p>
-            <Link to="/earn" className="btn btn-success">Open Earn</Link>
+            <Link to="/earn" className="btn btn-success">
+              Open Earn
+            </Link>
           </Card>
         </Col>
       </Row>
 
       <h4 className="fw-bold">Your campaigns</h4>
       {campaigns.length === 0 ? (
-        <div className="empty-state mb-4">No campaigns yet. <Link to="/promote">Create one</Link></div>
+        <div className="empty-state mb-4">
+          No campaigns yet. <Link to="/promote">Create one</Link>
+        </div>
       ) : (
         <Card className="rs-card rs-card-static mb-4">
           <Table size="sm" responsive className="mb-0">
             <thead>
-              <tr><th>Title</th><th>Status</th><th>Date</th></tr>
+              <tr>
+                <th>Title</th>
+                <th>Status</th>
+                <th>Date</th>
+              </tr>
             </thead>
             <tbody>
               {campaigns.map((c) => (
                 <tr key={c.id}>
                   <td>{c.title}</td>
-                  <td><Badge bg="secondary" className="badge-status">{c.status.replace(/_/g, ' ')}</Badge></td>
+                  <td>
+                    <Badge bg="secondary" className="badge-status">
+                      {c.status.replace(/_/g, ' ')}
+                    </Badge>
+                  </td>
                   <td className="small">{new Date(c.created_at).toLocaleString()}</td>
                 </tr>
               ))}
@@ -121,15 +161,29 @@ export default function Dashboard() {
 
       <h4 className="fw-bold">Your submissions</h4>
       {subs.length === 0 ? (
-        <div className="empty-state">No submissions yet. <Link to="/earn">Browse tasks</Link></div>
+        <div className="empty-state">
+          No submissions yet. <Link to="/earn">Browse tasks</Link>
+        </div>
       ) : (
         <Card className="rs-card rs-card-static">
           <Table size="sm" responsive className="mb-0">
-            <thead><tr><th>Status</th><th>Date</th></tr></thead>
+            <thead>
+              <tr>
+                <th>Status</th>
+                <th>Date</th>
+              </tr>
+            </thead>
             <tbody>
               {subs.map((s) => (
                 <tr key={s.id}>
-                  <td><Badge bg={s.status === 'approved' ? 'success' : s.status === 'rejected' ? 'danger' : 'warning'} className="badge-status">{s.status}</Badge></td>
+                  <td>
+                    <Badge
+                      bg={s.status === 'approved' ? 'success' : s.status === 'rejected' ? 'danger' : 'warning'}
+                      className="badge-status"
+                    >
+                      {s.status}
+                    </Badge>
+                  </td>
                   <td className="small">{new Date(s.created_at).toLocaleString()}</td>
                 </tr>
               ))}
