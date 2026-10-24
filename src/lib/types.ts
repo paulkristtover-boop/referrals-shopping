@@ -13,6 +13,7 @@ export type Package = {
   category: 'regular' | 'gambling'
   referrals: number
   price_usd: number
+  active?: boolean
 }
 
 export type Campaign = {

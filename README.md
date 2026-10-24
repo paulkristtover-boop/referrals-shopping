@@ -50,3 +50,22 @@ git push
 ```
 
 Link the GitHub repo to Vercel (Framework: Vite). Production URL: `*.vercel.app`.
+
+## Disable email confirmation (required for instant login)
+
+Supabase Dashboard → **Authentication** → **Providers** → **Email**:
+
+- Turn **OFF** “Confirm email”
+- Save
+
+Without this, new users cannot sign in until they click a confirmation email.
+
+## Admin CMS
+
+After you are registered:
+
+```sql
+update profiles set role = 'admin' where email = 'you@example.com';
+```
+
+Open **/admin** for campaigns, proofs, payouts, packages, and users.

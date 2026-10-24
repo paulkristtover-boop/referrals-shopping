@@ -1,3 +1,4 @@
+import { useEffect, useState } from 'react'
 import { Link, NavLink, Outlet } from 'react-router-dom'
 import { Container, Nav, Navbar, Button } from 'react-bootstrap'
 import { useAuth } from '../contexts/AuthContext'
@@ -6,12 +7,20 @@ import { useTheme } from '../contexts/ThemeContext'
 export default function Layout() {
   const { user, profile, signOut } = useAuth()
   const { theme, toggle } = useTheme()
+  const [scrolled, setScrolled] = useState(false)
+
+  useEffect(() => {
+    const onScroll = () => setScrolled(window.scrollY > 8)
+    onScroll()
+    window.addEventListener('scroll', onScroll)
+    return () => window.removeEventListener('scroll', onScroll)
+  }, [])
 
   return (
     <>
-      <Navbar expand="lg" className="border-bottom bg-body">
+      <Navbar expand="lg" className={`rs-navbar border-bottom ${scrolled ? 'scrolled' : ''}`}>
         <Container>
-          <Navbar.Brand as={Link} to="/" className="fw-bold">
+          <Navbar.Brand as={Link} to="/" className="rs-brand">
             Referral Shopping
           </Navbar.Brand>
           <Navbar.Toggle aria-controls="nav" />
@@ -25,18 +34,20 @@ export default function Layout() {
                   <Nav.Link as={NavLink} to="/earn">Earn</Nav.Link>
                   <Nav.Link as={NavLink} to="/wallet">Wallet</Nav.Link>
                   {profile?.role === 'admin' && (
-                    <Nav.Link as={NavLink} to="/admin">Admin</Nav.Link>
+                    <Nav.Link as={NavLink} to="/admin">Admin CMS</Nav.Link>
                   )}
                 </>
               )}
             </Nav>
-            <div className="d-flex align-items-center gap-2">
-              <Button size="sm" variant="outline-secondary" onClick={toggle}>
-                <i className={`bi ${theme === 'dark' ? 'bi-sun' : 'bi-moon-stars'}`} />
+            <div className="d-flex align-items-center gap-2 py-2 py-lg-0">
+              <Button size="sm" variant="outline-secondary" onClick={toggle} aria-label="Toggle theme">
+                <i className={`bi ${theme === 'dark' ? 'bi-sun-fill' : 'bi-moon-stars-fill'}`} />
               </Button>
               {user ? (
                 <>
-                  <span className="small text-muted d-none d-md-inline">{user.email}</span>
+                  <span className="small text-muted d-none d-md-inline text-truncate" style={{ maxWidth: 160 }}>
+                    {user.email}
+                  </span>
                   <Button size="sm" variant="outline-danger" onClick={() => void signOut()}>
                     Logout
                   </Button>
@@ -52,12 +63,14 @@ export default function Layout() {
         </Container>
       </Navbar>
       <main className="flex-grow-1 py-4">
-        <Container>
+        <Container className="page-enter">
           <Outlet />
         </Container>
       </main>
-      <footer className="border-top py-3 text-center text-muted small">
-        © {new Date().getFullYear()} Referral Shopping · <Link to="/terms">Terms</Link> · <Link to="/guide">Guide</Link>
+      <footer className="rs-footer text-center text-muted">
+        <Container>
+          © {new Date().getFullYear()} Referral Shopping · <Link to="/terms">Terms</Link> · <Link to="/guide">Guide</Link>
+        </Container>
       </footer>
     </>
   )
