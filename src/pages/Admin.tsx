@@ -147,7 +147,7 @@ export default function Admin() {
     <div className="page-enter">
       <div className="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
         <div>
-          <h1 className="fw-bold mb-0">Admin CMS</h1>
+          <h1 className="fw-bold mb-0" style={{color:"#fff"}}>Admin CMS</h1>
           <p className="text-muted small mb-0">Manage campaigns, proofs, payouts & packages</p>
         </div>
         <Button size="sm" variant="outline-secondary" onClick={() => void load()}>

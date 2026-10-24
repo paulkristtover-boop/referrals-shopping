@@ -5,6 +5,9 @@ export type Profile = {
   role: 'user' | 'admin'
   balance: number
   terms_accepted_at: string | null
+  invite_code?: string | null
+  referred_by?: string | null
+  totp_enabled?: boolean
 }
 
 export type Package = {
@@ -26,6 +29,8 @@ export type Campaign = {
   paid_amount: number | null
   crypto_chain: string | null
   payment_note: string | null
+  pay_code?: string | null
+  tx_hash?: string | null
   created_at: string
   packages?: Package
 }
