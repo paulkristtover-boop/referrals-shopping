@@ -17,7 +17,7 @@ export default function Admin() {
   const [msg, setMsg] = useState<string | null>(null)
   const [err, setErr] = useState<string | null>(null)
   const [pkgForm, setPkgForm] = useState({ name: '', category: 'regular', referrals: 1000, price_usd: 50 })
-  const [showPkg, setShowPkg] = useState(false)
+
   const [showPkg, setShowPkg] = useState(false)
   const [search, setSearch] = useState('')
   const [status, setStatus] = useState('all')
