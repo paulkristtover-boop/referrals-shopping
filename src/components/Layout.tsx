@@ -148,6 +148,9 @@ export default function Layout() {
                   <NavItem to="/notifications" icon="bi-bell">
                     Alerts
                   </NavItem>
+                  <NavItem to="/account" icon="bi-person-circle">
+                    Account
+                  </NavItem>
                 </>
               )}
               {!user && (
@@ -166,10 +169,13 @@ export default function Layout() {
               </Button>
               {user ? (
                 <>
-                  <span className="small text-muted text-truncate" style={{ maxWidth: 140 }}>
+                  <Link to="/account" className="small text-muted text-truncate text-decoration-none" style={{ maxWidth: 140 }}>
                     {user.email}
-                  </span>
-                  <Button size="sm" variant="outline-danger" onClick={() => void signOut()}>
+                  </Link>
+                  <Link to="/account" className="btn btn-sm btn-outline-secondary" title="Account">
+                    <i className="bi bi-person-circle" />
+                  </Link>
+                  <Button size="sm" variant="outline-danger" onClick={() => void signOut()} title="Logout">
                     <i className="bi bi-box-arrow-right" />
                   </Button>
                 </>

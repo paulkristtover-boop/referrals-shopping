@@ -17,6 +17,7 @@ import Admin from './pages/Admin'
 import AdminSupport from './pages/AdminSupport'
 import AdminPayments from './pages/AdminPayments'
 import Notifications from './pages/Notifications'
+import Account from './pages/Account'
 import { useAuth } from './contexts/AuthContext'
 import { Spinner } from 'react-bootstrap'
 
@@ -59,6 +60,7 @@ export default function App() {
         <Route path="invite" element={<Private><UserOnly><Invite /></UserOnly></Private>} />
         <Route path="security" element={<Private><Security /></Private>} />
         <Route path="notifications" element={<Private><Notifications /></Private>} />
+        <Route path="account" element={<Private><Account /></Private>} />
         <Route path="admin" element={<Private><AdminOnly><Admin /></AdminOnly></Private>} />
         <Route path="admin/support" element={<Private><AdminOnly><AdminSupport /></AdminOnly></Private>} />
         <Route path="admin/payments" element={<Private><AdminOnly><AdminPayments /></AdminOnly></Private>} />

@@ -1,19 +1,17 @@
 import { NavLink } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
-import { useNotifications } from '../contexts/NotificationContext'
 
 type Tab = { to: string; icon: string; label: string; end?: boolean; badge?: number }
 
 export default function BottomTabBar() {
   const { user, profile } = useAuth()
-  const { unread } = useNotifications()
   if (!user) return null
   if (profile?.role === 'admin') {
     const adminTabs: Tab[] = [
       { to: '/admin', icon: 'bi-grid-1x2', label: 'CMS', end: true },
       { to: '/admin/payments', icon: 'bi-currency-bitcoin', label: 'Pay' },
       { to: '/admin/support', icon: 'bi-headset', label: 'Support' },
-      { to: '/notifications', icon: 'bi-bell', label: 'Alerts', badge: unread },
+      { to: '/account', icon: 'bi-person-circle', label: 'Account' },
     ]
     return <TabBar tabs={adminTabs} />
   }
@@ -23,7 +21,7 @@ export default function BottomTabBar() {
     { to: '/promote', icon: 'bi-megaphone', label: 'Promote' },
     { to: '/earn', icon: 'bi-cash-coin', label: 'Earn' },
     { to: '/wallet', icon: 'bi-wallet2', label: 'Wallet' },
-    { to: '/notifications', icon: 'bi-bell', label: 'Alerts', badge: unread },
+    { to: '/account', icon: 'bi-person-circle', label: 'Account' },
   ]
   return <TabBar tabs={tabs} />
 }
