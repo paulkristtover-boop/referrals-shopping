@@ -127,6 +127,10 @@ export default function Home() {
             <Card.Header className="bg-primary text-white fw-semibold">Regular sites</Card.Header>
             <ul className="list-group list-group-flush">
               <li className="list-group-item d-flex justify-content-between">
+                <span>Free Starter (once)</span>
+                <strong className="text-success">50 free</strong>
+              </li>
+              <li className="list-group-item d-flex justify-content-between">
                 <span>1,000 referrals</span>
                 <strong>$50</strong>
               </li>

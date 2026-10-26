@@ -6,6 +6,7 @@ export type Profile = {
   balance: number
   terms_accepted_at: string | null
   invite_code?: string | null
+  free_starter_used_at?: string | null
   referred_by?: string | null
   totp_enabled?: boolean
 }

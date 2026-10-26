@@ -206,6 +206,7 @@ export default function Promote() {
   const [statusFilter, setStatusFilter] = useState('all')
   const [page, setPage] = useState(1)
   const [pageSize, setPageSize] = useState(10)
+  const [freeUsed, setFreeUsed] = useState(false)
 
   const load = async () => {
     if (!supabaseConfigured) {
@@ -213,21 +214,31 @@ export default function Promote() {
       setErr('Configure Supabase on Vercel.')
       return
     }
-    const [p, c, o] = await Promise.all([
+    const [p, c, o, prof] = await Promise.all([
       supabase.from('packages').select('*').eq('active', true).order('price_usd'),
       supabase.from('campaigns').select('*').eq('user_id', user!.id).order('created_at', { ascending: false }),
       supabase.from('payment_orders').select('*').eq('user_id', user!.id).order('created_at', { ascending: false }),
+      supabase.from('profiles').select('free_starter_used_at').eq('id', user!.id).maybeSingle(),
     ])
-    setPackages((p.data as Package[]) || [])
+    const pkgs = (p.data as Package[]) || []
+    setPackages(pkgs)
     setCampaigns((c.data as Campaign[]) || [])
     setOrders((o.data as PayOrder[]) || [])
-    if (p.data?.[0]) setPackageId(p.data[0].id)
+    const used = !!(prof.data as { free_starter_used_at?: string } | null)?.free_starter_used_at
+    setFreeUsed(used)
+    // Prefer selecting free package first if still available
+    const freePkg = pkgs.find((x) => Number(x.price_usd) === 0)
+    if (!used && freePkg) setPackageId(freePkg.id)
+    else if (pkgs[0]) setPackageId(pkgs[0].id)
     setLoading(false)
   }
 
   useEffect(() => {
     void load()
   }, [user?.id])
+
+  const selectedPkg = packages.find((x) => x.id === packageId)
+  const isFree = selectedPkg != null && Number(selectedPkg.price_usd) === 0
 
   const create = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -237,6 +248,21 @@ export default function Promote() {
     if (!pkg || !user) return
     setCreating(true)
     try {
+      // Free Starter — one per account, no crypto payment
+      if (Number(pkg.price_usd) === 0) {
+        if (freeUsed) throw new Error('You already used your Free Starter (50 referrals). Choose a paid package.')
+        const { data: campId, error: freeErr } = await supabase.rpc('claim_free_starter', {
+          p_title: title,
+          p_target_url: url,
+        })
+        if (freeErr) throw new Error(freeErr.message)
+        setMsg('Free Starter activated — 50 referrals. Promotion can start (approved).')
+        setTitle('')
+        setUrl('')
+        void load()
+        return
+      }
+
       // Unique amount from API (15 min window)
       const qRes = await fetch(`/api/payments/quote?usd=${pkg.price_usd}&chain=${chain}`)
       const quote = await qRes.json()
@@ -301,9 +327,19 @@ export default function Promote() {
   return (
     <>
       <h1 className="mb-2 fw-bold">Promote your link</h1>
-      <p className="text-muted mb-4">
-        Each order gets a <strong>unique crypto amount</strong> valid for <strong>15 minutes</strong>. A background worker watches the blockchain and confirms automatically.
+      <p className="text-muted mb-3">
+        New users get a <strong>one-time Free Starter (50 regular referrals)</strong>. Paid orders use a unique crypto amount for 15 minutes.
       </p>
+      {!freeUsed && packages.some((x) => Number(x.price_usd) === 0) && (
+        <Alert variant="info" className="py-2">
+          <i className="bi bi-gift me-1" /> Free Starter available — 50 referrals, regular sites only, once per account.
+        </Alert>
+      )}
+      {freeUsed && (
+        <Alert variant="secondary" className="py-2 small">
+          Free Starter already used on this account. Upgrade with a paid package for more volume.
+        </Alert>
+      )}
       {err && <Alert variant="danger">{err}</Alert>}
       {msg && <Alert variant="success">{msg}</Alert>}
 
@@ -314,11 +350,17 @@ export default function Promote() {
             <Form.Group className="mb-3">
               <Form.Label>Package</Form.Label>
               <Form.Select value={packageId} onChange={(e) => setPackageId(e.target.value)} required>
-                {packages.map((p) => (
-                  <option key={p.id} value={p.id}>
-                    {p.name} — ${p.price_usd} ({p.category})
-                  </option>
-                ))}
+                {packages.map((p) => {
+                  const free = Number(p.price_usd) === 0
+                  const disabled = free && freeUsed
+                  return (
+                    <option key={p.id} value={p.id} disabled={disabled}>
+                      {free
+                        ? `${p.name} — FREE${freeUsed ? ' (used)' : ' (once)'}`
+                        : `${p.name} — $${p.price_usd} (${p.category})`}
+                    </option>
+                  )
+                })}
               </Form.Select>
             </Form.Group>
             <Form.Group className="mb-3">
@@ -329,16 +371,25 @@ export default function Promote() {
               <Form.Label>Target URL</Form.Label>
               <Form.Control type="url" value={url} onChange={(e) => setUrl(e.target.value)} required />
             </Form.Group>
-            <Form.Group className="mb-3">
-              <Form.Label>Pay with</Form.Label>
-              <Form.Select value={chain} onChange={(e) => setChain(e.target.value as 'trx' | 'sol' | 'ton')}>
-                <option value="trx">TRX (Tron)</option>
-                <option value="sol">SOL (Solana)</option>
-                <option value="ton">TON</option>
-              </Form.Select>
-            </Form.Group>
-            <Button type="submit" disabled={creating}>
-              {creating ? 'Creating…' : 'Create order (15 min unique amount)'}
+            {!isFree && (
+              <Form.Group className="mb-3">
+                <Form.Label>Pay with</Form.Label>
+                <Form.Select value={chain} onChange={(e) => setChain(e.target.value as 'trx' | 'sol' | 'ton')}>
+                  <option value="trx">TRX (Tron)</option>
+                  <option value="sol">SOL (Solana)</option>
+                  <option value="ton">TON</option>
+                </Form.Select>
+              </Form.Group>
+            )}
+            {isFree && (
+              <p className="small text-muted">No payment needed for Free Starter. One claim per account.</p>
+            )}
+            <Button type="submit" disabled={creating || (isFree && freeUsed)} variant={isFree ? 'success' : 'primary'}>
+              {creating
+                ? 'Creating…'
+                : isFree
+                  ? 'Claim Free Starter (50 referrals)'
+                  : 'Create order (15 min unique amount)'}
             </Button>
           </Form>
         </Card.Body>

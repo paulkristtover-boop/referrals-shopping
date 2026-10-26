@@ -9,7 +9,7 @@ export default function Faq() {
     },
     {
       q: 'Do you offer a free trial?',
-      a: 'No. Free trials are not available because of past abuse. Every order starts with a paid package so we can keep promotion quality consistent for paying customers.',
+      a: 'Yes — a one-time Free Starter: 50 regular-site referrals per account. No free gambling packages. After that, choose a paid package for more volume. Unlimited free trials were removed because of abuse.',
     },
     {
       q: 'What is the refund / guarantee condition?',
