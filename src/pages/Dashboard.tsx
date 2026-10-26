@@ -4,6 +4,7 @@ import { Card, Row, Col, Table, Spinner, Alert, Badge } from 'react-bootstrap'
 import { useAuth } from '../contexts/AuthContext'
 import { supabase, supabaseConfigured } from '../lib/supabase'
 import type { Campaign, Submission } from '../lib/types'
+import FirstSessionGuide from '../components/FirstSessionGuide'
 
 function errMsg(e: unknown): string {
   if (!e) return 'Failed to load'
@@ -84,6 +85,8 @@ export default function Dashboard() {
           <p className="text-muted small mb-0">Welcome{profile?.full_name ? `, ${profile.full_name}` : ''}</p>
         </div>
       </div>
+
+      <FirstSessionGuide />
 
       {error && (
         <Alert variant="warning">

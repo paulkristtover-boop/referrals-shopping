@@ -1,47 +1,114 @@
 import { Link } from 'react-router-dom'
-import { Row, Col, Card } from 'react-bootstrap'
+import { Row, Col, Card, Button } from 'react-bootstrap'
 import Logo from '../components/Logo'
+import { useAuth } from '../contexts/AuthContext'
 
 const TG = 'https://t.me/referralshopping'
 
 export default function Home() {
+  const { user, profile } = useAuth()
+  const loggedIn = !!user
+  const isAdmin = profile?.role === 'admin'
+
   return (
     <div className="page-enter">
       <div className="hero-section text-center">
         <div className="d-flex justify-content-center mb-3 position-relative" style={{ zIndex: 1 }}>
-          <Logo size={56} showText={false} />
+          <Logo size={48} showText={false} />
         </div>
-        <h1 className="display-5 fw-bold mb-3 position-relative" style={{ zIndex: 1 }}>
-          Referral Shopping
+        <h1 className="display-5 fw-bold mb-2 position-relative" style={{ zIndex: 1 }}>
+          Get real referrals — or get paid to click
         </h1>
-        <p className="lead mb-2 opacity-90 position-relative" style={{ zIndex: 1 }}>
-          Buy real referrals for your links — or earn by completing simple tasks.
-        </p>
-        <p className="mb-4 opacity-75 small position-relative" style={{ zIndex: 1 }}>
-          We promote your link until you reach the package you ordered. At least 70% active referrals guaranteed.
+        <p className="lead mb-4 opacity-90 position-relative" style={{ zIndex: 1 }}>
+          One account. Two paths. No app install — works in your browser.
         </p>
         <div className="d-flex gap-2 justify-content-center flex-wrap position-relative" style={{ zIndex: 1 }}>
-          <Link to="/promote" className="btn btn-light btn-lg fw-semibold">
-            <i className="bi bi-megaphone me-2" />Order referrals
-          </Link>
-          <Link to="/earn" className="btn btn-outline-light btn-lg">
-            <i className="bi bi-cash-coin me-2" />Earn money
-          </Link>
-          <a href={TG} target="_blank" rel="noreferrer" className="btn btn-outline-light btn-lg">
-            <i className="bi bi-telegram me-2" />Telegram
-          </a>
+          {!loggedIn ? (
+            <>
+              <Link to="/register" className="btn btn-light btn-lg fw-semibold px-4">
+                <i className="bi bi-person-plus me-2" />
+                Create free account
+              </Link>
+              <Link to="/login" className="btn btn-outline-light btn-lg">
+                Login
+              </Link>
+            </>
+          ) : isAdmin ? (
+            <Link to="/admin" className="btn btn-light btn-lg fw-semibold">
+              Open Admin CMS
+            </Link>
+          ) : (
+            <>
+              <Link to="/dashboard" className="btn btn-light btn-lg fw-semibold">
+                Go to dashboard
+              </Link>
+              <Link to="/promote" className="btn btn-outline-light btn-lg">
+                Promote
+              </Link>
+              <Link to="/earn" className="btn btn-outline-light btn-lg">
+                Earn
+              </Link>
+            </>
+          )}
         </div>
+        <p className="small opacity-75 mt-3 mb-0 position-relative" style={{ zIndex: 1 }}>
+          Instant signup · no email confirmation · optional 2FA
+        </p>
       </div>
+
+      <h2 className="text-center mb-2 fw-bold">Choose your path</h2>
+      <p className="text-center text-muted mb-4">Pick one focus first — you can always use both later.</p>
+      <Row className="g-3 mb-5">
+        <Col md={6}>
+          <Card className="rs-card h-100 border-primary">
+            <Card.Body className="p-4 d-flex flex-column">
+              <div className="text-primary mb-2 fs-3">
+                <i className="bi bi-megaphone-fill" />
+              </div>
+              <h3 className="h5 fw-bold">I want more users</h3>
+              <p className="text-muted small flex-grow-1">
+                Buy a referral package, pay with TRX / SOL / TON, and we promote your link until the order is filled
+                (usually 3–12 days). 70% active target.
+              </p>
+              <Link
+                to={loggedIn && !isAdmin ? '/promote' : '/register?intent=promote'}
+                className="btn btn-primary"
+              >
+                {loggedIn && !isAdmin ? 'Open Promote' : 'Start — Promote'}
+              </Link>
+            </Card.Body>
+          </Card>
+        </Col>
+        <Col md={6}>
+          <Card className="rs-card h-100 border-success">
+            <Card.Body className="p-4 d-flex flex-column">
+              <div className="text-success mb-2 fs-3">
+                <i className="bi bi-cash-coin" />
+              </div>
+              <h3 className="h5 fw-bold">I want to earn</h3>
+              <p className="text-muted small flex-grow-1">
+                Open task links, wait the short timer, upload a screenshot. After approval, balance goes to your wallet
+                for crypto withdrawal.
+              </p>
+              <Link
+                to={loggedIn && !isAdmin ? '/earn' : '/register?intent=earn'}
+                className="btn btn-success"
+              >
+                {loggedIn && !isAdmin ? 'Open Earn' : 'Start — Earn'}
+              </Link>
+            </Card.Body>
+          </Card>
+        </Col>
+      </Row>
 
       <h2 className="text-center mb-4 fw-bold">How it works</h2>
       <Row className="g-3 mb-5">
         {[
-          ['1', 'Choose a package', 'Pick regular or gambling pricing and paste the link you want promoted.'],
-          ['2', 'Pay with crypto', 'Send TRX, SOL, or TON with your unique pay code. Submit the transaction hash.'],
-          ['3', 'We promote', 'Our team pushes your link until the ordered referral count is reached (typically 3–12 days).'],
-          ['4', 'Guarantee', 'At least 70% of referrals stay active for a month — or contact support for a review.'],
+          ['1', 'Sign up', 'Free account in under a minute. No email confirmation.'],
+          ['2', 'Promote or earn', 'Order referrals with crypto, or complete tasks for rewards.'],
+          ['3', 'Track & withdraw', 'Dashboard shows status. Earners cash out from Wallet.'],
         ].map(([n, t, d]) => (
-          <Col md={6} lg={3} key={n}>
+          <Col md={4} key={n}>
             <Card className="rs-card h-100 text-center p-3">
               <div className="display-6 text-primary mb-2">
                 <i className={`bi bi-${n}-circle-fill`} />
@@ -57,11 +124,20 @@ export default function Home() {
       <Row className="g-3 mb-4">
         <Col md={6}>
           <Card className="rs-card h-100">
-            <Card.Header className="bg-primary text-white fw-semibold">Regular sites / channels</Card.Header>
+            <Card.Header className="bg-primary text-white fw-semibold">Regular sites</Card.Header>
             <ul className="list-group list-group-flush">
-              <li className="list-group-item d-flex justify-content-between"><span>1,000 referrals</span><strong>$50</strong></li>
-              <li className="list-group-item d-flex justify-content-between"><span>1,900 referrals</span><strong>$100</strong></li>
-              <li className="list-group-item d-flex justify-content-between"><span>3,800 referrals</span><strong>$200</strong></li>
+              <li className="list-group-item d-flex justify-content-between">
+                <span>1,000 referrals</span>
+                <strong>$50</strong>
+              </li>
+              <li className="list-group-item d-flex justify-content-between">
+                <span>1,900 referrals</span>
+                <strong>$100</strong>
+              </li>
+              <li className="list-group-item d-flex justify-content-between">
+                <span>3,800 referrals</span>
+                <strong>$200</strong>
+              </li>
             </ul>
           </Card>
         </Col>
@@ -69,32 +145,40 @@ export default function Home() {
           <Card className="rs-card h-100">
             <Card.Header className="bg-danger text-white fw-semibold">Investment / gambling</Card.Header>
             <ul className="list-group list-group-flush">
-              <li className="list-group-item d-flex justify-content-between"><span>1,000 referrals</span><strong>$100</strong></li>
-              <li className="list-group-item d-flex justify-content-between"><span>1,900 referrals</span><strong>$200</strong></li>
-              <li className="list-group-item d-flex justify-content-between"><span>3,800 referrals</span><strong>$400</strong></li>
+              <li className="list-group-item d-flex justify-content-between">
+                <span>1,000 referrals</span>
+                <strong>$100</strong>
+              </li>
+              <li className="list-group-item d-flex justify-content-between">
+                <span>1,900 referrals</span>
+                <strong>$200</strong>
+              </li>
+              <li className="list-group-item d-flex justify-content-between">
+                <span>3,800 referrals</span>
+                <strong>$400</strong>
+              </li>
             </ul>
           </Card>
         </Col>
       </Row>
 
-      <Card className="rs-card rs-card-static mb-4 border-0">
-        <Card.Body className="text-center p-4">
-          <h4 className="fw-bold"><i className="bi bi-shield-check text-success me-2" />Quality guarantee</h4>
-          <p className="text-muted mb-0">
-            We aim for at least <strong>70% active referrals</strong> for about a month. If your active rate is clearly lower, open a Support ticket with the details we request.
-          </p>
-        </Card.Body>
-      </Card>
+      {!loggedIn && (
+        <div className="text-center mb-4">
+          <Link to="/register" className="btn btn-primary btn-lg px-4">
+            Create free account
+          </Link>
+          <div className="mt-2">
+            <Link to="/faq" className="small me-3">
+              FAQ
+            </Link>
+            <a href={TG} className="small" target="_blank" rel="noreferrer">
+              <i className="bi bi-telegram" /> Telegram
+            </a>
+          </div>
+        </div>
+      )}
 
-      <div className="text-center mb-3">
-        <Link to="/faq" className="btn btn-outline-primary me-2">FAQ</Link>
-        <Link to="/support" className="btn btn-outline-secondary me-2">Customer service</Link>
-        <a href={TG} className="btn btn-info text-white" target="_blank" rel="noreferrer">
-          <i className="bi bi-telegram me-1" /> t.me/referralshopping
-        </a>
-      </div>
-
-      <a className="tg-float" href={TG} target="_blank" rel="noreferrer" title="Telegram channel" aria-label="Telegram">
+      <a className="tg-float" href={TG} target="_blank" rel="noreferrer" title="Telegram" aria-label="Telegram">
         <i className="bi bi-telegram" />
       </a>
     </div>
