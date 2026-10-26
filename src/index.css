@@ -373,3 +373,103 @@ body {
   color: #fff !important;
   background: rgba(255, 255, 255, 0.12);
 }
+
+/* Social proof */
+.online-badge {
+  font-size: 0.9rem;
+  color: var(--bs-body-color);
+  background: color-mix(in srgb, #16a34a 12%, var(--bs-body-bg));
+  border: 1px solid color-mix(in srgb, #16a34a 25%, var(--bs-border-color));
+  border-radius: 999px;
+  padding: 0.35rem 0.85rem;
+}
+.online-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #16a34a;
+  box-shadow: 0 0 0 0 rgba(22, 163, 74, 0.5);
+  animation: pulse-dot 1.6s infinite;
+  display: inline-block;
+}
+@keyframes pulse-dot {
+  0% { box-shadow: 0 0 0 0 rgba(22, 163, 74, 0.45); }
+  70% { box-shadow: 0 0 0 8px rgba(22, 163, 74, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(22, 163, 74, 0); }
+}
+
+.trust-strip {
+  margin-top: 0.75rem;
+}
+.trust-chip {
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--bs-secondary-color);
+  background: var(--bs-body-bg);
+  border: 1px solid var(--bs-border-color);
+  border-radius: 999px;
+  padding: 0.3rem 0.7rem;
+}
+.trust-chip i {
+  color: var(--rs-primary);
+  margin-right: 0.25rem;
+}
+
+.stats-row {
+  margin: 1.25rem 0 0.5rem;
+}
+.stat-tile {
+  background: var(--bs-body-bg);
+  border: 1px solid var(--bs-border-color);
+  border-radius: var(--rs-radius);
+  padding: 0.9rem 0.5rem;
+}
+.stat-tile-label {
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  color: var(--bs-secondary-color);
+}
+.stat-tile-value {
+  font-size: 1.35rem;
+  font-weight: 800;
+  color: var(--rs-primary);
+  line-height: 1.2;
+}
+.stat-tile-sub {
+  font-size: 0.7rem;
+}
+
+.live-ticker {
+  background: color-mix(in srgb, var(--rs-primary) 6%, var(--bs-body-bg));
+  border: 1px solid var(--bs-border-color);
+  border-radius: var(--rs-radius);
+  padding: 0.55rem 0.85rem;
+  margin: 0.75rem 0 1.25rem;
+}
+.live-pill {
+  font-size: 0.7rem;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  color: #16a34a;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+.joined-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.8rem;
+  font-weight: 600;
+  background: color-mix(in srgb, var(--rs-primary) 10%, var(--bs-body-bg));
+  border-radius: 999px;
+  padding: 0.25rem 0.7rem;
+  color: var(--rs-primary);
+}
+
+.hero-social {
+  position: relative;
+  z-index: 1;
+  margin-top: 1rem;
+}

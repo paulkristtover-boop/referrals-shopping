@@ -2,6 +2,14 @@ import { Link } from 'react-router-dom'
 import { Row, Col, Card, Button } from 'react-bootstrap'
 import Logo from '../components/Logo'
 import { useAuth } from '../contexts/AuthContext'
+import {
+  OnlineBadge,
+  TrustStrip,
+  StatsRow,
+  LiveTicker,
+  JoinedTodayChip,
+  usePublicSocialProof,
+} from '../components/SocialProof'
 
 const TG = 'https://t.me/referralshopping'
 
@@ -9,9 +17,14 @@ export default function Home() {
   const { user, profile } = useAuth()
   const loggedIn = !!user
   const isAdmin = profile?.role === 'admin'
+  const { stats, live } = usePublicSocialProof()
 
   return (
     <div className="page-enter">
+      <div className="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+        <OnlineBadge online={stats.online_estimate} />
+        <JoinedTodayChip n={stats.joined_today} />
+      </div>
       <div className="hero-section text-center">
         <div className="d-flex justify-content-center mb-3 position-relative" style={{ zIndex: 1 }}>
           <Logo size={48} showText={false} />
@@ -51,12 +64,15 @@ export default function Home() {
             </>
           )}
         </div>
-        <p className="small opacity-75 mt-3 mb-0 position-relative" style={{ zIndex: 1 }}>
-          Instant signup · no email confirmation · optional 2FA
-        </p>
+        <div className="hero-social">
+          <TrustStrip />
+        </div>
       </div>
 
-      <h2 className="text-center mb-2 fw-bold">Choose your path</h2>
+      <LiveTicker items={live} />
+      <StatsRow stats={stats} />
+
+      <h2 className="text-center mb-2 fw-bold mt-4">Choose your path</h2>
       <p className="text-center text-muted mb-4">Pick one focus first — you can always use both later.</p>
       <Row className="g-3 mb-5">
         <Col md={6}>
