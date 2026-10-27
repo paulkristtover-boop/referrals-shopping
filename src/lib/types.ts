@@ -33,6 +33,7 @@ export type Campaign = {
   pay_code?: string | null
   tx_hash?: string | null
   created_at: string
+  referrals_delivered?: number | null
   packages?: Package
 }
 

@@ -74,7 +74,7 @@ export default function Admin() {
     setLoading(true)
     setErr(null)
     const [c, s, w, p, u] = await Promise.all([
-      supabase.from('campaigns').select('*, packages(name, price_usd), profiles(email)').order('created_at', { ascending: false }).limit(100),
+      supabase.from('campaigns').select('*, packages(name, price_usd, category, referrals), profiles(email)').order('created_at', { ascending: false }).limit(100),
       supabase.from('task_submissions').select('*, profiles(email), tasks(reward_amount, campaigns(title))').order('created_at', { ascending: false }).limit(100),
       supabase.from('withdrawals').select('*, profiles(email)').order('created_at', { ascending: false }).limit(100),
       supabase.from('packages').select('*').order('price_usd'),
@@ -172,7 +172,14 @@ export default function Admin() {
     void load()
   }
 
-  const setRole = async (id: string, role: string) => {
+  const setDelivered = async (id: string, value: string) => {
+    const n = Math.max(0, parseInt(value, 10) || 0)
+    await supabase.from('campaigns').update({ referrals_delivered: n }).eq('id', id)
+    setMsg(`Advert progress set to ${n}`)
+    void load()
+  }
+
+    const setRole = async (id: string, role: string) => {
     await supabase.from('profiles').update({ role }).eq('id', id)
     flash(`Role set to ${role}`)
     void load()
@@ -237,7 +244,7 @@ export default function Admin() {
           {(
             [
               ['overview', 'Overview'],
-              ['campaigns', `Campaigns${pendingC ? ` (${pendingC})` : ''}`],
+              ['campaigns', `Adverts${pendingC ? ` (${pendingC})` : ''}`],
               ['submissions', `Proofs${pendingS ? ` (${pendingS})` : ''}`],
               ['withdrawals', `Payouts${pendingW ? ` (${pendingW})` : ''}`],
               ['packages', 'Packages'],
@@ -284,23 +291,43 @@ export default function Admin() {
               pageSize={pageSize}
               onPageSize={setPageSize}
             />
+            <p className="small text-muted">Advert management — approve payments, set referrals delivered (signup-only vs deposit packages).</p>
             <Table size="sm" responsive hover>
               <thead>
-                <tr><th>User</th><th>Title</th><th>Package</th><th>Chain</th><th>Status</th><th></th></tr>
+                <tr><th>User</th><th>Advert</th><th>Package / rule</th><th>Pay</th><th>Status</th><th>Delivered</th><th></th></tr>
               </thead>
               <tbody>
-                {campPage.slice.map((c) => (
+                {campPage.slice.map((c) => {
+                  const cat = String((c.packages as { category?: string })?.category || 'regular')
+                  const goal = Number((c.packages as { referrals?: number })?.referrals || 0)
+                  return (
                   <tr key={String(c.id)}>
                     <td className="small">{String((c.profiles as { email?: string })?.email || '')}</td>
                     <td>
                       {String(c.title)}
                       <div className="small"><a href={String(c.target_url)} target="_blank" rel="noreferrer">link</a></div>
                     </td>
-                    <td className="small">{String((c.packages as { name?: string })?.name || '')}</td>
-                    <td className="small">{String(c.crypto_chain || '').toUpperCase()}<div>{String(c.payment_note || '')}</div></td>
+                    <td className="small">
+                      {String((c.packages as { name?: string })?.name || '')}
+                      <div className="text-muted">{cat === 'gambling' ? 'Account + deposit' : 'Signup only'}</div>
+                    </td>
+                    <td className="small">{String(c.crypto_chain || '').toUpperCase() || 'FREE'}
+                      <div className="text-truncate" style={{ maxWidth: 90 }}>{String(c.payment_note || c.tx_hash || '')}</div>
+                    </td>
                     <td><Badge bg="secondary" className="badge-status">{String(c.status).replace(/_/g, ' ')}</Badge></td>
+                    <td style={{ maxWidth: 110 }}>
+                      <Form.Control
+                        size="sm"
+                        type="number"
+                        min={0}
+                        defaultValue={Number(c.referrals_delivered || 0)}
+                        key={`${c.id}-${c.referrals_delivered}`}
+                        onBlur={(e) => void setDelivered(String(c.id), e.target.value)}
+                      />
+                      <div className="small text-muted">/ {goal || '—'}</div>
+                    </td>
                     <td className="text-nowrap">
-                      {c.status === 'pending_approval' && (
+                      {(c.status === 'pending_approval' || c.status === 'pending_payment') && (
                         <>
                           <Button size="sm" variant="success" className="me-1" onClick={() => void approveCampaign(String(c.id))}>Approve</Button>
                           <Button size="sm" variant="outline-danger" onClick={() => void rejectCampaign(String(c.id))}>Reject</Button>
@@ -308,7 +335,8 @@ export default function Admin() {
                       )}
                     </td>
                   </tr>
-                ))}
+                  )
+                })}
               </tbody>
             </Table>
             <ListPagination page={campPage.page} totalPages={campPage.totalPages} total={campPage.total} onPage={setPage} />

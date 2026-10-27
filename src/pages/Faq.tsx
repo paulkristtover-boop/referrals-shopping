@@ -4,8 +4,16 @@ import { Link } from 'react-router-dom'
 export default function Faq() {
   const items = [
     {
+      q: 'What counts as a referral?',
+      a: 'Regular packages: the person opens your referral link and creates an account — no deposit required. Investment/gambling packages: they must create an account and make a deposit. We only count referrals that meet the rule for the package you bought.',
+    },
+    {
+      q: 'Why are gambling / investment packages more expensive?',
+      a: 'Those referrals must deposit, not only register. That is harder to deliver, so pricing is higher than regular (signup-only) packages.',
+    },
+    {
       q: 'After I pay for a package, how long until I receive all referrals?',
-      a: 'It depends on the package size and the type of site or channel you ordered for. In most cases referrals are collected over about 3 to 12 days. Larger packages and harder niches can take longer. You can track status on your Dashboard after payment is confirmed.',
+      a: 'It depends on package size and category (regular vs deposit). In most cases delivery takes about 3 to 12 days. Deposit-based orders can take longer. Track status on your Dashboard after payment is confirmed.',
     },
     {
       q: 'Do you offer a free trial?',

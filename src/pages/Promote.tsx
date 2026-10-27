@@ -328,7 +328,8 @@ export default function Promote() {
     <>
       <h1 className="mb-2 fw-bold">Promote your link</h1>
       <p className="text-muted mb-3">
-        New users get a <strong>one-time Free Starter (50 regular referrals)</strong>. Paid orders use a unique crypto amount for 15 minutes.
+        <strong>Regular</strong> = signup via your link (no deposit). <strong>Gambling / investment</strong> = signup + deposit.
+        Free Starter is 50 regular referrals once. Paid orders use a unique crypto amount for 15 minutes.
       </p>
       {!freeUsed && packages.some((x) => Number(x.price_usd) === 0) && (
         <Alert variant="info" className="py-2">
@@ -356,8 +357,10 @@ export default function Promote() {
                   return (
                     <option key={p.id} value={p.id} disabled={disabled}>
                       {free
-                        ? `${p.name} — FREE${freeUsed ? ' (used)' : ' (once)'}`
-                        : `${p.name} — $${p.price_usd} (${p.category})`}
+                        ? `${p.name} — FREE${freeUsed ? ' (used)' : ' (once)'} · signup only`
+                        : `${p.name} — $${p.price_usd} · ${
+                            p.category === 'gambling' ? 'account + deposit' : 'signup only'
+                          }`}
                     </option>
                   )
                 })}

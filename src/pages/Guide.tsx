@@ -14,11 +14,18 @@ export default function Guide() {
       <Card className="rs-card rs-card-static mb-4">
         <Card.Body>
           <p className="mb-2">
-            You pay for a package, then we promote your link until it reaches the number of referrals you ordered.
-            Our promotional reach includes social channels (including Instagram pages with a large combined audience), and your link is shared as part of that promotion.
+            You pay for a package, then we promote your referral link until the ordered count is reached.
+          </p>
+          <p className="mb-2">
+            <strong>Regular packages:</strong> a referral counts when someone <strong>creates an account</strong> using your link.
+            They do <strong>not</strong> need to deposit.
+          </p>
+          <p className="mb-2">
+            <strong>Investment / gambling packages:</strong> a referral counts only when they <strong>create an account and make a deposit</strong>.
+            That is why these packages cost more.
           </p>
           <p className="mb-0 text-muted">
-            We target <strong>at least 70% active referrals</strong>. If the active rate is meaningfully lower, contact support with the information the admin requests for a review or refund path.
+            We target <strong>at least 70% active referrals</strong>. If the active rate is meaningfully lower, contact support with the details the admin requests.
           </p>
         </Card.Body>
       </Card>

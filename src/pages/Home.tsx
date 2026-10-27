@@ -83,8 +83,8 @@ export default function Home() {
               </div>
               <h3 className="h5 fw-bold">I want more users</h3>
               <p className="text-muted small flex-grow-1">
-                Buy a referral package, pay with TRX / SOL / TON, and we promote your link until the order is filled
-                (usually 3–12 days). 70% active target.
+                We drive people to your referral link. <strong>Regular</strong> = they create an account (no deposit).
+                <strong> Investment/gambling</strong> = account + deposit. Delivery usually 3–12 days; 70% active target.
               </p>
               <Link
                 to={loggedIn && !isAdmin ? '/promote' : '/register?intent=promote'}
@@ -140,7 +140,8 @@ export default function Home() {
       <Row className="g-3 mb-4">
         <Col md={6}>
           <Card className="rs-card h-100">
-            <Card.Header className="bg-primary text-white fw-semibold">Regular sites</Card.Header>
+            <Card.Header className="bg-primary text-white fw-semibold">Regular — signup only</Card.Header>
+            <div className="px-3 pt-2 small text-muted">Each referral = new account via your link. No deposit required.</div>
             <ul className="list-group list-group-flush">
               <li className="list-group-item d-flex justify-content-between">
                 <span>Free Starter (once)</span>
@@ -163,7 +164,8 @@ export default function Home() {
         </Col>
         <Col md={6}>
           <Card className="rs-card h-100">
-            <Card.Header className="bg-danger text-white fw-semibold">Investment / gambling</Card.Header>
+            <Card.Header className="bg-danger text-white fw-semibold">Investment / gambling — deposit</Card.Header>
+            <div className="px-3 pt-2 small text-muted">Each referral = account created <strong>and</strong> a deposit made.</div>
             <ul className="list-group list-group-flush">
               <li className="list-group-item d-flex justify-content-between">
                 <span>1,000 referrals</span>
