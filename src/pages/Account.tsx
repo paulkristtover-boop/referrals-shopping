@@ -194,7 +194,7 @@ export default function Account() {
           <h5 className="fw-bold text-danger mb-2">
             <i className="bi bi-box-arrow-right me-2" />Logout
           </h5>
-          <p className="text-muted small mb-3">Sign out of Referral Shopping on this device.</p>
+          <p className="text-muted small mb-3">Sign out of Referrals Shopping on this device.</p>
           <Button variant="danger" className="w-100 w-md-auto" disabled={loggingOut} onClick={() => void logout()}>
             {loggingOut ? (
               <><Spinner size="sm" className="me-1" />Signing out…</>

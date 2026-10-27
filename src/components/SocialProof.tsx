@@ -52,10 +52,11 @@ export function OnlineBadge({ online }: { online: number }) {
 
 export function TrustStrip() {
   const items = [
+    { icon: 'bi-shop', label: 'Referrals Shopping' },
     { icon: 'bi-shield-lock', label: '2FA available' },
     { icon: 'bi-gift', label: 'Free Starter 50' },
     { icon: 'bi-currency-bitcoin', label: 'TRX · SOL · TON' },
-    { icon: 'bi-phone', label: 'Browser only' },
+    { icon: 'bi-instagram', label: '@referralshopping' },
     { icon: 'bi-shield-check', label: '70% active target' },
   ]
   return (

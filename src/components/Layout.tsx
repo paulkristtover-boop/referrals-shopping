@@ -8,7 +8,7 @@ import Logo from './Logo'
 import NotificationBell from './NotificationBell'
 import BottomTabBar from './BottomTabBar'
 
-const TG = 'https://t.me/referralshopping'
+import { TG, IG, IG_HANDLE, BRAND } from '../lib/brand'
 
 function NavItem({ to, icon, children, end }: { to: string; icon: string; children: ReactNode; end?: boolean }) {
   return (
@@ -163,6 +163,9 @@ export default function Layout() {
               <a href={TG} target="_blank" rel="noreferrer" className="btn btn-sm btn-outline-primary" title="Telegram">
                 <i className="bi bi-telegram" />
               </a>
+              <a href={IG} target="_blank" rel="noreferrer" className="btn btn-sm btn-outline-danger" title="Instagram">
+                <i className="bi bi-instagram" />
+              </a>
               {user && <NotificationBell />}
               <Button size="sm" variant="outline-secondary" onClick={toggle}>
                 <i className={`bi ${theme === 'dark' ? 'bi-sun' : 'bi-moon'}`} />
@@ -210,10 +213,13 @@ export default function Layout() {
             <a href={TG} target="_blank" rel="noreferrer">
               <i className="bi bi-telegram" /> Telegram
             </a>
+            <a href={IG} target="_blank" rel="noreferrer">
+              <i className="bi bi-instagram" /> {IG_HANDLE}
+            </a>
           </div>
           <div className="d-flex justify-content-center align-items-center gap-2">
             <Logo size={20} showText={false} />
-            <span>© {new Date().getFullYear()} Referral Shopping</span>
+            <span>© {new Date().getFullYear()} {BRAND}</span>
           </div>
         </Container>
       </footer>

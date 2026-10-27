@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { Alert, Button, Card, Form, Badge, Spinner } from 'react-bootstrap'
 import { ListFilters, ListPagination, paginate } from '../components/ListControls'
 import { Link } from 'react-router-dom'
+import { TG, IG, IG_HANDLE, BRAND } from '../lib/brand'
 import { useAuth } from '../contexts/AuthContext'
 import { supabase, supabaseConfigured } from '../lib/supabase'
 
@@ -66,7 +67,7 @@ export default function Support() {
     return (
       <Alert variant="info">
         Please <Link to="/login">login</Link> to contact customer service, or join{' '}
-        <a href="https://t.me/referralshopping" target="_blank" rel="noreferrer">Telegram</a>.
+        <a href={TG} target="_blank" rel="noreferrer">Telegram</a>.
       </Alert>
     )
   }
@@ -76,7 +77,7 @@ export default function Support() {
       <h1 className="fw-bold mb-2">Customer service</h1>
       <p className="text-muted mb-4">
         Open a ticket for payment issues, refund reviews, or account help. For news, use{' '}
-        <a href="https://t.me/referralshopping" target="_blank" rel="noreferrer">t.me/referralshopping</a>.
+        <a href={TG} target="_blank" rel="noreferrer">Telegram</a>.
       </p>
       {err && <Alert variant="danger">{err}</Alert>}
       {msg && <Alert variant="success">{msg}</Alert>}

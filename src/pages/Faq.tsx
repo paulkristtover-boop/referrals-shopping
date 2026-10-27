@@ -1,5 +1,6 @@
 import { Accordion, Card } from 'react-bootstrap'
 import { Link } from 'react-router-dom'
+import { BRAND, TG, IG, IG_HANDLE } from '../lib/brand'
 
 export default function Faq() {
   const items = [
@@ -33,14 +34,14 @@ export default function Faq() {
     },
     {
       q: 'How do I contact customer service?',
-      a: 'Use Support on the website to open a ticket, or join our Telegram channel for announcements and updates.',
+      a: 'Use Support on the website to open a ticket, or follow us on Telegram and Instagram (@referralshopping) for announcements.',
     },
   ]
 
   return (
     <div className="page-enter">
       <h1 className="fw-bold mb-2">FAQ</h1>
-      <p className="text-muted mb-4">Frequently asked questions about Referral Shopping.</p>
+      <p className="text-muted mb-4">Frequently asked questions about {BRAND}.</p>
       <Card className="rs-card rs-card-static">
         <Card.Body>
           <Accordion alwaysOpen>
@@ -55,7 +56,9 @@ export default function Faq() {
       </Card>
       <p className="mt-3 small">
         Still need help? <Link to="/support">Open a support ticket</Link> or{' '}
-        <a href="https://t.me/referralshopping" target="_blank" rel="noreferrer">message the Telegram channel</a>.
+        <a href={TG} target="_blank" rel="noreferrer">Telegram</a>
+        {' · '}
+        <a href={IG} target="_blank" rel="noreferrer">{IG_HANDLE}</a>.
       </p>
     </div>
   )

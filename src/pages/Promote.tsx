@@ -326,10 +326,10 @@ export default function Promote() {
 
   return (
     <>
-      <h1 className="mb-2 fw-bold">Promote your link</h1>
+      <h1 className="mb-2 fw-bold">Shop referrals</h1>
       <p className="text-muted mb-3">
         <strong>Regular</strong> = signup via your link (no deposit). <strong>Gambling / investment</strong> = signup + deposit.
-        Free Starter is 50 regular referrals once. Paid orders use a unique crypto amount for 15 minutes.
+        On Referrals Shopping: Free Starter is 50 regular referrals once. Paid packages use a unique crypto amount for 15 minutes.
       </p>
       {!freeUsed && packages.some((x) => Number(x.price_usd) === 0) && (
         <Alert variant="info" className="py-2">

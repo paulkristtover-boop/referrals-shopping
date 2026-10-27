@@ -1,14 +1,13 @@
 import { Link } from 'react-router-dom'
 import { Row, Col, Card } from 'react-bootstrap'
-
-const TG = 'https://t.me/referralshopping'
+import { BRAND, TG, IG, IG_HANDLE } from '../lib/brand'
 
 export default function Guide() {
   return (
     <div className="page-enter">
-      <h1 className="fw-bold mb-2">How Referral Shopping works</h1>
+      <h1 className="fw-bold mb-2">How {BRAND} works</h1>
       <p className="text-muted mb-4">
-        Welcome! If you want to buy referrals, here is the simple version — the same idea we used on Telegram, now on the website.
+        Welcome to {BRAND}. Buy referral packages for your links — promoted until your order is filled. Also on Telegram & Instagram.
       </p>
 
       <Card className="rs-card rs-card-static mb-4">
@@ -67,7 +66,10 @@ export default function Guide() {
         <Link to="/register" className="btn btn-primary">Create account</Link>
         <Link to="/faq" className="btn btn-outline-secondary">FAQ</Link>
         <a href={TG} className="btn btn-outline-info" target="_blank" rel="noreferrer">
-          <i className="bi bi-telegram me-1" />Telegram channel
+          <i className="bi bi-telegram me-1" />Telegram
+        </a>
+        <a href={IG} className="btn btn-outline-danger" target="_blank" rel="noreferrer">
+          <i className="bi bi-instagram me-1" />{IG_HANDLE}
         </a>
       </div>
     </div>
