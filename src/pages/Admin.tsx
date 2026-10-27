@@ -3,6 +3,7 @@ import { Alert, Badge, Button, Form, Nav, Spinner, Table, Row, Col, Modal } from
 import { supabase, supabaseConfigured } from '../lib/supabase'
 import type { Package } from '../lib/types'
 import { ListFilters, ListPagination, paginate } from '../components/ListControls'
+import { BRAND, TG, IG, IG_HANDLE } from '../lib/brand'
 
 type TabKey = 'overview' | 'campaigns' | 'submissions' | 'withdrawals' | 'packages' | 'users'
 
@@ -201,8 +202,8 @@ export default function Admin() {
     <div className="page-enter">
       <div className="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
         <div>
-          <h1 className="fw-bold mb-0" style={{color:"#fff"}}>Admin CMS</h1>
-          <p className="text-muted small mb-0">Manage campaigns, proofs, payouts & packages</p>
+          <h1 className="fw-bold mb-0 text-white">{BRAND} Admin</h1>
+          <p className="text-white-50 small mb-0">Adverts, proofs, payouts, packages & users</p>
         </div>
         <Button size="sm" variant="outline-secondary" onClick={() => void load()}>
           <i className="bi bi-arrow-clockwise me-1" />Refresh
@@ -262,13 +263,21 @@ export default function Admin() {
             <div>
               <h5 className="fw-bold mb-3">Quick actions</h5>
               <p className="text-muted">
-                Use the tabs above to approve campaigns, review screenshots, process withdrawals, edit packages, and manage user roles.
+                Run {BRAND}: approve referral adverts, update delivery counts, review earn proofs, process withdrawals, and edit packages (regular = signup only, gambling = deposit).
               </p>
-              <ul>
-                <li>Campaigns waiting: <strong>{pendingC}</strong></li>
+              <ul className="mb-3">
+                <li>Adverts waiting payment review: <strong>{pendingC}</strong></li>
                 <li>Proofs waiting: <strong>{pendingS}</strong></li>
                 <li>Payouts waiting: <strong>{pendingW}</strong></li>
               </ul>
+              <div className="d-flex flex-wrap gap-2">
+                <a href={TG} target="_blank" rel="noreferrer" className="btn btn-sm btn-outline-primary">
+                  <i className="bi bi-telegram me-1" />Telegram
+                </a>
+                <a href={IG} target="_blank" rel="noreferrer" className="btn btn-sm btn-outline-danger">
+                  <i className="bi bi-instagram me-1" />{IG_HANDLE}
+                </a>
+              </div>
             </div>
           )}
 
@@ -442,7 +451,7 @@ export default function Admin() {
           {tab === 'packages' && (
             <>
               <div className="d-flex justify-content-between mb-3">
-                <h5 className="mb-0 fw-bold">Packages</h5>
+                <h5 className="mb-0 fw-bold">{BRAND} packages</h5>
                 <Button size="sm" onClick={() => setShowPkg(true)}>+ Add package</Button>
               </div>
               <ListFilters

@@ -817,3 +817,11 @@ a {
 .letter-space {
   letter-spacing: 0.12em;
 }
+
+/* Dashboard */
+.dash-hero {
+  padding: 1.15rem 1.25rem;
+  border-radius: var(--rs-radius);
+  background: linear-gradient(135deg, var(--rs-primary-soft), transparent 65%);
+  border: 1px solid var(--rs-border);
+}
