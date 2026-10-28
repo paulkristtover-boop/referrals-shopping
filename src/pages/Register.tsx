@@ -59,12 +59,18 @@ export default function Register() {
 
     let referredBy: string | null = null
     if (invite.trim()) {
-      const { data: inv } = await supabase
-        .from('profiles')
-        .select('id')
-        .eq('invite_code', invite.trim().toUpperCase())
-        .maybeSingle()
-      if (inv) referredBy = inv.id
+      const code = invite.trim()
+      const { data: rid } = await supabase.rpc('resolve_invite_code', { p_code: code })
+      if (rid) referredBy = rid as string
+      else {
+        // fallback before SQL migration
+        const { data: inv } = await supabase
+          .from('profiles')
+          .select('id')
+          .ilike('invite_code', code)
+          .maybeSingle()
+        if (inv) referredBy = inv.id
+      }
     }
 
     const { data, error: err } = await supabase.auth.signUp({

@@ -180,10 +180,59 @@ export default function Admin() {
     void load()
   }
 
-    const setRole = async (id: string, role: string) => {
-    await supabase.from('profiles').update({ role }).eq('id', id)
-    flash(`Role set to ${role}`)
+  const [adminToken, setAdminToken] = useState('')
+  const [lastAdminToken, setLastAdminToken] = useState<string | null>(null)
+  const [promoteUserId, setPromoteUserId] = useState<string | null>(null)
+
+  const createAdminInvite = async () => {
+    const { data, error } = await supabase.rpc('create_admin_invite', { p_note: 'admin-promote' })
+    if (error) {
+      setErr(error.message + ' — run supabase/invites_admin.sql')
+      return
+    }
+    const tok = String(data)
+    setLastAdminToken(tok)
+    setAdminToken(tok)
+    flash('Unique admin UUID created — use it once to promote a user')
+  }
+
+  const promoteWithToken = async (userId: string) => {
+    const tok = adminToken.trim()
+    if (!tok) {
+      setErr('Paste a unique admin invite UUID first (generate one below)')
+      return
+    }
+    const { error } = await supabase.rpc('promote_admin_with_token', {
+      p_user_id: userId,
+      p_token: tok,
+    })
+    if (error) {
+      setErr(error.message)
+      return
+    }
+    flash('User promoted to admin (token consumed)')
+    setAdminToken('')
+    setPromoteUserId(null)
+    setLastAdminToken(null)
     void load()
+  }
+
+  const demoteAdmin = async (userId: string) => {
+    const { error } = await supabase.rpc('demote_admin', { p_user_id: userId })
+    if (error) {
+      // fallback
+      await supabase.from('profiles').update({ role: 'user' }).eq('id', userId)
+    }
+    flash('Admin demoted to user')
+    void load()
+  }
+
+  const setRole = async (id: string, role: string) => {
+    if (role === 'admin') {
+      setPromoteUserId(id)
+      return
+    }
+    await demoteAdmin(id)
   }
 
   const pendingC = campaigns.filter((c) => c.status === 'pending_approval').length
@@ -529,6 +578,47 @@ export default function Admin() {
 
           {tab === 'users' && (
             <>
+            <Alert variant="light" className="border small mb-3">
+              <strong>Admin invites are unique UUIDs (one-time).</strong> Generate a token, then promote a user with it.
+              Direct “make admin” without a token is blocked after you run <code>invites_admin.sql</code>.
+            </Alert>
+            <div className="d-flex flex-wrap gap-2 align-items-end mb-3">
+              <Button size="sm" variant="dark" onClick={() => void createAdminInvite()}>
+                Generate admin UUID
+              </Button>
+              <Form.Group className="mb-0" style={{ minWidth: 280, flex: 1 }}>
+                <Form.Label className="small mb-0">Admin invite UUID</Form.Label>
+                <Form.Control
+                  size="sm"
+                  value={adminToken}
+                  onChange={(e) => setAdminToken(e.target.value.trim())}
+                  placeholder="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
+                  className="font-monospace"
+                />
+              </Form.Group>
+              {lastAdminToken && (
+                <Button
+                  size="sm"
+                  variant="outline-secondary"
+                  onClick={() => void navigator.clipboard.writeText(lastAdminToken)}
+                >
+                  Copy last UUID
+                </Button>
+              )}
+            </div>
+            {promoteUserId && (
+              <Alert variant="info" className="d-flex flex-wrap justify-content-between align-items-center gap-2">
+                <span className="small">Promote user <code>{promoteUserId.slice(0, 8)}…</code> with the UUID above?</span>
+                <span>
+                  <Button size="sm" variant="dark" className="me-1" onClick={() => void promoteWithToken(promoteUserId)}>
+                    Confirm promote
+                  </Button>
+                  <Button size="sm" variant="outline-secondary" onClick={() => setPromoteUserId(null)}>
+                    Cancel
+                  </Button>
+                </span>
+              </Alert>
+            )}
             <ListFilters
               search={search}
               onSearch={setSearch}
@@ -545,20 +635,25 @@ export default function Admin() {
             />
             <Table size="sm" responsive hover>
               <thead>
-                <tr><th>Email</th><th>Name</th><th>Balance</th><th>Role</th><th></th></tr>
+                <tr><th>Email</th><th>Name</th><th>User UUID</th><th>Balance</th><th>Role</th><th></th></tr>
               </thead>
               <tbody>
                 {userPage.slice.map((u) => (
                   <tr key={String(u.id)}>
                     <td className="small">{String(u.email || '')}</td>
                     <td>{String(u.full_name || '—')}</td>
+                    <td className="small font-monospace text-muted">{String(u.id).slice(0, 8)}…</td>
                     <td>${Number(u.balance || 0).toFixed(2)}</td>
                     <td><Badge bg={u.role === 'admin' ? 'dark' : 'secondary'}>{String(u.role)}</Badge></td>
                     <td>
                       {u.role !== 'admin' ? (
-                        <Button size="sm" variant="outline-dark" onClick={() => void setRole(String(u.id), 'admin')}>Make admin</Button>
+                        <Button size="sm" variant="outline-dark" onClick={() => void setRole(String(u.id), 'admin')}>
+                          Promote (UUID)
+                        </Button>
                       ) : (
-                        <Button size="sm" variant="outline-secondary" onClick={() => void setRole(String(u.id), 'user')}>Make user</Button>
+                        <Button size="sm" variant="outline-secondary" onClick={() => void setRole(String(u.id), 'user')}>
+                          Demote
+                        </Button>
                       )}
                     </td>
                   </tr>
