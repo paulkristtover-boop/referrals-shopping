@@ -52,11 +52,18 @@ export default function Admin() {
     if (!q) return true
     return match(p.name) || match(p.category)
   })
+  // Users tab lists customers only — admins are never shown here
   const filteredUsers = users.filter((u) => {
-    if (status === 'admin' && u.role !== 'admin') return false
-    if (status === 'user' && u.role === 'admin') return false
+    if (u.role === 'admin') return false
     if (!q) return true
-    return match(u.email) || match(u.full_name)
+    const id = String(u.id || '')
+    return (
+      match(u.email) ||
+      match(u.full_name) ||
+      match(u.invite_code) ||
+      id.toLowerCase().includes(q) ||
+      id.replace(/-/g, '').toLowerCase().includes(q.replace(/-/g, ''))
+    )
   })
 
   const campPage = paginate(filteredCampaigns, page, pageSize)
@@ -88,7 +95,7 @@ export default function Admin() {
     setSubs(s.data || [])
     setWithdrawals(w.data || [])
     setPackages((p.data as Package[]) || [])
-    setUsers(u.data || [])
+    setUsers((u.data || []).filter((row: Record<string, unknown>) => row.role !== 'admin'))
     setLoading(false)
   }
 
@@ -183,6 +190,17 @@ export default function Admin() {
   const [adminToken, setAdminToken] = useState('')
   const [lastAdminToken, setLastAdminToken] = useState<string | null>(null)
   const [promoteUserId, setPromoteUserId] = useState<string | null>(null)
+  const [selectedUserId, setSelectedUserId] = useState<string | null>(null)
+  const [userDetail, setUserDetail] = useState<Record<string, unknown> | null>(null)
+  const [userLogs, setUserLogs] = useState<{
+    campaigns: Record<string, unknown>[]
+    submissions: Record<string, unknown>[]
+    payments: Record<string, unknown>[]
+    withdrawals: Record<string, unknown>[]
+    tickets: Record<string, unknown>[]
+  }>({ campaigns: [], submissions: [], payments: [], withdrawals: [], tickets: [] })
+  const [userLogLoading, setUserLogLoading] = useState(false)
+  const [uuidSearch, setUuidSearch] = useState('')
 
   const createAdminInvite = async () => {
     const { data, error } = await supabase.rpc('create_admin_invite', { p_note: 'admin-promote' })
@@ -235,7 +253,58 @@ export default function Admin() {
     await demoteAdmin(id)
   }
 
-  const pendingC = campaigns.filter((c) => c.status === 'pending_approval').length
+  const openUserAccount = async (userId: string) => {
+    setSelectedUserId(userId)
+    setUserLogLoading(true)
+    setUserDetail(null)
+    try {
+      const { data: prof } = await supabase.from('profiles').select('*').eq('id', userId).maybeSingle()
+      setUserDetail((prof as Record<string, unknown>) || { id: userId })
+
+      const [c, s, pay, w, tick] = await Promise.all([
+        supabase.from('campaigns').select('*, packages(name, category, referrals)').eq('user_id', userId).order('created_at', { ascending: false }).limit(30),
+        supabase.from('task_submissions').select('*').eq('user_id', userId).order('created_at', { ascending: false }).limit(30),
+        supabase.from('payment_orders').select('*').eq('user_id', userId).order('created_at', { ascending: false }).limit(30),
+        supabase.from('withdrawals').select('*').eq('user_id', userId).order('created_at', { ascending: false }).limit(30),
+        supabase.from('support_tickets').select('*').eq('user_id', userId).order('created_at', { ascending: false }).limit(20),
+      ])
+      setUserLogs({
+        campaigns: (c.data as Record<string, unknown>[]) || [],
+        submissions: (s.data as Record<string, unknown>[]) || [],
+        payments: (pay.data as Record<string, unknown>[]) || [],
+        withdrawals: (w.data as Record<string, unknown>[]) || [],
+        tickets: (tick.data as Record<string, unknown>[]) || [],
+      })
+    } finally {
+      setUserLogLoading(false)
+    }
+  }
+
+  const findByUuid = async () => {
+    const raw = uuidSearch.trim().toLowerCase()
+    if (!raw) return
+    const found = users.find((u) => {
+      const id = String(u.id || '').toLowerCase()
+      return id === raw || id.replace(/-/g, '') === raw.replace(/-/g, '') || id.includes(raw)
+    })
+    if (found) {
+      void openUserAccount(String(found.id))
+      return
+    }
+    // Direct lookup (e.g. exact UUID) without requiring row in the non-admin list
+    const { data, error } = await supabase.from('profiles').select('id, role').eq('id', uuidSearch.trim()).maybeSingle()
+    if (error || !data) {
+      setErr('No user with that UUID.')
+      return
+    }
+    if (data.role === 'admin') {
+      setErr('That UUID belongs to an admin account — admins are not listed as users.')
+      return
+    }
+    void openUserAccount(String(data.id))
+  }
+
+    const pendingC = campaigns.filter((c) => c.status === 'pending_approval').length
   const pendingS = subs.filter((s) => s.status === 'pending').length
   const pendingW = withdrawals.filter((w) => w.status === 'pending').length
 
@@ -583,6 +652,19 @@ export default function Admin() {
               Direct “make admin” without a token is blocked after you run <code>invites_admin.sql</code>.
             </Alert>
             <div className="d-flex flex-wrap gap-2 align-items-end mb-3">
+              <Form.Group className="mb-0" style={{ minWidth: 260, flex: 1 }}>
+                <Form.Label className="small mb-0">Find account by user UUID</Form.Label>
+                <Form.Control
+                  size="sm"
+                  value={uuidSearch}
+                  onChange={(e) => setUuidSearch(e.target.value.trim())}
+                  placeholder="Full user account UUID"
+                  className="font-monospace"
+                />
+              </Form.Group>
+              <Button size="sm" variant="primary" onClick={() => void findByUuid()}>
+                Open account
+              </Button>
               <Button size="sm" variant="dark" onClick={() => void createAdminInvite()}>
                 Generate admin UUID
               </Button>
@@ -622,17 +704,16 @@ export default function Admin() {
             <ListFilters
               search={search}
               onSearch={setSearch}
-              placeholder="Email, name…"
+              placeholder="Email, name, or full UUID…"
               status={status}
               onStatus={setStatus}
               statusOptions={[
-                { value: 'all', label: 'All roles' },
-                { value: 'user', label: 'Users' },
-                { value: 'admin', label: 'Admins' },
+                { value: 'all', label: 'All users' },
               ]}
               pageSize={pageSize}
               onPageSize={setPageSize}
             />
+            <p className="small text-muted mb-2">Customer accounts only — admin accounts are hidden from this list.</p>
             <Table size="sm" responsive hover>
               <thead>
                 <tr><th>Email</th><th>Name</th><th>User UUID</th><th>Balance</th><th>Role</th><th></th></tr>
@@ -642,13 +723,26 @@ export default function Admin() {
                   <tr key={String(u.id)}>
                     <td className="small">{String(u.email || '')}</td>
                     <td>{String(u.full_name || '—')}</td>
-                    <td className="small font-monospace text-muted">{String(u.id).slice(0, 8)}…</td>
+                    <td className="small">
+                      <code className="user-select-all" style={{ fontSize: '0.7rem' }}>{String(u.id)}</code>
+                      <Button
+                        size="sm"
+                        variant="link"
+                        className="p-0 ms-1"
+                        onClick={() => void navigator.clipboard.writeText(String(u.id))}
+                      >
+                        Copy
+                      </Button>
+                    </td>
                     <td>${Number(u.balance || 0).toFixed(2)}</td>
                     <td><Badge bg={u.role === 'admin' ? 'dark' : 'secondary'}>{String(u.role)}</Badge></td>
-                    <td>
+                    <td className="text-nowrap">
+                      <Button size="sm" variant="outline-primary" className="me-1" onClick={() => void openUserAccount(String(u.id))}>
+                        View
+                      </Button>
                       {u.role !== 'admin' ? (
                         <Button size="sm" variant="outline-dark" onClick={() => void setRole(String(u.id), 'admin')}>
-                          Promote (UUID)
+                          Promote
                         </Button>
                       ) : (
                         <Button size="sm" variant="outline-secondary" onClick={() => void setRole(String(u.id), 'user')}>
@@ -661,6 +755,123 @@ export default function Admin() {
               </tbody>
             </Table>
             <ListPagination page={userPage.page} totalPages={userPage.totalPages} total={userPage.total} onPage={setPage} />
+
+            <Modal show={!!selectedUserId} onHide={() => setSelectedUserId(null)} size="lg" scrollable>
+              <Modal.Header closeButton>
+                <Modal.Title>User account</Modal.Title>
+              </Modal.Header>
+              <Modal.Body>
+                {userLogLoading && <div className="text-center py-4"><Spinner /></div>}
+                {!userLogLoading && userDetail && (
+                  <>
+                    <div className="mb-3">
+                      <div className="text-muted small">Account UUID</div>
+                      <code className="user-select-all">{String(userDetail.id)}</code>
+                      <Button size="sm" variant="link" onClick={() => void navigator.clipboard.writeText(String(userDetail.id))}>Copy UUID</Button>
+                    </div>
+                    <Row className="g-2 mb-3 small">
+                      <Col md={6}><strong>Email:</strong> {String(userDetail.email || '—')}</Col>
+                      <Col md={6}><strong>Name:</strong> {String(userDetail.full_name || '—')}</Col>
+                      <Col md={6}><strong>Role:</strong> {String(userDetail.role || 'user')}</Col>
+                      <Col md={6}><strong>Balance:</strong> ${Number(userDetail.balance || 0).toFixed(2)}</Col>
+                      <Col md={6}><strong>Invite code:</strong> <code>{String(userDetail.invite_code || '—')}</code></Col>
+                      <Col md={6}><strong>Free starter:</strong> {userDetail.free_starter_used_at ? 'Used' : 'Available'}</Col>
+                      <Col md={6}><strong>Joined:</strong> {userDetail.created_at ? new Date(String(userDetail.created_at)).toLocaleString() : '—'}</Col>
+                      <Col md={6}><strong>Last seen:</strong> {userDetail.last_seen_at ? new Date(String(userDetail.last_seen_at)).toLocaleString() : '—'}</Col>
+                    </Row>
+
+                    <h6 className="fw-bold">Adverts / campaigns ({userLogs.campaigns.length})</h6>
+                    {userLogs.campaigns.length === 0 ? <p className="small text-muted">None</p> : (
+                      <Table size="sm" responsive className="mb-3">
+                        <thead><tr><th>Title</th><th>Status</th><th>Delivered</th><th>When</th></tr></thead>
+                        <tbody>
+                          {userLogs.campaigns.map((c) => (
+                            <tr key={String(c.id)}>
+                              <td className="small">{String(c.title)}
+                                <div className="text-muted">{String((c.packages as { name?: string })?.name || '')}</div>
+                              </td>
+                              <td className="small">{String(c.status)}</td>
+                              <td className="small">{Number(c.referrals_delivered || 0)}</td>
+                              <td className="small">{c.created_at ? new Date(String(c.created_at)).toLocaleString() : ''}</td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </Table>
+                    )}
+
+                    <h6 className="fw-bold">Payment orders ({userLogs.payments.length})</h6>
+                    {userLogs.payments.length === 0 ? <p className="small text-muted">None</p> : (
+                      <Table size="sm" responsive className="mb-3">
+                        <thead><tr><th>Amount</th><th>Chain</th><th>Status</th><th>When</th></tr></thead>
+                        <tbody>
+                          {userLogs.payments.map((c) => (
+                            <tr key={String(c.id)}>
+                              <td className="small">${Number(c.amount_usd || 0).toFixed(2)}</td>
+                              <td className="small">{String(c.crypto_chain || '').toUpperCase()}</td>
+                              <td className="small">{String(c.status)}</td>
+                              <td className="small">{c.created_at ? new Date(String(c.created_at)).toLocaleString() : ''}</td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </Table>
+                    )}
+
+                    <h6 className="fw-bold">Earn submissions ({userLogs.submissions.length})</h6>
+                    {userLogs.submissions.length === 0 ? <p className="small text-muted">None</p> : (
+                      <Table size="sm" responsive className="mb-3">
+                        <thead><tr><th>Status</th><th>Proof</th><th>When</th></tr></thead>
+                        <tbody>
+                          {userLogs.submissions.map((c) => (
+                            <tr key={String(c.id)}>
+                              <td className="small">{String(c.status)}</td>
+                              <td className="small">{c.screenshot_url ? <a href={String(c.screenshot_url)} target="_blank" rel="noreferrer">view</a> : '—'}</td>
+                              <td className="small">{c.created_at ? new Date(String(c.created_at)).toLocaleString() : ''}</td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </Table>
+                    )}
+
+                    <h6 className="fw-bold">Withdrawals ({userLogs.withdrawals.length})</h6>
+                    {userLogs.withdrawals.length === 0 ? <p className="small text-muted">None</p> : (
+                      <Table size="sm" responsive className="mb-3">
+                        <thead><tr><th>Amount</th><th>Status</th><th>Wallet</th><th>When</th></tr></thead>
+                        <tbody>
+                          {userLogs.withdrawals.map((c) => (
+                            <tr key={String(c.id)}>
+                              <td className="small">${Number(c.amount || 0).toFixed(2)}</td>
+                              <td className="small">{String(c.status)}</td>
+                              <td className="small text-truncate" style={{ maxWidth: 120 }}>{String(c.wallet_address || '')}</td>
+                              <td className="small">{c.created_at ? new Date(String(c.created_at)).toLocaleString() : ''}</td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </Table>
+                    )}
+
+                    <h6 className="fw-bold">Support tickets ({userLogs.tickets.length})</h6>
+                    {userLogs.tickets.length === 0 ? <p className="small text-muted mb-0">None</p> : (
+                      <Table size="sm" responsive className="mb-0">
+                        <thead><tr><th>Subject</th><th>Status</th><th>When</th></tr></thead>
+                        <tbody>
+                          {userLogs.tickets.map((c) => (
+                            <tr key={String(c.id)}>
+                              <td className="small">{String(c.subject)}</td>
+                              <td className="small">{String(c.status)}</td>
+                              <td className="small">{c.created_at ? new Date(String(c.created_at)).toLocaleString() : ''}</td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </Table>
+                    )}
+                  </>
+                )}
+              </Modal.Body>
+              <Modal.Footer>
+                <Button variant="secondary" onClick={() => setSelectedUserId(null)}>Close</Button>
+              </Modal.Footer>
+            </Modal>
+
             </>
           )}
         </div>
