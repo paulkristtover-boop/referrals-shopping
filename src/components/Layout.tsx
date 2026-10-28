@@ -7,6 +7,7 @@ import { useTheme } from '../contexts/ThemeContext'
 import Logo from './Logo'
 import NotificationBell from './NotificationBell'
 import BottomTabBar from './BottomTabBar'
+import OfflineNotice from './OfflineNotice'
 
 import { TG, IG, IG_HANDLE, BRAND } from '../lib/brand'
 
@@ -39,6 +40,7 @@ export default function Layout() {
   if (isAdminArea && isAdmin) {
     return (
       <>
+        <OfflineNotice />
         <Navbar expand="lg" className={`rs-navbar top-nav admin-nav ${scrolled ? 'scrolled' : ''}`}>
           <Container fluid className="px-3 px-lg-4">
             <Navbar.Brand as={Link} to="/admin" className="d-flex align-items-center gap-2 text-white">
@@ -88,6 +90,7 @@ export default function Layout() {
   // —— User / public top bar ——
   return (
     <>
+      <OfflineNotice />
       <Navbar expand="lg" className={`rs-navbar top-nav ${scrolled ? 'scrolled' : ''}`}>
         <Container>
           <Navbar.Brand as={Link} to="/" className="d-flex align-items-center">
