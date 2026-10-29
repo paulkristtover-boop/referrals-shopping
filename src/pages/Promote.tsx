@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Alert, Button, Card, Form, Spinner, Badge } from 'react-bootstrap'
 import { ListFilters, ListPagination, paginate } from '../components/ListControls'
+import OrderTimeline from '../components/OrderTimeline'
 import { useAuth } from '../contexts/AuthContext'
 import { deposits, supabase, supabaseConfigured } from '../lib/supabase'
 import type { Campaign, Package } from '../lib/types'
@@ -62,6 +63,7 @@ function CopyBtn({ value, label = 'Copy' }: { value: string; label?: string }) {
 
 function PaymentPanel({
   order,
+  campaignId,
   onUpdated,
 }: {
   order: PayOrder
@@ -72,6 +74,8 @@ function PaymentPanel({
   const [checking, setChecking] = useState(false)
   const [note, setNote] = useState<string | null>(null)
   const [auto, setAuto] = useState(true)
+  const [txHash, setTxHash] = useState('')
+  const [txBusy, setTxBusy] = useState(false)
 
   const chain = order.crypto_chain.toUpperCase()
   const addr = order.deposit_address || deposits[order.crypto_chain as 'trx' | 'sol' | 'ton'] || ''
@@ -185,6 +189,43 @@ function PaymentPanel({
         </div>
       )}
       {note && <Alert variant="info" className="mt-3 mb-0 py-2 small">{note}</Alert>}
+
+      <div className="mt-3 pt-3 border-top">
+        <div className="small fw-semibold mb-1">Paid already? Submit TX hash</div>
+        <div className="d-flex flex-wrap gap-2">
+          <Form.Control
+            size="sm"
+            className="font-monospace"
+            style={{ maxWidth: 320 }}
+            placeholder="Transaction hash / id"
+            value={txHash}
+            onChange={(e) => setTxHash(e.target.value)}
+          />
+          <Button
+            size="sm"
+            variant="outline-primary"
+            disabled={txBusy || txHash.trim().length < 8}
+            onClick={async () => {
+              setTxBusy(true)
+              setNote(null)
+              const { error } = await supabase.rpc('submit_campaign_tx', {
+                p_campaign_id: campaignId,
+                p_tx_hash: txHash.trim(),
+              })
+              setTxBusy(false)
+              if (error) {
+                setNote(error.message + ' — or wait for auto-check')
+                return
+              }
+              setNote('TX submitted — admin will confirm payment.')
+              setAuto(false)
+              onUpdated()
+            }}
+          >
+            {txBusy ? 'Sending…' : 'Submit TX'}
+          </Button>
+        </div>
+      </div>
     </div>
   )
 }
@@ -410,7 +451,8 @@ export default function Promote() {
             { value: 'all', label: 'All statuses' },
             { value: 'pending_payment', label: 'Awaiting payment' },
             { value: 'pending_approval', label: 'Checking / submitted' },
-            { value: 'approved', label: 'Approved' },
+            { value: 'approved', label: 'Promoting' },
+            { value: 'completed', label: 'Completed' },
             { value: 'rejected', label: 'Rejected' },
             { value: 'expired', label: 'Expired' },
           ]}
@@ -443,15 +485,25 @@ export default function Promote() {
                     Open link
                   </a>
                 </div>
-                <Badge bg="secondary" className="badge-status">
-                  {c.status.replace(/_/g, ' ')}
-                </Badge>
+                <OrderTimeline
+                  status={c.status}
+                  delivered={Number((c as { referrals_delivered?: number }).referrals_delivered || 0)}
+                  goal={undefined}
+                />
               </div>
               {order && (c.status === 'pending_payment' || order.status === 'awaiting_payment') && (
-                <PaymentPanel order={order} campaignId={c.id} onUpdated={() => void load()} />
+                <div className="mt-3">
+                  <PaymentPanel order={order} campaignId={c.id} onUpdated={() => void load()} />
+                </div>
+              )}
+              {c.status === 'pending_approval' && (
+                <p className="small text-info mt-2 mb-0">Payment submitted — waiting for admin confirmation.</p>
               )}
               {c.status === 'approved' && (
-                <p className="small text-success mt-2 mb-0">Payment confirmed — promotion active.</p>
+                <p className="small text-success mt-2 mb-0">Promoting your link — track progress on Dashboard.</p>
+              )}
+              {c.status === 'completed' && (
+                <p className="small text-success mt-2 mb-0">Order complete — referral target reached.</p>
               )}
             </Card.Body>
           </Card>

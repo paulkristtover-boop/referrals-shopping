@@ -5,6 +5,7 @@ import { useAuth } from '../contexts/AuthContext'
 import { supabase, supabaseConfigured } from '../lib/supabase'
 import type { Campaign, Package, Submission } from '../lib/types'
 import FirstSessionGuide from '../components/FirstSessionGuide'
+import OrderTimeline from '../components/OrderTimeline'
 import { ListFilters, ListPagination, paginate } from '../components/ListControls'
 import { BRAND } from '../lib/brand'
 
@@ -267,7 +268,8 @@ export default function Dashboard() {
             { value: 'all', label: 'All statuses' },
             { value: 'pending_payment', label: 'Awaiting payment' },
             { value: 'pending_approval', label: 'Payment submitted' },
-            { value: 'approved', label: 'Live / approved' },
+            { value: 'approved', label: 'Promoting' },
+            { value: 'completed', label: 'Completed' },
             { value: 'rejected', label: 'Rejected' },
             { value: 'expired', label: 'Expired' },
           ]}
@@ -338,7 +340,13 @@ export default function Dashboard() {
                           </div>
                           <ProgressBar now={pct} style={{ height: 7 }} variant={pct >= 100 ? 'success' : 'primary'} />
                         </td>
-                        <td>{statusBadge(c.status)}</td>
+                        <td>
+                          <OrderTimeline
+                            status={c.status}
+                            delivered={Number(c.referrals_delivered || 0)}
+                            goal={c.packages?.referrals}
+                          />
+                        </td>
                         <td>
                           {(c.status === 'pending_payment' || c.status === 'pending_approval') && (
                             <Link to="/promote" className="btn btn-sm btn-outline-primary">
@@ -365,7 +373,11 @@ export default function Dashboard() {
                   <Card.Body className="py-3">
                     <div className="d-flex justify-content-between gap-2 mb-1">
                       <strong>{c.title}</strong>
-                      {statusBadge(c.status)}
+                      <OrderTimeline
+                      status={c.status}
+                      delivered={Number(c.referrals_delivered || 0)}
+                      goal={c.packages?.referrals}
+                    />
                     </div>
                     <div className="d-flex flex-wrap gap-2 align-items-center mb-2">
                       <span className="fw-semibold small">{c.packages?.name || 'Package'}</span>

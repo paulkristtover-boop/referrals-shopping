@@ -189,8 +189,13 @@ export default function Admin() {
 
   const setDelivered = async (id: string, value: string) => {
     const n = Math.max(0, parseInt(value, 10) || 0)
-    await supabase.from('campaigns').update({ referrals_delivered: n }).eq('id', id)
-    setMsg(`Advert progress set to ${n}`)
+    const { error } = await supabase.rpc('admin_set_delivery', { p_campaign_id: id, p_delivered: n })
+    if (error) {
+      await supabase.from('campaigns').update({ referrals_delivered: n }).eq('id', id)
+      setMsg(`Progress set to ${n} (run campaign_lifecycle.sql for auto-complete)`)
+    } else {
+      setMsg(`Delivery updated to ${n} — auto-completes when goal reached`)
+    }
     void load()
   }
 

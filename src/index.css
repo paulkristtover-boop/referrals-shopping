@@ -910,3 +910,21 @@ a {
 body.offline-lock {
   overflow: hidden;
 }
+
+/* Order timeline */
+.order-step {
+  font-size: 0.72rem;
+  font-weight: 700;
+  padding: 0.2rem 0.5rem;
+  border-radius: 999px;
+  background: var(--bs-secondary-bg);
+  color: var(--bs-secondary-color);
+}
+.order-step.active {
+  background: var(--rs-primary-soft);
+  color: var(--rs-primary);
+}
+.order-step.done {
+  background: var(--rs-success-soft);
+  color: var(--rs-success);
+}
