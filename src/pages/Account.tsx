@@ -102,6 +102,24 @@ export default function Account() {
             </div>
           </div>
 
+          <Form.Group className="mb-3">
+            <Form.Label>Account ID</Form.Label>
+            <div className="d-flex flex-wrap gap-2 align-items-center">
+              <code className="user-select-all small" style={{ wordBreak: 'break-all' }}>{user.id}</code>
+              <Button
+                type="button"
+                size="sm"
+                variant="outline-secondary"
+                onClick={() => void navigator.clipboard.writeText(user.id).then(() => setMsg('Account ID copied'))}
+              >
+                Copy
+              </Button>
+            </div>
+            <Form.Text className="text-muted">
+              Use this ID for support. It is unique and never changes.
+            </Form.Text>
+          </Form.Group>
+
           <Form onSubmit={saveProfile}>
             <Form.Group className="mb-3">
               <Form.Label>Full name</Form.Label>

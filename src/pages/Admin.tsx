@@ -294,11 +294,11 @@ export default function Admin() {
     // Direct lookup (e.g. exact UUID) without requiring row in the non-admin list
     const { data, error } = await supabase.from('profiles').select('id, role').eq('id', uuidSearch.trim()).maybeSingle()
     if (error || !data) {
-      setErr('No user with that UUID.')
+      setErr('No user with that Account ID.')
       return
     }
     if (data.role === 'admin') {
-      setErr('That UUID belongs to an admin account — admins are not listed as users.')
+      setErr('That Account ID belongs to an admin — admins are not listed as users.')
       return
     }
     void openUserAccount(String(data.id))
@@ -653,12 +653,12 @@ export default function Admin() {
             </Alert>
             <div className="d-flex flex-wrap gap-2 align-items-end mb-3">
               <Form.Group className="mb-0" style={{ minWidth: 260, flex: 1 }}>
-                <Form.Label className="small mb-0">Find account by user UUID</Form.Label>
+                <Form.Label className="small mb-0">Find account by Account ID</Form.Label>
                 <Form.Control
                   size="sm"
                   value={uuidSearch}
                   onChange={(e) => setUuidSearch(e.target.value.trim())}
-                  placeholder="Full user account UUID"
+                  placeholder="Account ID (UUID)"
                   className="font-monospace"
                 />
               </Form.Group>
@@ -716,7 +716,7 @@ export default function Admin() {
             <p className="small text-muted mb-2">Customer accounts only — admin accounts are hidden from this list.</p>
             <Table size="sm" responsive hover>
               <thead>
-                <tr><th>Email</th><th>Name</th><th>User UUID</th><th>Balance</th><th>Role</th><th></th></tr>
+                <tr><th>Email</th><th>Name</th><th>Account ID</th><th>Balance</th><th>Role</th><th></th></tr>
               </thead>
               <tbody>
                 {userPage.slice.map((u) => (
@@ -765,9 +765,9 @@ export default function Admin() {
                 {!userLogLoading && userDetail && (
                   <>
                     <div className="mb-3">
-                      <div className="text-muted small">Account UUID</div>
+                      <div className="text-muted small">Account ID</div>
                       <code className="user-select-all">{String(userDetail.id)}</code>
-                      <Button size="sm" variant="link" onClick={() => void navigator.clipboard.writeText(String(userDetail.id))}>Copy UUID</Button>
+                      <Button size="sm" variant="link" onClick={() => void navigator.clipboard.writeText(String(userDetail.id))}>Copy ID</Button>
                     </div>
                     <Row className="g-2 mb-3 small">
                       <Col md={6}><strong>Email:</strong> {String(userDetail.email || '—')}</Col>

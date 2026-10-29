@@ -12,11 +12,11 @@ type Invitee = {
 }
 
 function newInviteCode() {
-  // UUID without dashes — unique, URL-safe
+  // Short unique invite code (not the account id)
   if (typeof crypto !== 'undefined' && crypto.randomUUID) {
-    return crypto.randomUUID().replace(/-/g, '')
+    return crypto.randomUUID().replace(/-/g, '').slice(0, 10).toUpperCase()
   }
-  return `${Date.now().toString(16)}${Math.random().toString(16).slice(2)}`
+  return Math.random().toString(36).slice(2, 12).toUpperCase()
 }
 
 export default function Invite() {
@@ -96,14 +96,14 @@ export default function Invite() {
     <div className="page-enter">
       <h1 className="fw-bold mb-2">Invite friends</h1>
       <p className="text-muted mb-4">
-        Share your unique {BRAND} invite link. Each code is a UUID-based id. When someone registers with it, they count toward your invites.
+        Share your {BRAND} invite link. Friends who register with your code are counted as your invites. Your Account ID (for support) is separate — see Account.
       </p>
       {err && <Alert variant="warning">{err}</Alert>}
       {copied && <Alert variant="success">Copied.</Alert>}
 
       <Card className="rs-card rs-card-static mb-3">
         <Card.Body>
-          <div className="text-muted small">Your invite code (UUID)</div>
+          <div className="text-muted small">Your invite code</div>
           <div className="pay-code mb-3 user-select-all" style={{ fontSize: '0.95rem', wordBreak: 'break-all' }}>
             {inviteCode || '…'}
           </div>
