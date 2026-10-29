@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { Alert, Button, Card, Form, Spinner, Badge } from 'react-bootstrap'
 import { ListFilters, ListPagination, paginate } from '../components/ListControls'
 import OrderTimeline from '../components/OrderTimeline'
+import ShareOrder from '../components/ShareOrder'
 import { useAuth } from '../contexts/AuthContext'
 import { deposits, supabase, supabaseConfigured } from '../lib/supabase'
 import type { Campaign, Package } from '../lib/types'
@@ -257,7 +258,7 @@ export default function Promote() {
     }
     const [p, c, o, prof] = await Promise.all([
       supabase.from('packages').select('*').eq('active', true).order('price_usd'),
-      supabase.from('campaigns').select('*').eq('user_id', user!.id).order('created_at', { ascending: false }),
+      supabase.from('campaigns').select('*, packages(name, category, referrals)').eq('user_id', user!.id).order('created_at', { ascending: false }),
       supabase.from('payment_orders').select('*').eq('user_id', user!.id).order('created_at', { ascending: false }),
       supabase.from('profiles').select('free_starter_used_at').eq('id', user!.id).maybeSingle(),
     ])
@@ -505,6 +506,17 @@ export default function Promote() {
               {c.status === 'completed' && (
                 <p className="small text-success mt-2 mb-0">Order complete — referral target reached.</p>
               )}
+              <div className="mt-3 pt-2 border-top d-flex flex-wrap justify-content-between align-items-center gap-2">
+                <span className="small text-muted">Share referral link</span>
+                <ShareOrder
+                  order={{
+                    title: c.title,
+                    targetUrl: c.target_url,
+                    status: c.status,
+                    packageName: c.packages?.name || packages.find((x) => x.id === c.package_id)?.name,
+                  }}
+                />
+              </div>
             </Card.Body>
           </Card>
         )

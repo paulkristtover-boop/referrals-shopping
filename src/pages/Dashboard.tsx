@@ -6,6 +6,7 @@ import { supabase, supabaseConfigured } from '../lib/supabase'
 import type { Campaign, Package, Submission } from '../lib/types'
 import FirstSessionGuide from '../components/FirstSessionGuide'
 import OrderTimeline from '../components/OrderTimeline'
+import ShareOrder from '../components/ShareOrder'
 import { ListFilters, ListPagination, paginate } from '../components/ListControls'
 import { BRAND } from '../lib/brand'
 
@@ -347,9 +348,17 @@ export default function Dashboard() {
                             goal={c.packages?.referrals}
                           />
                         </td>
-                        <td>
+                        <td className="text-nowrap">
+                          <ShareOrder
+                            order={{
+                              title: c.title,
+                              targetUrl: c.target_url,
+                              status: c.status,
+                              packageName: c.packages?.name,
+                            }}
+                          />
                           {(c.status === 'pending_payment' || c.status === 'pending_approval') && (
-                            <Link to="/promote" className="btn btn-sm btn-outline-primary">
+                            <Link to="/promote" className="btn btn-sm btn-outline-primary ms-1">
                               Pay
                             </Link>
                           )}
@@ -393,9 +402,19 @@ export default function Dashboard() {
                     <div className="small text-muted mb-1">
                       {done.toLocaleString()}/{goal ? goal.toLocaleString() : '—'} delivered
                     </div>
-                    <a href={c.target_url} className="small" target="_blank" rel="noreferrer">
-                      Open referral link
-                    </a>
+                    <div className="d-flex flex-wrap justify-content-between align-items-center gap-2 mt-2">
+                      <a href={c.target_url} className="small" target="_blank" rel="noreferrer">
+                        Open referral link
+                      </a>
+                      <ShareOrder
+                        order={{
+                          title: c.title,
+                          targetUrl: c.target_url,
+                          status: c.status,
+                          packageName: c.packages?.name,
+                        }}
+                      />
+                    </div>
                   </Card.Body>
                 </Card>
               )

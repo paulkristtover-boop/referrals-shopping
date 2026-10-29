@@ -1,0 +1,133 @@
+import { useState } from 'react'
+import { Button, Dropdown } from 'react-bootstrap'
+import { BRAND } from '../lib/brand'
+
+export type ShareOrderPayload = {
+  title: string
+  targetUrl: string
+  status?: string
+  packageName?: string
+  accountId?: string
+}
+
+function buildMessage(p: ShareOrderPayload) {
+  const lines = [
+    `${BRAND} — ${p.title}`,
+    p.packageName ? `Package: ${p.packageName}` : null,
+    p.status ? `Status: ${p.status.replace(/_/g, ' ')}` : null,
+    '',
+    'Referral link:',
+    p.targetUrl,
+  ].filter(Boolean) as string[]
+  return lines.join('\n')
+}
+
+function encoded(p: ShareOrderPayload) {
+  const text = buildMessage(p)
+  const url = p.targetUrl
+  return {
+    text,
+    textEnc: encodeURIComponent(text),
+    urlEnc: encodeURIComponent(url),
+    wa: `https://wa.me/?text=${encodeURIComponent(text)}`,
+    tg: `https://t.me/share/url?url=${encodeURIComponent(url)}&text=${encodeURIComponent(`${BRAND}: ${p.title}`)}`,
+    x: `https://twitter.com/intent/tweet?text=${encodeURIComponent(`${BRAND}: ${p.title}`)}&url=${encodeURIComponent(url)}`,
+    fb: `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(url)}`,
+    mail: `mailto:?subject=${encodeURIComponent(`${BRAND} — ${p.title}`)}&body=${encodeURIComponent(text)}`,
+  }
+}
+
+type Props = {
+  order: ShareOrderPayload
+  size?: 'sm' | undefined
+  variant?: string
+  className?: string
+}
+
+export default function ShareOrder({ order, size = 'sm', variant = 'outline-secondary', className = '' }: Props) {
+  const [copied, setCopied] = useState(false)
+  const links = encoded(order)
+
+  const copy = async (value: string) => {
+    try {
+      await navigator.clipboard.writeText(value)
+      setCopied(true)
+      setTimeout(() => setCopied(false), 2000)
+    } catch {
+      /* ignore */
+    }
+  }
+
+  const nativeShare = async () => {
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          title: `${BRAND} — ${order.title}`,
+          text: buildMessage(order),
+          url: order.targetUrl,
+        })
+        return
+      } catch {
+        /* user cancelled */
+      }
+    }
+    void copy(order.targetUrl)
+  }
+
+  const open = (href: string) => {
+    window.open(href, '_blank', 'noopener,noreferrer')
+  }
+
+  return (
+    <div className={`d-inline-flex flex-wrap gap-1 align-items-center ${className}`}>
+      <Dropdown>
+        <Dropdown.Toggle size={size} variant={variant} id={`share-${order.targetUrl.slice(-8)}`}>
+          <i className="bi bi-share me-1" />
+          Share
+        </Dropdown.Toggle>
+        <Dropdown.Menu align="end">
+          <Dropdown.Header>Share order / referral link</Dropdown.Header>
+          <Dropdown.Item onClick={() => open(links.wa)}>
+            <i className="bi bi-whatsapp text-success me-2" />
+            WhatsApp
+          </Dropdown.Item>
+          <Dropdown.Item onClick={() => open(links.tg)}>
+            <i className="bi bi-telegram text-primary me-2" />
+            Telegram
+          </Dropdown.Item>
+          <Dropdown.Item onClick={() => open(links.x)}>
+            <i className="bi bi-twitter-x me-2" />
+            X (Twitter)
+          </Dropdown.Item>
+          <Dropdown.Item onClick={() => open(links.fb)}>
+            <i className="bi bi-facebook text-primary me-2" />
+            Facebook
+          </Dropdown.Item>
+          <Dropdown.Item onClick={() => open(links.mail)}>
+            <i className="bi bi-envelope me-2" />
+            Email
+          </Dropdown.Item>
+          <Dropdown.Divider />
+          <Dropdown.Item onClick={() => void nativeShare()}>
+            <i className="bi bi-phone me-2" />
+            Device share…
+          </Dropdown.Item>
+          <Dropdown.Item onClick={() => void copy(order.targetUrl)}>
+            <i className="bi bi-link-45deg me-2" />
+            {copied ? 'Copied!' : 'Copy referral link'}
+          </Dropdown.Item>
+          <Dropdown.Item onClick={() => void copy(links.text)}>
+            <i className="bi bi-clipboard me-2" />
+            Copy full message
+          </Dropdown.Item>
+        </Dropdown.Menu>
+      </Dropdown>
+      <Button size={size} variant="outline-success" title="WhatsApp" onClick={() => open(links.wa)}>
+        <i className="bi bi-whatsapp" />
+      </Button>
+      <Button size={size} variant="outline-primary" title="Telegram" onClick={() => open(links.tg)}>
+        <i className="bi bi-telegram" />
+      </Button>
+    </div>
+  )
+}
