@@ -61,6 +61,7 @@ export default function Admin() {
       match(u.email) ||
       match(u.full_name) ||
       match(u.invite_code) ||
+      match(u.account_id) ||
       id.toLowerCase().includes(q) ||
       id.replace(/-/g, '').toLowerCase().includes(q.replace(/-/g, ''))
     )
@@ -281,18 +282,37 @@ export default function Admin() {
   }
 
   const findByUuid = async () => {
-    const raw = uuidSearch.trim().toLowerCase()
+    const raw = uuidSearch.trim()
     if (!raw) return
+    const low = raw.toLowerCase()
     const found = users.find((u) => {
       const id = String(u.id || '').toLowerCase()
-      return id === raw || id.replace(/-/g, '') === raw.replace(/-/g, '') || id.includes(raw)
+      const aid = String(u.account_id || '').toLowerCase()
+      return (
+        aid === low ||
+        id === low ||
+        id.replace(/-/g, '') === low.replace(/-/g, '') ||
+        id.includes(low) ||
+        aid.includes(low)
+      )
     })
     if (found) {
       void openUserAccount(String(found.id))
       return
     }
-    // Direct lookup (e.g. exact UUID) without requiring row in the non-admin list
-    const { data, error } = await supabase.from('profiles').select('id, role').eq('id', uuidSearch.trim()).maybeSingle()
+    // RS-##### via RPC
+    const { data: rid } = await supabase.rpc('resolve_account_id', { p_code: raw })
+    if (rid) {
+      const { data: prof } = await supabase.from('profiles').select('id, role').eq('id', rid).maybeSingle()
+      if (prof?.role === 'admin') {
+        setErr('That Account ID belongs to an admin — admins are not listed as users.')
+        return
+      }
+      void openUserAccount(String(rid))
+      return
+    }
+    // Internal UUID fallback (support/debug)
+    const { data, error } = await supabase.from('profiles').select('id, role').eq('id', raw).maybeSingle()
     if (error || !data) {
       setErr('No user with that Account ID.')
       return
@@ -658,7 +678,7 @@ export default function Admin() {
                   size="sm"
                   value={uuidSearch}
                   onChange={(e) => setUuidSearch(e.target.value.trim())}
-                  placeholder="Account ID (UUID)"
+                  placeholder="RS-10042 or email"
                   className="font-monospace"
                 />
               </Form.Group>
@@ -704,7 +724,7 @@ export default function Admin() {
             <ListFilters
               search={search}
               onSearch={setSearch}
-              placeholder="Email, name, or full UUID…"
+              placeholder="Email, name, or RS-10042…"
               status={status}
               onStatus={setStatus}
               statusOptions={[
@@ -724,15 +744,17 @@ export default function Admin() {
                     <td className="small">{String(u.email || '')}</td>
                     <td>{String(u.full_name || '—')}</td>
                     <td className="small">
-                      <code className="user-select-all" style={{ fontSize: '0.7rem' }}>{String(u.id)}</code>
-                      <Button
-                        size="sm"
-                        variant="link"
-                        className="p-0 ms-1"
-                        onClick={() => void navigator.clipboard.writeText(String(u.id))}
-                      >
-                        Copy
-                      </Button>
+                      <code className="user-select-all fw-semibold">{String(u.account_id || '—')}</code>
+                      {u.account_id ? (
+                        <Button
+                          size="sm"
+                          variant="link"
+                          className="p-0 ms-1"
+                          onClick={() => void navigator.clipboard.writeText(String(u.account_id))}
+                        >
+                          Copy
+                        </Button>
+                      ) : null}
                     </td>
                     <td>${Number(u.balance || 0).toFixed(2)}</td>
                     <td><Badge bg={u.role === 'admin' ? 'dark' : 'secondary'}>{String(u.role)}</Badge></td>
@@ -766,8 +788,12 @@ export default function Admin() {
                   <>
                     <div className="mb-3">
                       <div className="text-muted small">Account ID</div>
-                      <code className="user-select-all">{String(userDetail.id)}</code>
-                      <Button size="sm" variant="link" onClick={() => void navigator.clipboard.writeText(String(userDetail.id))}>Copy ID</Button>
+                      <code className="user-select-all fs-5 fw-bold">{String(userDetail.account_id || '—')}</code>
+                      {userDetail.account_id ? (
+                        <Button size="sm" variant="link" onClick={() => void navigator.clipboard.writeText(String(userDetail.account_id))}>Copy</Button>
+                      ) : null}
+                      <div className="text-muted small mt-2">Internal UUID (system only)</div>
+                      <code className="user-select-all small text-muted">{String(userDetail.id)}</code>
                     </div>
                     <Row className="g-2 mb-3 small">
                       <Col md={6}><strong>Email:</strong> {String(userDetail.email || '—')}</Col>

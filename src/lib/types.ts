@@ -5,6 +5,7 @@ export type Profile = {
   role: 'user' | 'admin'
   balance: number
   terms_accepted_at: string | null
+  account_id?: string | null
   invite_code?: string | null
   free_starter_used_at?: string | null
   referred_by?: string | null

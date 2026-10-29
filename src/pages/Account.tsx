@@ -105,18 +105,21 @@ export default function Account() {
           <Form.Group className="mb-3">
             <Form.Label>Account ID</Form.Label>
             <div className="d-flex flex-wrap gap-2 align-items-center">
-              <code className="user-select-all small" style={{ wordBreak: 'break-all' }}>{user.id}</code>
+              <code className="user-select-all fs-5 fw-bold">{profile?.account_id || '…'}</code>
               <Button
                 type="button"
                 size="sm"
                 variant="outline-secondary"
-                onClick={() => void navigator.clipboard.writeText(user.id).then(() => setMsg('Account ID copied'))}
+                disabled={!profile?.account_id}
+                onClick={() =>
+                  void navigator.clipboard.writeText(profile?.account_id || '').then(() => setMsg('Account ID copied'))
+                }
               >
                 Copy
               </Button>
             </div>
             <Form.Text className="text-muted">
-              Use this ID for support. It is unique and never changes.
+              Share this with support (e.g. RS-10042). Your system UUID stays private.
             </Form.Text>
           </Form.Group>
 
