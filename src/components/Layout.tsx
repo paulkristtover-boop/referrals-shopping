@@ -5,7 +5,6 @@ import { Container, Nav, Navbar, Button } from 'react-bootstrap'
 import { useAuth } from '../contexts/AuthContext'
 import { useTheme } from '../contexts/ThemeContext'
 import Logo from './Logo'
-import NotificationBell from './NotificationBell'
 import BottomTabBar from './BottomTabBar'
 import OfflineNotice from './OfflineNotice'
 
@@ -48,7 +47,6 @@ export default function Layout() {
               <span className="fw-bold">Admin</span>
             </Navbar.Brand>
             <div className="d-flex align-items-center gap-2 ms-auto">
-              <NotificationBell light />
               <Button size="sm" variant="outline-light" onClick={toggle} className="d-none d-sm-inline-flex">
                 <i className={`bi ${theme === 'dark' ? 'bi-sun' : 'bi-moon'}`} />
               </Button>
@@ -67,9 +65,6 @@ export default function Layout() {
             <Nav className="gap-1 py-1">
               <Nav.Link as={NavLink} to="/admin" end>
                 <i className="bi bi-grid-1x2 nav-icon" />CMS
-              </Nav.Link>
-              <Nav.Link as={NavLink} to="/admin/payments">
-                <i className="bi bi-currency-bitcoin nav-icon" />Payments
               </Nav.Link>
               <Nav.Link as={NavLink} to="/admin/support">
                 <i className="bi bi-headset nav-icon" />Support
@@ -99,7 +94,7 @@ export default function Layout() {
 
           {/* Mobile: compact top actions */}
           <div className="d-flex align-items-center gap-2 d-lg-none ms-auto me-1">
-            {user && <NotificationBell />}
+            {user &&}
             <Button size="sm" variant="outline-secondary" onClick={toggle}>
               <i className={`bi ${theme === 'dark' ? 'bi-sun' : 'bi-moon'}`} />
             </Button>
@@ -148,9 +143,6 @@ export default function Layout() {
                   <NavItem to="/support" icon="bi-headset">
                     Support
                   </NavItem>
-                  <NavItem to="/notifications" icon="bi-bell">
-                    Alerts
-                  </NavItem>
                   <NavItem to="/account" icon="bi-person-circle">
                     Account
                   </NavItem>
@@ -169,7 +161,7 @@ export default function Layout() {
               <a href={IG} target="_blank" rel="noreferrer" className="btn btn-sm btn-outline-danger" title="Instagram">
                 <i className="bi bi-instagram" />
               </a>
-              {user && <NotificationBell />}
+              {user &&}
               <Button size="sm" variant="outline-secondary" onClick={toggle}>
                 <i className={`bi ${theme === 'dark' ? 'bi-sun' : 'bi-moon'}`} />
               </Button>

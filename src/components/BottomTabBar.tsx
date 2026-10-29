@@ -1,7 +1,7 @@
 import { NavLink } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
 
-type Tab = { to: string; icon: string; label: string; end?: boolean; badge?: number }
+type Tab = { to: string; icon: string; label: string; end?: boolean }
 
 export default function BottomTabBar() {
   const { user, profile } = useAuth()
@@ -9,7 +9,6 @@ export default function BottomTabBar() {
   if (profile?.role === 'admin') {
     const adminTabs: Tab[] = [
       { to: '/admin', icon: 'bi-grid-1x2', label: 'CMS', end: true },
-      { to: '/admin/payments', icon: 'bi-currency-bitcoin', label: 'Pay' },
       { to: '/admin/support', icon: 'bi-headset', label: 'Support' },
       { to: '/account', icon: 'bi-person-circle', label: 'Account' },
     ]
@@ -18,7 +17,7 @@ export default function BottomTabBar() {
 
   const tabs: Tab[] = [
     { to: '/dashboard', icon: 'bi-speedometer2', label: 'Home' },
-    { to: '/promote', icon: 'bi-megaphone', label: 'Promote' },
+    { to: '/promote', icon: 'bi-shop', label: 'Shop' },
     { to: '/earn', icon: 'bi-cash-coin', label: 'Earn' },
     { to: '/wallet', icon: 'bi-wallet2', label: 'Wallet' },
     { to: '/account', icon: 'bi-person-circle', label: 'Account' },
@@ -33,9 +32,6 @@ function TabBar({ tabs }: { tabs: Tab[] }) {
         <NavLink key={t.to} to={t.to} end={t.end} className={({ isActive }) => `bottom-tab ${isActive ? 'active' : ''}`}>
           <span className="bottom-tab-icon">
             <i className={`bi ${t.icon}`} />
-            {!!t.badge && t.badge > 0 && (
-              <span className="bottom-tab-badge">{t.badge > 9 ? '9+' : t.badge}</span>
-            )}
           </span>
           <span className="bottom-tab-label">{t.label}</span>
         </NavLink>

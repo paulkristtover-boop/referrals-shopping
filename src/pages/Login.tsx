@@ -171,8 +171,6 @@ export default function Login() {
 
             <p className="text-center mt-3 mb-0 small">
               No account? <Link to="/register">Register</Link>
-              {' · '}
-              <Link to="/security">Set up 2FA</Link>
             </p>
           </Card.Body>
         </Card>

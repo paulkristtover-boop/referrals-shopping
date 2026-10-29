@@ -160,10 +160,6 @@ export default function Account() {
             <span><i className="bi bi-shield-check me-2 text-primary" />Two-factor authentication</span>
             <i className="bi bi-chevron-right text-muted" />
           </ListGroup.Item>
-          <ListGroup.Item action as={Link} to="/notifications" className="d-flex justify-content-between align-items-center">
-            <span><i className="bi bi-bell me-2 text-primary" />Notifications</span>
-            <i className="bi bi-chevron-right text-muted" />
-          </ListGroup.Item>
           {profile?.role !== 'admin' && (
             <>
               <ListGroup.Item action as={Link} to="/invite" className="d-flex justify-content-between align-items-center">

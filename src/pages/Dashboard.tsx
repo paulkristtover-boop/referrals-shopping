@@ -227,7 +227,7 @@ export default function Dashboard() {
       </Row>
 
       <Row className="g-3 mb-4">
-        <Col md={8}>
+        <Col md={12}>
           <Alert variant="light" className="border h-100 mb-0 py-3">
             <strong className="d-block mb-1">{BRAND} referral rules</strong>
             <span className="small text-muted">
@@ -242,23 +242,7 @@ export default function Dashboard() {
             </span>
           </Alert>
         </Col>
-        <Col md={4}>
-          <Card className="rs-card rs-card-static h-100">
-            <Card.Body className="py-3 d-flex flex-column justify-content-center gap-2">
-              <div className="small fw-semibold">Follow {BRAND}</div>
-              <div className="d-flex flex-wrap gap-2">
-                <a href={TG} target="_blank" rel="noreferrer" className="btn btn-sm btn-outline-primary">
-                  <i className="bi bi-telegram me-1" />
-                  Telegram
-                </a>
-                <a href={IG} target="_blank" rel="noreferrer" className="btn btn-sm btn-outline-danger">
-                  <i className="bi bi-instagram me-1" />
-                  {IG_HANDLE}
-                </a>
-              </div>
-            </Card.Body>
-          </Card>
-        </Col>
+        
       </Row>
 
       <div className="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-2">
