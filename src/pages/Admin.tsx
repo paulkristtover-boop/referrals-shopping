@@ -142,19 +142,25 @@ export default function Admin() {
   }
 
   const payWithdrawal = async (id: string) => {
-    await supabase.from('withdrawals').update({ status: 'paid', processed_at: new Date().toISOString() }).eq('id', id)
+    const { error } = await supabase.rpc('admin_mark_withdrawal_paid', { p_id: id })
+    if (error) { await supabase.from('withdrawals').update({ status: 'paid', processed_at: new Date().toISOString() }).eq('id', id) }
     flash('Marked as paid')
     void load()
   }
 
   const rejectWithdrawal = async (id: string, userId: string, amount: number) => {
-    await supabase.from('withdrawals').update({ status: 'rejected', processed_at: new Date().toISOString() }).eq('id', id)
-    // best-effort restore if column exists
-    const { data: prof } = await supabase.from('profiles').select('balance').eq('id', userId).single()
-    if (prof) {
-      await supabase.from('profiles').update({ balance: Number(prof.balance) + amount }).eq('id', userId)
+    const { error } = await supabase.rpc('admin_reject_withdrawal', { p_id: id })
+    if (error) {
+      // Fallback only when RPC missing: reject + refund once
+      await supabase.from('withdrawals').update({ status: 'rejected', processed_at: new Date().toISOString() }).eq('id', id)
+      const { data: prof } = await supabase.from('profiles').select('balance').eq('id', userId).single()
+      if (prof) {
+        await supabase.from('profiles').update({ balance: Number(prof.balance) + amount }).eq('id', userId)
+      }
+      setErr(error.message + ' — used fallback reject; prefer withdrawals_safe.sql')
+    } else {
+      flash('Withdrawal rejected — balance refunded')
     }
-    flash('Withdrawal rejected')
     void load()
   }
 
