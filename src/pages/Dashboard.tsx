@@ -6,7 +6,7 @@ import { supabase, supabaseConfigured } from '../lib/supabase'
 import type { Campaign, Package, Submission } from '../lib/types'
 import FirstSessionGuide from '../components/FirstSessionGuide'
 import { ListFilters, ListPagination, paginate } from '../components/ListControls'
-import { BRAND, TG, IG, IG_HANDLE } from '../lib/brand'
+import { BRAND } from '../lib/brand'
 
 function errMsg(e: unknown): string {
   if (!e) return 'Failed to load'

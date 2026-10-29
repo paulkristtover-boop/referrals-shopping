@@ -95,7 +95,7 @@ export default function Admin() {
     setSubs(s.data || [])
     setWithdrawals(w.data || [])
     setPackages((p.data as Package[]) || [])
-    setUsers((u.data || []).filter((row: Record<string, unknown>) => row.role !== 'admin'))
+    setUsers(((u.data as Record<string, unknown>[]) || []).filter((row) => row.role !== 'admin'))
     setLoading(false)
   }
 
@@ -787,7 +787,8 @@ export default function Admin() {
                         <tbody>
                           {userLogs.campaigns.map((c) => (
                             <tr key={String(c.id)}>
-                              <td className="small">{String(c.title)}
+                              <td className="small">
+                                {String(c.title)}
                                 <div className="text-muted">{String((c.packages as { name?: string })?.name || '')}</div>
                               </td>
                               <td className="small">{String(c.status)}</td>
