@@ -72,7 +72,7 @@ export default function Layout() {
             </Nav>
           </Container>
         </div>
-        <main className={`flex-grow-1 py-3 admin-main ${showBottom ? 'has-bottom-nav' : ''}`}>
+        <main className={`flex-grow-1 py-3 py-md-4 rs-main admin-main ${showBottom ? 'has-bottom-nav' : ''}`}>
           <Container fluid className="px-3 px-lg-4 page-enter">
             <Outlet />
           </Container>
@@ -190,7 +190,7 @@ export default function Layout() {
         </Container>
       </Navbar>
 
-      <main className={`flex-grow-1 py-3 py-lg-4 ${showBottom ? 'has-bottom-nav' : ''}`}>
+      <main className={`flex-grow-1 py-3 py-md-4 rs-main ${showBottom ? 'has-bottom-nav' : ''}`}>
         <Container className="page-enter">
           <Outlet />
         </Container>

@@ -107,7 +107,7 @@ export default function Register() {
 
   return (
     <div className="row justify-content-center">
-      <div className="col-md-5">
+      <div className="col-12 col-sm-10 col-md-6 col-lg-5">
         <Card className="rs-card rs-card-static border-0">
           <Card.Body className="p-4">
             <h2 className="text-center mb-1 fw-bold">Create account</h2>
