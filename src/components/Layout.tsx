@@ -94,7 +94,6 @@ export default function Layout() {
 
           {/* Mobile: compact top actions */}
           <div className="d-flex align-items-center gap-2 d-lg-none ms-auto me-1">
-            {user &&}
             <Button size="sm" variant="outline-secondary" onClick={toggle}>
               <i className={`bi ${theme === 'dark' ? 'bi-sun' : 'bi-moon'}`} />
             </Button>
@@ -161,8 +160,7 @@ export default function Layout() {
               <a href={IG} target="_blank" rel="noreferrer" className="btn btn-sm btn-outline-danger" title="Instagram">
                 <i className="bi bi-instagram" />
               </a>
-              {user &&}
-              <Button size="sm" variant="outline-secondary" onClick={toggle}>
+                <Button size="sm" variant="outline-secondary" onClick={toggle}>
                 <i className={`bi ${theme === 'dark' ? 'bi-sun' : 'bi-moon'}`} />
               </Button>
               {user ? (
