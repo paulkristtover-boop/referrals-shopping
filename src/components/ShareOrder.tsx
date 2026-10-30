@@ -2,36 +2,35 @@ import { useState } from 'react'
 import { Button, Dropdown } from 'react-bootstrap'
 import { BRAND } from '../lib/brand'
 
+/** Public share payload — never include payment/order status */
 export type ShareOrderPayload = {
   title: string
+  /** Referral link to share externally */
   targetUrl: string
-  status?: string
   packageName?: string
-  accountId?: string
 }
 
 function buildMessage(p: ShareOrderPayload) {
   const lines = [
-    `${BRAND} — ${p.title}`,
+    `${BRAND}`,
+    p.title,
     p.packageName ? `Package: ${p.packageName}` : null,
-    p.status ? `Status: ${p.status.replace(/_/g, ' ')}` : null,
     '',
-    'Referral link:',
+    'Join via this referral link:',
     p.targetUrl,
-  ].filter(Boolean) as string[]
+  ].filter((x) => x !== null && x !== undefined) as string[]
   return lines.join('\n')
 }
 
-function encoded(p: ShareOrderPayload) {
+function shareLinks(p: ShareOrderPayload) {
   const text = buildMessage(p)
+  const short = `${BRAND}: ${p.title}`
   const url = p.targetUrl
   return {
     text,
-    textEnc: encodeURIComponent(text),
-    urlEnc: encodeURIComponent(url),
     wa: `https://wa.me/?text=${encodeURIComponent(text)}`,
-    tg: `https://t.me/share/url?url=${encodeURIComponent(url)}&text=${encodeURIComponent(`${BRAND}: ${p.title}`)}`,
-    x: `https://twitter.com/intent/tweet?text=${encodeURIComponent(`${BRAND}: ${p.title}`)}&url=${encodeURIComponent(url)}`,
+    tg: `https://t.me/share/url?url=${encodeURIComponent(url)}&text=${encodeURIComponent(short)}`,
+    x: `https://twitter.com/intent/tweet?text=${encodeURIComponent(short)}&url=${encodeURIComponent(url)}`,
     fb: `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(url)}`,
     mail: `mailto:?subject=${encodeURIComponent(`${BRAND} — ${p.title}`)}&body=${encodeURIComponent(text)}`,
   }
@@ -39,27 +38,27 @@ function encoded(p: ShareOrderPayload) {
 
 type Props = {
   order: ShareOrderPayload
-  size?: 'sm' | undefined
+  size?: 'sm'
   variant?: string
   className?: string
 }
 
 export default function ShareOrder({ order, size = 'sm', variant = 'outline-secondary', className = '' }: Props) {
-  const [copied, setCopied] = useState(false)
-  const links = encoded(order)
+  const [copied, setCopied] = useState<'link' | 'msg' | null>(null)
+  const links = shareLinks(order)
 
-  const copy = async (value: string) => {
+  const copy = async (value: string, kind: 'link' | 'msg') => {
     try {
       await navigator.clipboard.writeText(value)
-      setCopied(true)
-      setTimeout(() => setCopied(false), 2000)
+      setCopied(kind)
+      setTimeout(() => setCopied(null), 2000)
     } catch {
       /* ignore */
     }
   }
 
   const nativeShare = async () => {
-    if (navigator.share) {
+    if (typeof navigator !== 'undefined' && navigator.share) {
       try {
         await navigator.share({
           title: `${BRAND} — ${order.title}`,
@@ -68,10 +67,10 @@ export default function ShareOrder({ order, size = 'sm', variant = 'outline-seco
         })
         return
       } catch {
-        /* user cancelled */
+        /* cancelled */
       }
     }
-    void copy(order.targetUrl)
+    void copy(order.targetUrl, 'link')
   }
 
   const open = (href: string) => {
@@ -81,12 +80,12 @@ export default function ShareOrder({ order, size = 'sm', variant = 'outline-seco
   return (
     <div className={`d-inline-flex flex-wrap gap-1 align-items-center ${className}`}>
       <Dropdown>
-        <Dropdown.Toggle size={size} variant={variant} id={`share-${order.targetUrl.slice(-8)}`}>
+        <Dropdown.Toggle size={size} variant={variant} id={`share-${order.targetUrl.slice(-12)}`}>
           <i className="bi bi-share me-1" />
           Share
         </Dropdown.Toggle>
         <Dropdown.Menu align="end">
-          <Dropdown.Header>Share order / referral link</Dropdown.Header>
+          <Dropdown.Header>Share referral link only</Dropdown.Header>
           <Dropdown.Item onClick={() => open(links.wa)}>
             <i className="bi bi-whatsapp text-success me-2" />
             WhatsApp
@@ -112,20 +111,20 @@ export default function ShareOrder({ order, size = 'sm', variant = 'outline-seco
             <i className="bi bi-phone me-2" />
             Device share…
           </Dropdown.Item>
-          <Dropdown.Item onClick={() => void copy(order.targetUrl)}>
+          <Dropdown.Item onClick={() => void copy(order.targetUrl, 'link')}>
             <i className="bi bi-link-45deg me-2" />
-            {copied ? 'Copied!' : 'Copy referral link'}
+            {copied === 'link' ? 'Copied!' : 'Copy referral link'}
           </Dropdown.Item>
-          <Dropdown.Item onClick={() => void copy(links.text)}>
+          <Dropdown.Item onClick={() => void copy(links.text, 'msg')}>
             <i className="bi bi-clipboard me-2" />
-            Copy full message
+            {copied === 'msg' ? 'Copied!' : 'Copy message'}
           </Dropdown.Item>
         </Dropdown.Menu>
       </Dropdown>
-      <Button size={size} variant="outline-success" title="WhatsApp" onClick={() => open(links.wa)}>
+      <Button size={size} variant="outline-success" title="WhatsApp" onClick={() => open(links.wa)} aria-label="Share on WhatsApp">
         <i className="bi bi-whatsapp" />
       </Button>
-      <Button size={size} variant="outline-primary" title="Telegram" onClick={() => open(links.tg)}>
+      <Button size={size} variant="outline-primary" title="Telegram" onClick={() => open(links.tg)} aria-label="Share on Telegram">
         <i className="bi bi-telegram" />
       </Button>
     </div>

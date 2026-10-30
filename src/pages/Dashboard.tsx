@@ -353,8 +353,7 @@ export default function Dashboard() {
                             order={{
                               title: c.title,
                               targetUrl: c.target_url,
-                              status: c.status,
-                              packageName: c.packages?.name,
+                                                            packageName: c.packages?.name,
                             }}
                           />
                           {(c.status === 'pending_payment' || c.status === 'pending_approval') && (
@@ -410,8 +409,7 @@ export default function Dashboard() {
                         order={{
                           title: c.title,
                           targetUrl: c.target_url,
-                          status: c.status,
-                          packageName: c.packages?.name,
+                                                    packageName: c.packages?.name,
                         }}
                       />
                     </div>

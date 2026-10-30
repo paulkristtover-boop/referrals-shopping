@@ -16,7 +16,8 @@ Run in **Supabase → SQL Editor** in this order (skip any already applied):
 | 10 | `withdrawals_safe.sql` | Safe withdraw / refund |
 | 11 | `invites_admin.sql` | Invite counts + admin UUID tokens |
 | 12 | `public_stats.sql` | Optional homepage stats (optional) |
-| 13 | `platform_settings.sql` | Admin-editable deposit wallets |
+| 13 | `campaign_extras.sql` | Optional description + sample screenshot |
+| 14 | `platform_settings.sql` | Admin-editable deposit wallets |
 | 14 | `notifications.sql` | Optional (feature removed from UI) |
 
 Also create a **Storage** bucket named `screenshots` (public read) for earn proofs.

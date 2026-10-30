@@ -242,6 +242,8 @@ export default function Promote() {
   const [packageId, setPackageId] = useState('')
   const [title, setTitle] = useState('')
   const [url, setUrl] = useState('')
+  const [description, setDescription] = useState('')
+  const [sampleFile, setSampleFile] = useState<File | null>(null)
   const [chain, setChain] = useState<'trx' | 'sol' | 'ton'>('trx')
   const [msg, setMsg] = useState<string | null>(null)
   const [err, setErr] = useState<string | null>(null)
@@ -294,17 +296,34 @@ export default function Promote() {
     if (!pkg || !user) return
     setCreating(true)
     try {
+      let sampleUrl: string | null = null
+      if (sampleFile) {
+        const path = `${user.id}/samples/${Date.now()}_${sampleFile.name.replace(/[^\w.-]/g, '_')}`
+        const up = await supabase.storage.from('screenshots').upload(path, sampleFile)
+        if (up.error) throw new Error(up.error.message)
+        sampleUrl = supabase.storage.from('screenshots').getPublicUrl(path).data.publicUrl
+      }
+      const desc = description.trim() || null
+
       // Free Starter — one per account, no crypto payment
       if (Number(pkg.price_usd) === 0) {
         if (freeUsed) throw new Error('You already used your Free Starter (50 referrals). Choose a paid package.')
-        const { data: campId, error: freeErr } = await supabase.rpc('claim_free_starter', {
+        const { error: freeErr } = await supabase.rpc('claim_free_starter', {
           p_title: title,
           p_target_url: url,
+          p_description: desc,
+          p_sample_screenshot_url: sampleUrl,
         })
-        if (freeErr) throw new Error(freeErr.message)
+        if (freeErr) {
+          // fallback 2-arg RPC
+          const { error: e2 } = await supabase.rpc('claim_free_starter', { p_title: title, p_target_url: url })
+          if (e2) throw new Error(freeErr.message)
+        }
         setMsg('Free Starter activated — 50 referrals. Promotion can start (approved).')
         setTitle('')
         setUrl('')
+        setDescription('')
+        setSampleFile(null)
         void load()
         return
       }
@@ -324,6 +343,8 @@ export default function Promote() {
           package_id: packageId,
           title,
           target_url: url,
+          description: desc,
+          sample_screenshot_url: sampleUrl,
           status: 'pending_payment',
           paid_amount: pkg.price_usd,
           crypto_chain: chain,
@@ -354,6 +375,8 @@ export default function Promote() {
       setMsg(`Send exactly ${Number(quote.amount_crypto).toFixed(6)} ${chain.toUpperCase()} within 15 minutes.`)
       setTitle('')
       setUrl('')
+      setDescription('')
+      setSampleFile(null)
       void load()
     } catch (ex: unknown) {
       setErr(ex instanceof Error ? ex.message : 'Failed to create order')
@@ -414,11 +437,30 @@ export default function Promote() {
             </Form.Group>
             <Form.Group className="mb-3">
               <Form.Label>Title</Form.Label>
-              <Form.Control value={title} onChange={(e) => setTitle(e.target.value)} required />
+              <Form.Control value={title} onChange={(e) => setTitle(e.target.value)} required placeholder="e.g. My app invite" />
             </Form.Group>
             <Form.Group className="mb-3">
               <Form.Label>Target URL</Form.Label>
               <Form.Control type="url" value={url} onChange={(e) => setUrl(e.target.value)} required />
+            <Form.Group className="mb-3">
+              <Form.Label>Description <span className="text-muted fw-normal">(optional)</span></Form.Label>
+              <Form.Control
+                as="textarea"
+                rows={2}
+                value={description}
+                onChange={(e) => setDescription(e.target.value)}
+                placeholder="What should referred users do? Any notes for earners…"
+              />
+            </Form.Group>
+            <Form.Group className="mb-3">
+              <Form.Label>Sample screenshot <span className="text-muted fw-normal">(optional)</span></Form.Label>
+              <Form.Control
+                type="file"
+                accept="image/*"
+                onChange={(e) => setSampleFile((e.target as HTMLInputElement).files?.[0] || null)}
+              />
+              <Form.Text className="text-muted">Example of the signup/deposit screen — helps earners submit the right proof.</Form.Text>
+            </Form.Group>
             </Form.Group>
             {!isFree && (
               <Form.Group className="mb-3">
@@ -516,7 +558,6 @@ export default function Promote() {
                   order={{
                     title: c.title,
                     targetUrl: c.target_url,
-                    status: c.status,
                     packageName: c.packages?.name || packages.find((x) => x.id === c.package_id)?.name,
                   }}
                 />

@@ -27,6 +27,8 @@ export type Campaign = {
   package_id: string
   title: string
   target_url: string
+  description?: string | null
+  sample_screenshot_url?: string | null
   status: string
   paid_amount: number | null
   crypto_chain: string | null
@@ -44,7 +46,7 @@ export type Task = {
   reward_amount: number
   wait_seconds: number
   active: boolean
-  campaigns?: { title: string; target_url: string; status: string }
+  campaigns?: { title: string; target_url: string; status: string; description?: string | null; sample_screenshot_url?: string | null; user_id?: string }
 }
 
 export type Submission = {

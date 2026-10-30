@@ -476,6 +476,10 @@ export default function Admin() {
                     <td>
                       {String(c.title)}
                       <div className="small"><a href={String(c.target_url)} target="_blank" rel="noreferrer">link</a></div>
+                      {c.description ? <div className="small text-muted text-truncate" style={{ maxWidth: 180 }}>{String(c.description)}</div> : null}
+                      {c.sample_screenshot_url ? (
+                        <a href={String(c.sample_screenshot_url)} target="_blank" rel="noreferrer" className="small">sample</a>
+                      ) : null}
                     </td>
                     <td className="small">
                       {String((c.packages as { name?: string })?.name || '')}

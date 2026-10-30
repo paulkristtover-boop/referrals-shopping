@@ -31,7 +31,7 @@ export default function Earn() {
     }
     setErr(null)
     const [t, s] = await Promise.all([
-      supabase.from('tasks').select('*, campaigns(title, target_url, status, user_id)').eq('active', true),
+      supabase.from('tasks').select('*, campaigns(title, target_url, status, user_id, description, sample_screenshot_url)').eq('active', true),
       supabase.from('task_submissions').select('task_id').eq('user_id', user.id),
     ])
     const list = ((t.data as TaskRow[]) || []).filter((x) => {
@@ -203,6 +203,21 @@ export default function Earn() {
                   <div className="small text-muted text-truncate" style={{ maxWidth: 360 }}>
                     {t.campaigns?.target_url}
                   </div>
+                  {t.campaigns?.description && (
+                    <p className="small text-muted mb-1 mt-1">{t.campaigns.description}</p>
+                  )}
+                  {t.campaigns?.sample_screenshot_url && (
+                    <div className="mt-2">
+                      <div className="small text-muted mb-1">Sample proof</div>
+                      <a href={t.campaigns.sample_screenshot_url} target="_blank" rel="noreferrer">
+                        <img
+                          src={t.campaigns.sample_screenshot_url}
+                          alt="Sample screenshot"
+                          style={{ maxHeight: 100, maxWidth: '100%', borderRadius: 8, border: '1px solid var(--bs-border-color)' }}
+                        />
+                      </a>
+                    </div>
+                  )}
                 </div>
                 <div className="text-end">
                   <Badge bg="success" className="badge-status">
