@@ -4,7 +4,7 @@ import { ListFilters, ListPagination, paginate } from '../components/ListControl
 import OrderTimeline from '../components/OrderTimeline'
 import ShareOrder from '../components/ShareOrder'
 import { useAuth } from '../contexts/AuthContext'
-import { deposits, supabase, supabaseConfigured } from '../lib/supabase'
+import { deposits as envDeposits, loadDeposits, supabase, supabaseConfigured } from '../lib/supabase'
 import type { Campaign, Package } from '../lib/types'
 
 type PayOrder = {
@@ -66,10 +66,12 @@ function PaymentPanel({
   order,
   campaignId,
   onUpdated,
+  wallets = envDeposits,
 }: {
   order: PayOrder
   campaignId: string
   onUpdated: () => void
+  wallets?: { trx: string; sol: string; ton: string }
 }) {
   const { left, label } = useCountdown(order.expires_at)
   const [checking, setChecking] = useState(false)
@@ -79,7 +81,7 @@ function PaymentPanel({
   const [txBusy, setTxBusy] = useState(false)
 
   const chain = order.crypto_chain.toUpperCase()
-  const addr = order.deposit_address || deposits[order.crypto_chain as 'trx' | 'sol' | 'ton'] || ''
+  const addr = order.deposit_address || wallets[order.crypto_chain as 'trx' | 'sol' | 'ton'] || ''
   const amountStr = Number(order.amount_crypto).toFixed(6)
   // QR encodes amount + address hint as plain text address (universal)
   const qrPayload = addr
@@ -236,6 +238,7 @@ export default function Promote() {
   const [packages, setPackages] = useState<Package[]>([])
   const [campaigns, setCampaigns] = useState<Campaign[]>([])
   const [orders, setOrders] = useState<PayOrder[]>([])
+  const [walletDeposits, setWalletDeposits] = useState(envDeposits)
   const [packageId, setPackageId] = useState('')
   const [title, setTitle] = useState('')
   const [url, setUrl] = useState('')
@@ -277,6 +280,7 @@ export default function Promote() {
 
   useEffect(() => {
     void load()
+    void loadDeposits().then(setWalletDeposits)
   }, [user?.id])
 
   const selectedPkg = packages.find((x) => x.id === packageId)
@@ -341,7 +345,7 @@ export default function Promote() {
         rate_usd: quote.rate_usd,
         crypto_chain: chain,
         pay_code: code,
-        deposit_address: quote.deposit_address || deposits[chain],
+        deposit_address: quote.deposit_address || walletDeposits[chain as 'trx'|'sol'|'ton'] || envDeposits[chain as 'trx'|'sol'|'ton'],
         expires_at: expires,
         status: 'awaiting_payment',
       })
@@ -494,7 +498,7 @@ export default function Promote() {
               </div>
               {order && (c.status === 'pending_payment' || order.status === 'awaiting_payment') && (
                 <div className="mt-3">
-                  <PaymentPanel order={order} campaignId={c.id} onUpdated={() => void load()} />
+                  <PaymentPanel order={order} campaignId={c.id} onUpdated={() => void load()} wallets={walletDeposits} />
                 </div>
               )}
               {c.status === 'pending_approval' && (

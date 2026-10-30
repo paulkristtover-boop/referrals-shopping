@@ -132,3 +132,19 @@ export function depositFor(chain) {
   if (chain === 'ton') return process.env.DEPOSIT_TON || process.env.VITE_DEPOSIT_TON || ''
   return ''
 }
+
+/** Prefer admin-configured wallets in platform_settings, else env */
+export async function resolveDepositAddress(chain) {
+  const c = String(chain || '').toLowerCase()
+  const key = c === 'trx' ? 'deposit_trx' : c === 'sol' ? 'deposit_sol' : c === 'ton' ? 'deposit_ton' : null
+  if (!key) return ''
+  try {
+    const { adminClient } = await import('./supabaseAdmin.js')
+    const sb = adminClient()
+    const { data } = await sb.from('platform_settings').select('value').eq('key', key).maybeSingle()
+    if (data?.value && String(data.value).trim()) return String(data.value).trim()
+  } catch {
+    /* env fallback */
+  }
+  return depositFor(c)
+}

@@ -5,7 +5,7 @@ import type { Package } from '../lib/types'
 import { ListFilters, ListPagination, paginate } from '../components/ListControls'
 import { BRAND, TG, IG, IG_HANDLE } from '../lib/brand'
 
-type TabKey = 'overview' | 'campaigns' | 'submissions' | 'withdrawals' | 'packages' | 'users'
+type TabKey = 'overview' | 'campaigns' | 'submissions' | 'withdrawals' | 'packages' | 'users' | 'settings'
 
 export default function Admin() {
   const [tab, setTab] = useState<TabKey>('overview')
@@ -24,6 +24,8 @@ export default function Admin() {
   const [status, setStatus] = useState('all')
   const [page, setPage] = useState(1)
   const [pageSize, setPageSize] = useState(10)
+  const [settings, setSettings] = useState({ deposit_trx: '', deposit_sol: '', deposit_ton: '' })
+  const [settingsSaving, setSettingsSaving] = useState(false)
 
   // reset page when tab/filter changes
   useEffect(() => { setPage(1) }, [tab, search, status, pageSize])
@@ -97,6 +99,15 @@ export default function Admin() {
     setWithdrawals(w.data || [])
     setPackages((p.data as Package[]) || [])
     setUsers(((u.data as Record<string, unknown>[]) || []).filter((row) => row.role !== 'admin'))
+    const { data: dep } = await supabase.rpc('get_deposit_addresses')
+    if (dep && typeof dep === 'object') {
+      const d = dep as Record<string, string>
+      setSettings({
+        deposit_trx: d.trx || '',
+        deposit_sol: d.sol || '',
+        deposit_ton: d.ton || '',
+      })
+    }
     setLoading(false)
   }
 
@@ -399,6 +410,7 @@ export default function Admin() {
               ['withdrawals', `Payouts${pendingW ? ` (${pendingW})` : ''}`],
               ['packages', 'Packages'],
               ['users', 'Users'],
+              ['settings', 'Settings'],
             ] as [TabKey, string][]
           ).map(([k, label]) => (
             <Nav.Link key={k} active={tab === k} onClick={() => setTab(k)}>
@@ -912,6 +924,73 @@ export default function Admin() {
 
             </>
           )}
+
+          {tab === 'settings' && (
+            <>
+              <h5 className="fw-bold mb-2">Platform settings</h5>
+              <p className="small text-muted mb-3">
+                Deposit wallets shown to customers when they pay for referral packages. Saved in the database (overrides env if set).
+                Run <code>supabase/platform_settings.sql</code> once.
+              </p>
+              <Form
+                className="row g-3"
+                onSubmit={async (e) => {
+                  e.preventDefault()
+                  setSettingsSaving(true)
+                  setErr(null)
+                  try {
+                    for (const [key, value] of [
+                      ['deposit_trx', settings.deposit_trx],
+                      ['deposit_sol', settings.deposit_sol],
+                      ['deposit_ton', settings.deposit_ton],
+                    ] as const) {
+                      const { error } = await supabase.rpc('admin_set_setting', { p_key: key, p_value: value })
+                      if (error) throw error
+                    }
+                    flash('Deposit addresses saved')
+                  } catch (err: unknown) {
+                    setErr(err instanceof Error ? err.message : 'Save failed — run platform_settings.sql')
+                  } finally {
+                    setSettingsSaving(false)
+                  }
+                }}
+              >
+                <div className="col-12">
+                  <Form.Label>TRX deposit address</Form.Label>
+                  <Form.Control
+                    className="font-monospace"
+                    value={settings.deposit_trx}
+                    onChange={(e) => setSettings((s) => ({ ...s, deposit_trx: e.target.value.trim() }))}
+                    placeholder="T…"
+                  />
+                </div>
+                <div className="col-12">
+                  <Form.Label>SOL deposit address</Form.Label>
+                  <Form.Control
+                    className="font-monospace"
+                    value={settings.deposit_sol}
+                    onChange={(e) => setSettings((s) => ({ ...s, deposit_sol: e.target.value.trim() }))}
+                    placeholder="Solana address"
+                  />
+                </div>
+                <div className="col-12">
+                  <Form.Label>TON deposit address</Form.Label>
+                  <Form.Control
+                    className="font-monospace"
+                    value={settings.deposit_ton}
+                    onChange={(e) => setSettings((s) => ({ ...s, deposit_ton: e.target.value.trim() }))}
+                    placeholder="EQ…"
+                  />
+                </div>
+                <div className="col-12">
+                  <Button type="submit" disabled={settingsSaving}>
+                    {settingsSaving ? 'Saving…' : 'Save wallets'}
+                  </Button>
+                </div>
+              </Form>
+            </>
+          )}
+
         </div>
       </div>
     </div>

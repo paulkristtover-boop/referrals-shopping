@@ -1,4 +1,4 @@
-import { getRates, makeUniqueCryptoAmount, depositFor } from '../_lib/chains.js'
+import { getRates, makeUniqueCryptoAmount, resolveDepositAddress } from '../_lib/chains.js'
 
 /** GET ?usd=50&chain=trx → unique crypto amount for 15 min window */
 export default async function handler(req, res) {
@@ -13,7 +13,7 @@ export default async function handler(req, res) {
     const rates = await getRates()
     const rate = rates[chain]
     const { amount, suffix } = makeUniqueCryptoAmount(usd, rate)
-    const deposit_address = depositFor(chain)
+    const deposit_address = await resolveDepositAddress(chain)
     const expires_at = new Date(Date.now() + 15 * 60 * 1000).toISOString()
     return res.json({
       chain,
