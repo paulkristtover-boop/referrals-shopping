@@ -2,10 +2,9 @@ import { useState } from 'react'
 import { Button, Dropdown } from 'react-bootstrap'
 import { BRAND } from '../lib/brand'
 
-/** Public share payload — never include payment/order status */
+/** Public share — never include order status */
 export type ShareOrderPayload = {
   title: string
-  /** Referral link to share externally */
   targetUrl: string
   packageName?: string
 }
@@ -18,7 +17,7 @@ function buildMessage(p: ShareOrderPayload) {
     '',
     'Join via this referral link:',
     p.targetUrl,
-  ].filter((x) => x !== null && x !== undefined) as string[]
+  ].filter((x) => x != null) as string[]
   return lines.join('\n')
 }
 
@@ -78,13 +77,24 @@ export default function ShareOrder({ order, size = 'sm', variant = 'outline-seco
   }
 
   return (
-    <div className={`d-inline-flex flex-wrap gap-1 align-items-center ${className}`}>
-      <Dropdown>
+    <div className={`share-order-wrap d-inline-flex flex-wrap gap-1 align-items-center ${className}`}>
+      <Dropdown drop="up" align="end" autoClose="outside">
         <Dropdown.Toggle size={size} variant={variant} id={`share-${order.targetUrl.slice(-12)}`}>
           <i className="bi bi-share me-1" />
           Share
         </Dropdown.Toggle>
-        <Dropdown.Menu align="end">
+        <Dropdown.Menu
+          popperConfig={{
+            strategy: 'fixed',
+            modifiers: [
+              { name: 'offset', options: { offset: [0, 8] } },
+              { name: 'preventOverflow', options: { boundary: 'viewport', padding: 8 } },
+              { name: 'flip', options: { fallbackPlacements: ['top', 'bottom'] } },
+            ],
+          }}
+          renderOnMount
+          className="share-dropdown-menu shadow"
+        >
           <Dropdown.Header>Share referral link only</Dropdown.Header>
           <Dropdown.Item onClick={() => open(links.wa)}>
             <i className="bi bi-whatsapp text-success me-2" />
@@ -121,10 +131,10 @@ export default function ShareOrder({ order, size = 'sm', variant = 'outline-seco
           </Dropdown.Item>
         </Dropdown.Menu>
       </Dropdown>
-      <Button size={size} variant="outline-success" title="WhatsApp" onClick={() => open(links.wa)} aria-label="Share on WhatsApp">
+      <Button size={size} variant="outline-success" title="WhatsApp" onClick={() => open(links.wa)} aria-label="WhatsApp">
         <i className="bi bi-whatsapp" />
       </Button>
-      <Button size={size} variant="outline-primary" title="Telegram" onClick={() => open(links.tg)} aria-label="Share on Telegram">
+      <Button size={size} variant="outline-primary" title="Telegram" onClick={() => open(links.tg)} aria-label="Telegram">
         <i className="bi bi-telegram" />
       </Button>
     </div>

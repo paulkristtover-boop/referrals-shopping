@@ -3,18 +3,19 @@ import { Row, Col, Card } from 'react-bootstrap'
 import Logo from '../components/Logo'
 import { useAuth } from '../contexts/AuthContext'
 import { BRAND, TG, IG, IG_HANDLE } from '../lib/brand'
+import { formatMoney } from '../lib/money'
 
 const REGULAR_PACKS = [
   { name: 'Free Starter', refs: 50, price: 0, free: true },
-  { name: 'Starter', refs: 1000, price: 50 },
-  { name: 'Growth', refs: 1900, price: 100 },
-  { name: 'Scale', refs: 3800, price: 200 },
+  { name: 'Starter', refs: 1000, price: 25000 },
+  { name: 'Growth', refs: 1900, price: 50000 },
+  { name: 'Scale', refs: 3800, price: 100000 },
 ]
 
 const GAMBLING_PACKS = [
-  { name: 'Deposit Starter', refs: 1000, price: 100 },
-  { name: 'Deposit Growth', refs: 1900, price: 200 },
-  { name: 'Deposit Scale', refs: 3800, price: 400 },
+  { name: 'Deposit Starter', refs: 1000, price: 50000 },
+  { name: 'Deposit Growth', refs: 1900, price: 100000 },
+  { name: 'Deposit Scale', refs: 3800, price: 200000 },
 ]
 
 const TRUST = [
@@ -134,7 +135,7 @@ export default function Home() {
                 <div className="package-refs">{p.refs.toLocaleString()}</div>
                 <div className="small text-muted mb-2">referrals</div>
                 <div className="fw-bold mb-1">{p.name}</div>
-                <div className="package-price mb-2">{p.free ? <span className="text-success">$0</span> : `$${p.price}`}</div>
+                <div className="package-price mb-2">{p.free ? <span className="text-success">$0</span> : formatMoney(p.price)}</div>
                 <div className="small text-muted mt-auto">No deposit required</div>
               </Card.Body>
             </Card>
@@ -151,7 +152,7 @@ export default function Home() {
                 <div className="package-refs text-danger">{p.refs.toLocaleString()}</div>
                 <div className="small text-muted mb-2">referrals</div>
                 <div className="fw-bold mb-1">{p.name}</div>
-                <div className="package-price mb-2">${p.price}</div>
+                <div className="package-price mb-2">{formatMoney(p.price)}</div>
                 <div className="small text-muted mt-auto">Must deposit</div>
               </Card.Body>
             </Card>

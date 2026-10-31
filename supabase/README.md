@@ -23,3 +23,5 @@ Run in **Supabase → SQL Editor** in this order (skip any already applied):
 Also create a **Storage** bucket named `screenshots` (public read) for earn proofs.
 
 Auth: **Confirm email = OFF**. Optional MFA for 2FA.
+
+| 15 | `naira_drafts_poster.sql` | NGN package prices, drafts, poster confirm + disputes |

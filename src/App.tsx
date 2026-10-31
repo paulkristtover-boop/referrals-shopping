@@ -15,6 +15,7 @@ import Wallet from './pages/Wallet'
 import Invite from './pages/Invite'
 import Security from './pages/Security'
 import Account from './pages/Account'
+import PosterProofs from './pages/PosterProofs'
 import Admin from './pages/Admin'
 import AdminSupport from './pages/AdminSupport'
 import { useAuth } from './contexts/AuthContext'
@@ -112,6 +113,16 @@ export default function App() {
             <Private>
               <UserOnly>
                 <Invite />
+              </UserOnly>
+            </Private>
+          }
+        />
+        <Route
+          path="proofs"
+          element={
+            <Private>
+              <UserOnly>
+                <PosterProofs />
               </UserOnly>
             </Private>
           }

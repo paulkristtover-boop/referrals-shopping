@@ -4,6 +4,7 @@ import { supabase, supabaseConfigured } from '../lib/supabase'
 import type { Package } from '../lib/types'
 import { ListFilters, ListPagination, paginate } from '../components/ListControls'
 import { BRAND, TG, IG, IG_HANDLE } from '../lib/brand'
+import { formatMoney } from '../lib/money'
 
 type TabKey = 'overview' | 'campaigns' | 'submissions' | 'withdrawals' | 'packages' | 'users' | 'settings'
 
@@ -528,6 +529,7 @@ export default function Admin() {
               statusOptions={[
                 { value: 'all', label: 'All statuses' },
                 { value: 'pending', label: 'Pending' },
+                { value: 'disputed', label: 'Disputes' },
                 { value: 'approved', label: 'Approved' },
                 { value: 'rejected', label: 'Rejected' },
               ]}
@@ -573,6 +575,7 @@ export default function Admin() {
               statusOptions={[
                 { value: 'all', label: 'All statuses' },
                 { value: 'pending', label: 'Pending' },
+                { value: 'disputed', label: 'Disputes' },
                 { value: 'paid', label: 'Paid' },
                 { value: 'rejected', label: 'Rejected' },
               ]}
@@ -587,7 +590,7 @@ export default function Admin() {
                 {wdPage.slice.map((w) => (
                   <tr key={String(w.id)}>
                     <td className="small">{String((w.profiles as { email?: string })?.email || '')}</td>
-                    <td>${Number(w.amount).toFixed(2)}</td>
+                    <td>{formatMoney(w.amount)}</td>
                     <td>{String(w.crypto_chain).toUpperCase()}</td>
                     <td className="small">{String(w.wallet_address)}</td>
                     <td><Badge className="badge-status" bg="secondary">{String(w.status)}</Badge></td>
@@ -643,7 +646,7 @@ export default function Admin() {
                       <td>{p.name}</td>
                       <td>{p.category}</td>
                       <td>{p.referrals}</td>
-                      <td>${Number(p.price_usd).toFixed(0)}</td>
+                      <td>{formatMoney(p.price_usd)}</td>
                       <td>{(p as Package & { active?: boolean }).active === false ? 'No' : 'Yes'}</td>
                       <td>
                         <Button
@@ -783,7 +786,7 @@ export default function Admin() {
                         </Button>
                       ) : null}
                     </td>
-                    <td>${Number(u.balance || 0).toFixed(2)}</td>
+                    <td>{formatMoney(u.balance || 0)}</td>
                     <td><Badge bg={u.role === 'admin' ? 'dark' : 'secondary'}>{String(u.role)}</Badge></td>
                     <td className="text-nowrap">
                       <Button size="sm" variant="outline-primary" className="me-1" onClick={() => void openUserAccount(String(u.id))}>
@@ -826,7 +829,7 @@ export default function Admin() {
                       <Col md={6}><strong>Email:</strong> {String(userDetail.email || '—')}</Col>
                       <Col md={6}><strong>Name:</strong> {String(userDetail.full_name || '—')}</Col>
                       <Col md={6}><strong>Role:</strong> {String(userDetail.role || 'user')}</Col>
-                      <Col md={6}><strong>Balance:</strong> ${Number(userDetail.balance || 0).toFixed(2)}</Col>
+                      <Col md={6}><strong>Balance:</strong> {formatMoney(userDetail.balance || 0)}</Col>
                       <Col md={6}><strong>Invite code:</strong> <code>{String(userDetail.invite_code || '—')}</code></Col>
                       <Col md={6}><strong>Free starter:</strong> {userDetail.free_starter_used_at ? 'Used' : 'Available'}</Col>
                       <Col md={6}><strong>Joined:</strong> {userDetail.created_at ? new Date(String(userDetail.created_at)).toLocaleString() : '—'}</Col>
@@ -860,7 +863,7 @@ export default function Admin() {
                         <tbody>
                           {userLogs.payments.map((c) => (
                             <tr key={String(c.id)}>
-                              <td className="small">${Number(c.amount_usd || 0).toFixed(2)}</td>
+                              <td className="small">{formatMoney(c.amount_usd || 0)}</td>
                               <td className="small">{String(c.crypto_chain || '').toUpperCase()}</td>
                               <td className="small">{String(c.status)}</td>
                               <td className="small">{c.created_at ? new Date(String(c.created_at)).toLocaleString() : ''}</td>
@@ -893,7 +896,7 @@ export default function Admin() {
                         <tbody>
                           {userLogs.withdrawals.map((c) => (
                             <tr key={String(c.id)}>
-                              <td className="small">${Number(c.amount || 0).toFixed(2)}</td>
+                              <td className="small">{formatMoney(c.amount || 0)}</td>
                               <td className="small">{String(c.status)}</td>
                               <td className="small text-truncate" style={{ maxWidth: 120 }}>{String(c.wallet_address || '')}</td>
                               <td className="small">{c.created_at ? new Date(String(c.created_at)).toLocaleString() : ''}</td>

@@ -7,6 +7,7 @@ import { useTheme } from '../contexts/ThemeContext'
 import Logo from './Logo'
 import BottomTabBar from './BottomTabBar'
 import OfflineNotice from './OfflineNotice'
+import SlowConnection from './SlowConnection'
 
 import { TG, IG, IG_HANDLE, BRAND } from '../lib/brand'
 
@@ -40,7 +41,9 @@ export default function Layout() {
     return (
       <>
         <OfflineNotice />
-        <Navbar expand="lg" className={`rs-navbar top-nav admin-nav ${scrolled ? 'scrolled' : ''}`}>
+        <SlowConnection />
+        
+<Navbar expand="lg" className={`rs-navbar top-nav admin-nav ${scrolled ? 'scrolled' : ''}`}>
           <Container fluid className="px-3 px-lg-4">
             <Navbar.Brand as={Link} to="/admin" className="d-flex align-items-center gap-2 text-white">
               <Logo size={28} showText={false} />
@@ -86,7 +89,9 @@ export default function Layout() {
   return (
     <>
       <OfflineNotice />
-      <Navbar expand="lg" className={`rs-navbar top-nav ${scrolled ? 'scrolled' : ''}`}>
+        <SlowConnection />
+        
+<Navbar expand="lg" className={`rs-navbar top-nav ${scrolled ? 'scrolled' : ''}`}>
         <Container>
           <Navbar.Brand as={Link} to="/" className="d-flex align-items-center">
             <Logo size={28} />
@@ -136,6 +141,9 @@ export default function Layout() {
               </NavItem>
               {user && !isAdmin && (
                 <>
+                  <NavItem to="/proofs" icon="bi-check2-square">
+                    Proofs
+                  </NavItem>
                   <NavItem to="/invite" icon="bi-people">
                     Invite
                   </NavItem>

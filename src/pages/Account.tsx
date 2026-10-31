@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom'
 import { Alert, Button, Card, Form, ListGroup, Spinner } from 'react-bootstrap'
 import { useAuth } from '../contexts/AuthContext'
 import { supabase, supabaseConfigured } from '../lib/supabase'
+import { formatMoney } from '../lib/money'
 
 export default function Account() {
   const { user, profile, refreshProfile, signOut } = useAuth()
@@ -183,7 +184,11 @@ export default function Account() {
           </ListGroup.Item>
           {profile?.role !== 'admin' && (
             <>
-              <ListGroup.Item action as={Link} to="/invite" className="d-flex justify-content-between align-items-center">
+              <ListGroup.Item action as={Link} to="/proofs" className="d-flex justify-content-between align-items-center">
+            <span><i className="bi bi-check2-square me-2 text-primary" />Confirm proofs</span>
+            <i className="bi bi-chevron-right text-muted" />
+          </ListGroup.Item>
+          <ListGroup.Item action as={Link} to="/invite" className="d-flex justify-content-between align-items-center">
                 <span><i className="bi bi-people me-2 text-primary" />Invite friends</span>
                 <i className="bi bi-chevron-right text-muted" />
               </ListGroup.Item>

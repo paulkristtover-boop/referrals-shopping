@@ -4,6 +4,7 @@ import { ListFilters, ListPagination, paginate } from '../components/ListControl
 import { useAuth } from '../contexts/AuthContext'
 import { supabase, supabaseConfigured } from '../lib/supabase'
 import { BRAND } from '../lib/brand'
+import { formatMoney } from '../lib/money'
 
 type W = {
   id: string
@@ -14,7 +15,7 @@ type W = {
   created_at: string
 }
 
-const MIN_USD = 1
+const MIN_USD = 100
 
 function statusBadge(status: string) {
   const map: Record<string, string> = {
@@ -70,7 +71,7 @@ export default function Wallet() {
     const a = Number(amount)
     if (!supabaseConfigured || !user) return
     if (!a || a < MIN_USD) {
-      setErr(`Minimum withdrawal is $${MIN_USD.toFixed(2)}`)
+      setErr(`Minimum withdrawal is ₦${MIN_USD.toFixed(2)}`)
       return
     }
     if (a > Number(profile?.balance || 0)) {
@@ -151,7 +152,7 @@ export default function Wallet() {
       <Card className="rs-card rs-card-static mb-4">
         <Card.Body>
           <h5 className="fw-bold">Request withdrawal</h5>
-          <p className="small text-muted">Minimum ${MIN_USD.toFixed(2)}. Admin sends crypto to your address after review.</p>
+          <p className="small text-muted">Minimum {formatMoney(MIN_USD)}. Admin sends crypto to your address after review.</p>
           <Form onSubmit={request} className="row g-3">
             <div className="col-md-4">
               <Form.Label>Amount (USD)</Form.Label>
@@ -236,7 +237,7 @@ export default function Wallet() {
           <tbody>
             {pg.slice.map((w) => (
               <tr key={w.id}>
-                <td>${Number(w.amount).toFixed(2)}</td>
+                <td>{formatMoney(w.amount)}</td>
                 <td>{w.crypto_chain.toUpperCase()}</td>
                 <td className="small font-monospace text-truncate" style={{ maxWidth: 140 }}>
                   {w.wallet_address}

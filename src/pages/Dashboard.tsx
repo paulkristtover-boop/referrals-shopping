@@ -9,6 +9,7 @@ import OrderTimeline from '../components/OrderTimeline'
 import ShareOrder from '../components/ShareOrder'
 import { ListFilters, ListPagination, paginate } from '../components/ListControls'
 import { BRAND } from '../lib/brand'
+import { formatMoney } from '../lib/money'
 
 function errMsg(e: unknown): string {
   if (!e) return 'Failed to load'
@@ -181,7 +182,7 @@ export default function Dashboard() {
         <Col xs={6} md={4} lg={2}>
           <div className="stat-card h-100">
             <div className="text-muted small">Wallet</div>
-            <div className="stat-value">${Number(profile?.balance || 0).toFixed(2)}</div>
+            <div className="stat-value">{formatMoney(profile?.balance || 0)}</div>
             <Link to="/wallet" className="small">
               Withdraw →
             </Link>
@@ -327,7 +328,7 @@ export default function Dashboard() {
                           <div className="fw-semibold small">{c.packages?.name || '—'}</div>
                           <div className="text-muted small">
                             {goal ? `${goal.toLocaleString()} refs` : ''}
-                            {c.paid_amount != null ? ` · $${Number(c.paid_amount).toFixed(0)}` : ''}
+                            {c.paid_amount != null ? ` · ${formatMoney(c.paid_amount)}` : ''}
                           </div>
                         </td>
                         <td>
@@ -394,7 +395,7 @@ export default function Dashboard() {
                       </Badge>
                       <span className="small text-muted">
                         {goal ? `${goal.toLocaleString()} refs` : ''}
-                        {c.paid_amount != null ? ` · $${Number(c.paid_amount).toFixed(0)}` : ''}
+                        {c.paid_amount != null ? ` · ${formatMoney(c.paid_amount)}` : ''}
                       </span>
                     </div>
                     <ProgressBar now={pct} className="mb-1" style={{ height: 7 }} />

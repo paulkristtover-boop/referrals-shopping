@@ -5,6 +5,7 @@ import OrderTimeline from '../components/OrderTimeline'
 import ShareOrder from '../components/ShareOrder'
 import { useAuth } from '../contexts/AuthContext'
 import { deposits as envDeposits, loadDeposits, supabase, supabaseConfigured } from '../lib/supabase'
+import { formatMoney } from '../lib/money'
 import type { Campaign, Package } from '../lib/types'
 
 type PayOrder = {
@@ -244,6 +245,7 @@ export default function Promote() {
   const [url, setUrl] = useState('')
   const [description, setDescription] = useState('')
   const [sampleFile, setSampleFile] = useState<File | null>(null)
+  const [draftId, setDraftId] = useState<string | null>(null)
   const [chain, setChain] = useState<'trx' | 'sol' | 'ton'>('trx')
   const [msg, setMsg] = useState<string | null>(null)
   const [err, setErr] = useState<string | null>(null)
@@ -288,6 +290,68 @@ export default function Promote() {
   const selectedPkg = packages.find((x) => x.id === packageId)
   const isFree = selectedPkg != null && Number(selectedPkg.price_usd) === 0
 
+  const uploadSample = async (): Promise<string | null> => {
+    if (!sampleFile || !user) return null
+    const path = `${user.id}/samples/${Date.now()}_${sampleFile.name.replace(/[^\w.-]/g, '_')}`
+    const up = await supabase.storage.from('screenshots').upload(path, sampleFile)
+    if (up.error) throw new Error(up.error.message)
+    return supabase.storage.from('screenshots').getPublicUrl(path).data.publicUrl
+  }
+
+  const saveDraft = async () => {
+    if (!user || !packageId) {
+      setErr('Choose a package, title and URL to save a draft')
+      return
+    }
+    setErr(null)
+    setCreating(true)
+    try {
+      const sampleUrl = await uploadSample()
+      const { data, error } = await supabase.rpc('save_campaign_draft', {
+        p_title: title,
+        p_target_url: url,
+        p_package_id: packageId,
+        p_description: description.trim() || null,
+        p_sample_screenshot_url: sampleUrl,
+        p_campaign_id: draftId,
+      })
+      if (error) {
+        // fallback insert
+        const { data: camp, error: e2 } = await supabase.from('campaigns').insert({
+          user_id: user.id,
+          package_id: packageId,
+          title,
+          target_url: url,
+          description: description.trim() || null,
+          sample_screenshot_url: sampleUrl,
+          status: 'draft',
+          paid_amount: 0,
+        }).select('id').single()
+        if (e2) throw e2
+        setDraftId(camp.id)
+      } else {
+        setDraftId(data as string)
+      }
+      setMsg('Draft saved — continue anytime and post when ready.')
+      void load()
+    } catch (ex: unknown) {
+      setErr(ex instanceof Error ? ex.message : 'Could not save draft')
+    } finally {
+      setCreating(false)
+    }
+  }
+
+  const continueDraft = (c: Campaign) => {
+    setDraftId(c.id)
+    setTitle(c.title)
+    setUrl(c.target_url)
+    setDescription(c.description || '')
+    setPackageId(c.package_id)
+    setSampleFile(null)
+    setMsg('Draft loaded — edit and post, or save again.')
+    window.scrollTo({ top: 0, behavior: 'smooth' })
+  }
+
   const create = async (e: React.FormEvent) => {
     e.preventDefault()
     setErr(null)
@@ -324,6 +388,7 @@ export default function Promote() {
         setUrl('')
         setDescription('')
         setSampleFile(null)
+        setDraftId(null)
         void load()
         return
       }
@@ -427,7 +492,7 @@ export default function Promote() {
                     <option key={p.id} value={p.id} disabled={disabled}>
                       {free
                         ? `${p.name} — FREE${freeUsed ? ' (used)' : ' (once)'} · signup only`
-                        : `${p.name} — $${p.price_usd} · ${
+                        : `${p.name} — ${formatMoney(p.price_usd)} · ${
                             p.category === 'gambling' ? 'account + deposit' : 'signup only'
                           }`}
                     </option>
@@ -496,6 +561,7 @@ export default function Promote() {
           onStatus={(v) => { setStatusFilter(v); setPage(1) }}
           statusOptions={[
             { value: 'all', label: 'All statuses' },
+            { value: 'draft', label: 'Drafts' },
             { value: 'pending_payment', label: 'Awaiting payment' },
             { value: 'pending_approval', label: 'Checking / submitted' },
             { value: 'approved', label: 'Promoting' },
@@ -526,7 +592,7 @@ export default function Promote() {
                 <div>
                   <strong>{c.title}</strong>
                   <div className="small text-muted">
-                    ${Number(c.paid_amount || 0).toFixed(0)} · {(c.crypto_chain || '').toUpperCase()}
+                    {formatMoney(c.paid_amount || 0)} · {(c.crypto_chain || '').toUpperCase()}
                   </div>
                   <a href={c.target_url} target="_blank" rel="noreferrer" className="small">
                     Open link
@@ -548,6 +614,11 @@ export default function Promote() {
               )}
               {c.status === 'approved' && (
                 <p className="small text-success mt-2 mb-0">Promoting your link — track progress on Dashboard.</p>
+              )}
+              {c.status === 'draft' && (
+                <div className="mt-2">
+                  <Button size="sm" variant="primary" onClick={() => continueDraft(c)}>Continue draft</Button>
+                </div>
               )}
               {c.status === 'completed' && (
                 <p className="small text-success mt-2 mb-0">Order complete — referral target reached.</p>

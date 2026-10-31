@@ -5,6 +5,7 @@ import { useAuth } from '../contexts/AuthContext'
 import { supabase, supabaseConfigured } from '../lib/supabase'
 import type { Task } from '../lib/types'
 import { BRAND } from '../lib/brand'
+import { formatMoney } from '../lib/money'
 
 type TaskRow = Task & { campaigns?: { title: string; target_url: string; status: string; user_id?: string } }
 
@@ -221,7 +222,7 @@ export default function Earn() {
                 </div>
                 <div className="text-end">
                   <Badge bg="success" className="badge-status">
-                    ${Number(t.reward_amount).toFixed(2)}
+                    {formatMoney(t.reward_amount)}
                   </Badge>
                   <div className="small text-muted">Wait {t.wait_seconds}s</div>
                 </div>
