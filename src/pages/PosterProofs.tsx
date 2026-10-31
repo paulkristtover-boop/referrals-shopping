@@ -4,6 +4,7 @@ import { useAuth } from '../contexts/AuthContext'
 import { supabase, supabaseConfigured } from '../lib/supabase'
 import { formatMoney } from '../lib/money'
 import { BRAND } from '../lib/brand'
+import EmptyState from '../components/EmptyState'
 
 type Row = {
   id: string
@@ -112,7 +113,7 @@ export default function PosterProofs() {
       )}
 
       {rows.length === 0 ? (
-        <div className="empty-state">No proofs on your adverts yet.</div>
+        <EmptyState>No proofs on your adverts yet.</EmptyState>
       ) : (
         <div className="d-flex flex-column gap-3">
           {rows.map((r) => (

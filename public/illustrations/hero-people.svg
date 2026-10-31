@@ -1,0 +1,50 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 360" fill="none" role="img" aria-label="People connecting through referrals">
+  <defs>
+    <linearGradient id="g1" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#2563eb"/>
+      <stop offset="100%" stop-color="#7c3aed"/>
+    </linearGradient>
+    <linearGradient id="g2" x1="1" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#06b6d4"/>
+      <stop offset="100%" stop-color="#2563eb"/>
+    </linearGradient>
+    <linearGradient id="g3" x1="0.5" y1="0" x2="0.5" y2="1">
+      <stop offset="0%" stop-color="#f59e0b"/>
+      <stop offset="100%" stop-color="#ef4444"/>
+    </linearGradient>
+  </defs>
+  <!-- soft background blobs -->
+  <circle cx="120" cy="80" r="70" fill="#2563eb" opacity="0.08"/>
+  <circle cx="520" cy="260" r="90" fill="#7c3aed" opacity="0.08"/>
+  <circle cx="340" cy="60" r="40" fill="#06b6d4" opacity="0.1"/>
+  <!-- connection lines -->
+  <path d="M160 180 C240 120, 300 120, 380 170" stroke="#2563eb" stroke-width="3" stroke-dasharray="6 6" opacity="0.35"/>
+  <path d="M200 220 C280 260, 360 260, 460 200" stroke="#7c3aed" stroke-width="3" stroke-dasharray="6 6" opacity="0.35"/>
+  <path d="M280 160 C340 200, 400 140, 480 160" stroke="#06b6d4" stroke-width="2.5" opacity="0.3"/>
+  <!-- person 1 -->
+  <g transform="translate(100,120)">
+    <circle cx="40" cy="36" r="28" fill="url(#g1)"/>
+    <circle cx="40" cy="30" r="14" fill="#fff" opacity="0.95"/>
+    <ellipse cx="40" cy="72" rx="26" ry="18" fill="#fff" opacity="0.95"/>
+    <circle cx="40" cy="28" r="10" fill="#1e3a5f"/>
+    <path d="M24 78 Q40 92 56 78" stroke="#1e3a5f" stroke-width="3" fill="none" opacity="0.3"/>
+  </g>
+  <!-- person 2 center -->
+  <g transform="translate(280,90)">
+    <circle cx="40" cy="40" r="34" fill="url(#g2)"/>
+    <circle cx="40" cy="34" r="16" fill="#fff" opacity="0.95"/>
+    <ellipse cx="40" cy="80" rx="30" ry="20" fill="#fff" opacity="0.95"/>
+    <circle cx="40" cy="32" r="11" fill="#0f766e"/>
+  </g>
+  <!-- person 3 -->
+  <g transform="translate(460,130)">
+    <circle cx="40" cy="36" r="28" fill="url(#g3)"/>
+    <circle cx="40" cy="30" r="14" fill="#fff" opacity="0.95"/>
+    <ellipse cx="40" cy="72" rx="26" ry="18" fill="#fff" opacity="0.95"/>
+    <circle cx="40" cy="28" r="10" fill="#7c2d12"/>
+  </g>
+  <!-- small nodes -->
+  <circle cx="240" cy="200" r="8" fill="#2563eb" opacity="0.5"/>
+  <circle cx="400" cy="220" r="8" fill="#7c3aed" opacity="0.5"/>
+  <circle cx="320" cy="250" r="6" fill="#06b6d4" opacity="0.5"/>
+</svg>

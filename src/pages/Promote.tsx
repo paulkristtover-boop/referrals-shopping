@@ -7,6 +7,7 @@ import { useAuth } from '../contexts/AuthContext'
 import { deposits as envDeposits, loadDeposits, supabase, supabaseConfigured } from '../lib/supabase'
 import { formatMoney } from '../lib/money'
 import type { Campaign, Package } from '../lib/types'
+import EmptyState from '../components/EmptyState'
 
 type PayOrder = {
   id: string
@@ -642,7 +643,7 @@ export default function Promote() {
           </>
         )
       })()}
-      {campaigns.length === 0 && <div className="empty-state">No orders yet.</div>}
+      {campaigns.length === 0 && <EmptyState>No orders yet.</EmptyState>}
     </>
   )
 }

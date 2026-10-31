@@ -3,6 +3,7 @@ import { Alert, Button, Card, Form, InputGroup, Table, Spinner } from 'react-boo
 import { useAuth } from '../contexts/AuthContext'
 import { supabase, supabaseConfigured } from '../lib/supabase'
 import { BRAND } from '../lib/brand'
+import EmptyState from '../components/EmptyState'
 
 type Invitee = {
   id: string
@@ -129,7 +130,7 @@ export default function Invite() {
 
       <h5 className="fw-bold">Recent invitees</h5>
       {invitees.length === 0 ? (
-        <div className="empty-state">No one has used your code yet.</div>
+        <EmptyState>No one has used your code yet.</EmptyState>
       ) : (
         <Card className="rs-card rs-card-static">
           <Table size="sm" responsive className="mb-0">

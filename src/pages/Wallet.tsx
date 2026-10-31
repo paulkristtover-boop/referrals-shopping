@@ -5,6 +5,7 @@ import { useAuth } from '../contexts/AuthContext'
 import { supabase, supabaseConfigured } from '../lib/supabase'
 import { BRAND } from '../lib/brand'
 import { formatMoney } from '../lib/money'
+import EmptyState from '../components/EmptyState'
 
 type W = {
   id: string
@@ -248,7 +249,7 @@ export default function Wallet() {
             ))}
           </tbody>
         </Table>
-        {pg.slice.length === 0 && <div className="empty-state border-0">No withdrawals yet.</div>}
+        {pg.slice.length === 0 && <EmptyState className="border-0">No withdrawals yet.</EmptyState>}
       </Card>
       <ListPagination page={pg.page} totalPages={pg.totalPages} total={pg.total} onPage={setPage} />
     </div>

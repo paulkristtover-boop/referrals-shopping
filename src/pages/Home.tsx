@@ -34,15 +34,24 @@ export default function Home() {
   return (
     <div className="page-enter">
       <div className="hero-section text-center">
-        <div className="d-flex justify-content-center mb-3">
+        <div className="hero-with-art">
+          <div className="hero-copy">
+        <div className="d-flex justify-content-center justify-content-lg-start mb-3">
           <Logo size={48} showText={false} />
         </div>
         <p className="text-uppercase small fw-semibold mb-2 opacity-75 letter-space">{BRAND}</p>
         <h1 className="display-5 fw-bold mb-2">Buy real referrals for your links</h1>
-        <p className="lead mb-4 opacity-90">
+        <p className="lead mb-3 opacity-90">
           Order a package — we promote your referral link until it fills. Or earn by completing simple tasks.
         </p>
-        <div className="d-flex gap-2 justify-content-center flex-wrap">
+        <div className="avatar-stack mb-3 justify-content-center justify-content-lg-start">
+          <span className="av" title="Members">A</span>
+          <span className="av a2">B</span>
+          <span className="av a3">C</span>
+          <span className="av a4">+</span>
+          <span className="small ms-2 opacity-75">People growing with {BRAND}</span>
+        </div>
+        <div className="d-flex gap-2 justify-content-center flex-wrap hero-cta">
           {!loggedIn ? (
             <>
               <Link to="/register" className="btn btn-light btn-lg fw-semibold px-4">
@@ -75,17 +84,26 @@ export default function Home() {
             </span>
           ))}
         </div>
+          </div>
+          <div className="hero-visual d-none d-md-block">
+            <img
+              className="hero-art"
+              src="/illustrations/hero-people.svg"
+              alt="People connecting through referral links"
+              width={640}
+              height={360}
+            />
+          </div>
+        </div>
       </div>
 
       <h2 className="text-center mb-2 fw-bold">Two paths</h2>
       <p className="text-center text-muted mb-4">Same account — promote or earn.</p>
       <Row className="g-3 mb-5">
         <Col md={6}>
-          <Card className="rs-card h-100 border-primary">
+          <Card className="rs-card h-100 border-primary graphic-top">
             <Card.Body className="p-4 d-flex flex-column">
-              <div className="text-primary mb-2 fs-3">
-                <i className="bi bi-shop" />
-              </div>
+              <img className="feature-art" src="/illustrations/hero-people.svg" alt="" width={400} height={160} />
               <h3 className="h5 fw-bold">Shop referrals</h3>
               <p className="text-muted small flex-grow-1">
                 Pay for a package. We drive people to your link.
@@ -102,11 +120,9 @@ export default function Home() {
           </Card>
         </Col>
         <Col md={6}>
-          <Card className="rs-card h-100 border-success">
+          <Card className="rs-card h-100 border-success graphic-top">
             <Card.Body className="p-4 d-flex flex-column">
-              <div className="text-success mb-2 fs-3">
-                <i className="bi bi-cash-coin" />
-              </div>
+              <img className="feature-art" src="/illustrations/earn-people.svg" alt="" width={400} height={160} />
               <h3 className="h5 fw-bold">Earn on tasks</h3>
               <p className="text-muted small flex-grow-1">
                 Open task links, wait the timer, upload a screenshot. Get paid after approval.
