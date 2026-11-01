@@ -1364,3 +1364,152 @@ main .container-fluid {
   opacity: 0.7;
   filter: invert(0.85) hue-rotate(180deg);
 }
+
+/* ── JS-driven animations ── */
+.page-enter {
+  animation: pageIn 0.45s ease both;
+}
+@keyframes pageIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: none; }
+}
+
+.reveal {
+  opacity: 0;
+  transform: translateY(18px);
+  transition: opacity 0.55s ease, transform 0.55s ease;
+}
+.reveal-visible {
+  opacity: 1;
+  transform: none;
+}
+
+.anim-prep {
+  opacity: 0;
+  transform: translateY(14px);
+}
+.anim-in {
+  opacity: 1;
+  transform: none;
+  transition: opacity 0.45s ease, transform 0.45s ease;
+}
+
+.has-ripple {
+  position: relative;
+  overflow: hidden;
+}
+.ripple-ink {
+  position: absolute;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.35);
+  pointer-events: none;
+  transform: scale(0);
+  animation: ripple 0.55s ease-out forwards;
+}
+@keyframes ripple {
+  to { transform: scale(2.4); opacity: 0; }
+}
+
+.float-blobs {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+  z-index: 0;
+}
+.float-blobs .blob {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(40px);
+  opacity: 0.35;
+  animation: floatBlob 12s ease-in-out infinite;
+}
+.float-blobs .b1 {
+  width: 180px; height: 180px;
+  background: #60a5fa;
+  top: -40px; left: 10%;
+}
+.float-blobs .b2 {
+  width: 140px; height: 140px;
+  background: #a78bfa;
+  bottom: 10%; right: 15%;
+  animation-delay: -4s;
+}
+.float-blobs .b3 {
+  width: 100px; height: 100px;
+  background: #34d399;
+  top: 40%; left: 50%;
+  animation-delay: -7s;
+}
+@keyframes floatBlob {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  33% { transform: translate(18px, -14px) scale(1.05); }
+  66% { transform: translate(-12px, 10px) scale(0.96); }
+}
+
+.hero-section {
+  isolation: isolate;
+}
+.hero-section .hero-with-art,
+.hero-section .hero-copy {
+  position: relative;
+  z-index: 1;
+}
+
+.rs-card {
+  transition: transform 0.25s ease, box-shadow 0.25s ease;
+}
+.rs-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 12px 28px rgba(15, 23, 42, 0.1);
+}
+[data-bs-theme='dark'] .rs-card:hover {
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.35);
+}
+
+.btn {
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+.btn:active:not(:disabled) {
+  transform: scale(0.97);
+}
+
+.bottom-tab {
+  transition: color 0.2s ease, transform 0.2s ease;
+}
+.bottom-tab.active .bottom-tab-icon {
+  animation: tabPop 0.35s ease;
+}
+@keyframes tabPop {
+  0% { transform: scale(1); }
+  40% { transform: scale(1.2); }
+  100% { transform: scale(1); }
+}
+
+.order-step {
+  transition: background 0.25s ease, color 0.25s ease, transform 0.25s ease;
+}
+.order-step.active {
+  animation: pulseSoft 1.8s ease infinite;
+}
+@keyframes pulseSoft {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(37, 99, 235, 0.35); }
+  50% { box-shadow: 0 0 0 6px rgba(37, 99, 235, 0); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .page-enter,
+  .reveal,
+  .anim-prep,
+  .anim-in,
+  .float-blobs .blob,
+  .order-step.active,
+  .bottom-tab.active .bottom-tab-icon,
+  .rs-card,
+  .btn {
+    animation: none !important;
+    transition: none !important;
+    transform: none !important;
+    opacity: 1 !important;
+  }
+}

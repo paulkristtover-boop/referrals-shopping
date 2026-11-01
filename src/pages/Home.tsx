@@ -4,6 +4,7 @@ import Logo from '../components/Logo'
 import { useAuth } from '../contexts/AuthContext'
 import { BRAND, TG, IG, IG_HANDLE } from '../lib/brand'
 import { formatMoney } from '../lib/money'
+import { FloatBlobs, Reveal, Stagger } from '../components/Animated'
 
 const REGULAR_PACKS = [
   { name: 'Free Starter', refs: 50, price: 0, free: true },
@@ -33,7 +34,8 @@ export default function Home() {
 
   return (
     <div className="page-enter">
-      <div className="hero-section text-center">
+      <div className="hero-section text-center position-relative">
+        <FloatBlobs />
         <div className="hero-with-art">
           <div className="hero-copy">
         <div className="d-flex justify-content-center justify-content-lg-start mb-3">
@@ -97,9 +99,9 @@ export default function Home() {
         </div>
       </div>
 
-      <h2 className="text-center mb-2 fw-bold">Two paths</h2>
+      <Reveal><h2 className="text-center mb-2 fw-bold">Two paths</h2></Reveal>
       <p className="text-center text-muted mb-4">Same account — promote or earn.</p>
-      <Row className="g-3 mb-5">
+      <Stagger className="mb-5"><Row className="g-3">
         <Col md={6}>
           <Card className="rs-card h-100 border-primary graphic-top">
             <Card.Body className="p-4 d-flex flex-column">
@@ -136,9 +138,9 @@ export default function Home() {
             </Card.Body>
           </Card>
         </Col>
-      </Row>
+      </Row></Stagger>
 
-      <h2 className="text-center fw-bold mb-1">{BRAND} packages</h2>
+      <Reveal><h2 className="text-center fw-bold mb-1">{BRAND} packages</h2></Reveal>
       <p className="text-center text-muted mb-4">Signup-only vs deposit packages — clear pricing</p>
 
       <h3 className="h6 text-uppercase text-muted fw-bold mb-3">Regular — signup only</h3>

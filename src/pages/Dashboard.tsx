@@ -10,6 +10,7 @@ import ShareOrder from '../components/ShareOrder'
 import { ListFilters, ListPagination, paginate } from '../components/ListControls'
 import { BRAND } from '../lib/brand'
 import { formatMoney } from '../lib/money'
+import { CountUp, Reveal } from '../components/Animated'
 
 function errMsg(e: unknown): string {
   if (!e) return 'Failed to load'
