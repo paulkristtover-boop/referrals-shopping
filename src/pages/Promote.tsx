@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { useSearchParams } from 'react-router-dom'
 import { Alert, Button, Card, Form, Spinner, Badge } from 'react-bootstrap'
 import { ListFilters, ListPagination, paginate } from '../components/ListControls'
 import OrderTimeline from '../components/OrderTimeline'
@@ -237,6 +238,7 @@ function PaymentPanel({
 
 export default function Promote() {
   const { user } = useAuth()
+  const [searchParams, setSearchParams] = useSearchParams()
   const [packages, setPackages] = useState<Package[]>([])
   const [campaigns, setCampaigns] = useState<Campaign[]>([])
   const [orders, setOrders] = useState<PayOrder[]>([])
@@ -248,6 +250,7 @@ export default function Promote() {
   const [sampleFile, setSampleFile] = useState<File | null>(null)
   const [draftId, setDraftId] = useState<string | null>(null)
   const [chain, setChain] = useState<'trx' | 'sol' | 'ton'>('trx')
+  const [payMethod, setPayMethod] = useState<'flutterwave' | 'crypto'>('flutterwave')
   const [msg, setMsg] = useState<string | null>(null)
   const [err, setErr] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
@@ -287,6 +290,41 @@ export default function Promote() {
     void load()
     void loadDeposits().then(setWalletDeposits)
   }, [user?.id])
+
+  // Secure Flutterwave return — verify on server
+  useEffect(() => {
+    const flw = searchParams.get('flw')
+    const tx_ref = searchParams.get('tx_ref')
+    const campaignId = searchParams.get('campaignId')
+    const transaction_id = searchParams.get('transaction_id') || searchParams.get('transactionId')
+    if (flw !== '1' || (!tx_ref && !transaction_id)) return
+    let cancelled = false
+    ;(async () => {
+      setMsg('Verifying Flutterwave payment…')
+      try {
+        const res = await fetch('/api/payments/flutterwave-verify', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ tx_ref, transaction_id, campaignId }),
+        })
+        const data = await res.json()
+        if (cancelled) return
+        if (data.status === 'confirmed') {
+          setMsg('Payment confirmed — waiting for admin to approve your referral link.')
+        } else {
+          setErr(data.error || data.message || 'Payment not confirmed yet. Contact support with your receipt.')
+        }
+      } catch {
+        if (!cancelled) setErr('Could not verify payment. Try again or contact support.')
+      } finally {
+        setSearchParams({}, { replace: true })
+        void load()
+      }
+    })()
+    return () => {
+      cancelled = true
+    }
+  }, [searchParams])
 
   const selectedPkg = packages.find((x) => x.id === packageId)
   const isFree = selectedPkg != null && Number(selectedPkg.price_usd) === 0
@@ -394,7 +432,61 @@ export default function Promote() {
         return
       }
 
-      // Unique amount from API (15 min window)
+      // Create campaign then checkout
+      let campId = draftId
+      if (campId) {
+        await supabase
+          .from('campaigns')
+          .update({
+            title,
+            target_url: url,
+            description: desc,
+            sample_screenshot_url: sampleUrl,
+            package_id: packageId,
+            paid_amount: pkg.price_usd,
+            status: 'pending_payment',
+          })
+          .eq('id', campId)
+          .eq('user_id', user.id)
+      } else {
+        const { data: camp, error } = await supabase
+          .from('campaigns')
+          .insert({
+            user_id: user.id,
+            package_id: packageId,
+            title,
+            target_url: url,
+            description: desc,
+            sample_screenshot_url: sampleUrl,
+            status: 'pending_payment',
+            paid_amount: pkg.price_usd,
+            crypto_chain: payMethod === 'flutterwave' ? 'ngn_flw' : chain,
+          })
+          .select('*')
+          .single()
+        if (error) throw error
+        campId = camp.id
+      }
+
+      if (payMethod === 'flutterwave') {
+        const initRes = await fetch('/api/payments/flutterwave-init', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            campaignId: campId,
+            email: user.email,
+            name: user.user_metadata?.full_name || user.email,
+            amountNgn: pkg.price_usd,
+          }),
+        })
+        const init = await initRes.json()
+        if (!initRes.ok || !init.link) throw new Error(init.error || 'Could not start Flutterwave checkout')
+        setMsg('Redirecting to secure Flutterwave checkout…')
+        window.location.href = init.link as string
+        return
+      }
+
+      // Crypto path
       const qRes = await fetch(`/api/payments/quote?usd=${pkg.price_usd}&chain=${chain}`)
       const quote = await qRes.json()
       if (!qRes.ok) throw new Error(quote.error || 'Could not get payment quote')
@@ -402,47 +494,36 @@ export default function Promote() {
       const code = payCode()
       const expires = quote.expires_at as string
 
-      const { data: camp, error } = await supabase
+      await supabase
         .from('campaigns')
-        .insert({
-          user_id: user.id,
-          package_id: packageId,
-          title,
-          target_url: url,
-          description: desc,
-          sample_screenshot_url: sampleUrl,
-          status: 'pending_payment',
-          paid_amount: pkg.price_usd,
+        .update({
           crypto_chain: chain,
           pay_code: code,
           amount_crypto: quote.amount_crypto,
           expires_at: expires,
         })
-        .select('*')
-        .single()
+        .eq('id', campId)
 
-      if (error) throw error
-
-      const { error: oErr } = await supabase.from('payment_orders').insert({
+      await supabase.from('payment_orders').insert({
         user_id: user.id,
-        campaign_id: camp.id,
+        campaign_id: campId,
         amount_usd: pkg.price_usd,
         amount_crypto: quote.amount_crypto,
         unique_suffix: quote.unique_suffix,
         rate_usd: quote.rate_usd,
         crypto_chain: chain,
         pay_code: code,
-        deposit_address: quote.deposit_address || walletDeposits[chain as 'trx'|'sol'|'ton'] || envDeposits[chain as 'trx'|'sol'|'ton'],
+        deposit_address: quote.deposit_address || walletDeposits[chain as 'trx' | 'sol' | 'ton'] || envDeposits[chain as 'trx' | 'sol' | 'ton'],
         expires_at: expires,
         status: 'awaiting_payment',
       })
-      if (oErr) throw oErr
 
       setMsg(`Send exactly ${Number(quote.amount_crypto).toFixed(6)} ${chain.toUpperCase()} within 15 minutes.`)
       setTitle('')
       setUrl('')
       setDescription('')
       setSampleFile(null)
+      setDraftId(null)
       void load()
     } catch (ex: unknown) {
       setErr(ex instanceof Error ? ex.message : 'Failed to create order')
@@ -508,6 +589,7 @@ export default function Promote() {
             <Form.Group className="mb-3">
               <Form.Label>Target URL</Form.Label>
               <Form.Control type="url" value={url} onChange={(e) => setUrl(e.target.value)} required />
+            </Form.Group>
             <Form.Group className="mb-3">
               <Form.Label>Description <span className="text-muted fw-normal">(optional)</span></Form.Label>
               <Form.Control
@@ -527,10 +609,37 @@ export default function Promote() {
               />
               <Form.Text className="text-muted">Example of the signup/deposit screen — helps earners submit the right proof.</Form.Text>
             </Form.Group>
-            </Form.Group>
             {!isFree && (
               <Form.Group className="mb-3">
-                <Form.Label>Pay with</Form.Label>
+                <Form.Label>Payment method</Form.Label>
+                <div className="d-flex flex-wrap gap-2 mb-2">
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant={payMethod === 'flutterwave' ? 'primary' : 'outline-primary'}
+                    onClick={() => setPayMethod('flutterwave')}
+                  >
+                    <i className="bi bi-credit-card me-1" />
+                    Flutterwave (₦)
+                  </Button>
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant={payMethod === 'crypto' ? 'primary' : 'outline-secondary'}
+                    onClick={() => setPayMethod('crypto')}
+                  >
+                    <i className="bi bi-currency-bitcoin me-1" />
+                    Crypto
+                  </Button>
+                </div>
+                <Form.Text className="text-muted d-block">
+                  Card, bank transfer, USSD via Flutterwave. Payment is verified on our servers.
+                </Form.Text>
+              </Form.Group>
+            )}
+            {payMethod === 'crypto' && !isFree && (
+              <Form.Group className="mb-3">
+                <Form.Label>Crypto chain</Form.Label>
                 <Form.Select value={chain} onChange={(e) => setChain(e.target.value as 'trx' | 'sol' | 'ton')}>
                   <option value="trx">TRX (Tron)</option>
                   <option value="sol">SOL (Solana)</option>
@@ -541,13 +650,22 @@ export default function Promote() {
             {isFree && (
               <p className="small text-muted">No payment needed for Free Starter. One claim per account.</p>
             )}
-            <Button type="submit" disabled={creating || (isFree && freeUsed)} variant={isFree ? 'success' : 'primary'}>
-              {creating
-                ? 'Creating…'
-                : isFree
-                  ? 'Claim Free Starter (50 referrals)'
-                  : 'Create order (15 min unique amount)'}
-            </Button>
+            <div className="d-flex flex-wrap gap-2">
+              <Button type="submit" disabled={creating || (isFree && freeUsed)} variant={isFree ? 'success' : 'primary'}>
+                {creating
+                  ? 'Working…'
+                  : isFree
+                    ? 'Claim Free Starter (50 referrals)'
+                    : payMethod === 'flutterwave'
+                      ? 'Pay with Flutterwave'
+                      : 'Create order (crypto)'}
+              </Button>
+              {!isFree && (
+                <Button type="button" variant="outline-secondary" disabled={creating || !packageId || !title || !url} onClick={() => void saveDraft()}>
+                  Save draft
+                </Button>
+              )}
+            </div>
           </Form>
         </Card.Body>
       </Card>
@@ -605,9 +723,35 @@ export default function Promote() {
                   goal={undefined}
                 />
               </div>
-              {order && (c.status === 'pending_payment' || order.status === 'awaiting_payment') && (
+              {order && (c.status === 'pending_payment' || order.status === 'awaiting_payment') && order.crypto_chain !== 'ngn_flw' && (
                 <div className="mt-3">
                   <PaymentPanel order={order} campaignId={c.id} onUpdated={() => void load()} wallets={walletDeposits} />
+                </div>
+              )}
+              {c.status === 'pending_payment' && (c.crypto_chain === 'ngn_flw' || order?.crypto_chain === 'ngn_flw') && (
+                <div className="mt-3">
+                  <p className="small text-muted mb-2">Flutterwave checkout — complete payment in the window, then return here.</p>
+                  <Button
+                    size="sm"
+                    variant="primary"
+                    onClick={async () => {
+                      const res = await fetch('/api/payments/flutterwave-init', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                          campaignId: c.id,
+                          email: user?.email,
+                          name: user?.email,
+                          amountNgn: c.paid_amount,
+                        }),
+                      })
+                      const data = await res.json()
+                      if (data.link) window.location.href = data.link
+                      else setErr(data.error || 'Could not open checkout')
+                    }}
+                  >
+                    Open Flutterwave checkout
+                  </Button>
                 </div>
               )}
               {c.status === 'pending_approval' && (
