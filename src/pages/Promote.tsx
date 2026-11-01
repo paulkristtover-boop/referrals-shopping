@@ -7,6 +7,15 @@ import ShareOrder from '../components/ShareOrder'
 import { useAuth } from '../contexts/AuthContext'
 import { deposits as envDeposits, loadDeposits, supabase, supabaseConfigured } from '../lib/supabase'
 import { formatMoney } from '../lib/money'
+import {
+  type RefCategory,
+  REGULAR_TIERS,
+  INVESTMENT_TIERS,
+  MIN_ORDER_NGN,
+  FREE_STARTER_REFS,
+  priceForReferrals,
+  isFreeStarter,
+} from '../lib/pricing'
 import type { Campaign, Package } from '../lib/types'
 import EmptyState from '../components/EmptyState'
 
@@ -244,6 +253,8 @@ export default function Promote() {
   const [orders, setOrders] = useState<PayOrder[]>([])
   const [walletDeposits, setWalletDeposits] = useState(envDeposits)
   const [packageId, setPackageId] = useState('')
+  const [refCategory, setRefCategory] = useState<RefCategory>('regular')
+  const [referralCount, setReferralCount] = useState(1000)
   const [title, setTitle] = useState('')
   const [url, setUrl] = useState('')
   const [description, setDescription] = useState('')
@@ -326,8 +337,38 @@ export default function Promote() {
     }
   }, [searchParams])
 
-  const selectedPkg = packages.find((x) => x.id === packageId)
-  const isFree = selectedPkg != null && Number(selectedPkg.price_usd) === 0
+  useEffect(() => {
+    const match =
+      packages.find(
+        (x) =>
+          x.category === refCategory &&
+          Number(x.referrals) === Number(referralCount)
+      ) ||
+      packages.find(
+        (x) =>
+          x.category === refCategory &&
+          Math.abs(Number(x.referrals) - Number(referralCount)) ===
+            Math.min(...packages.filter((p) => p.category === refCategory).map((p) => Math.abs(Number(p.referrals) - Number(referralCount))))
+      )
+    if (match) setPackageId(match.id)
+  }, [refCategory, referralCount, packages])
+
+  const selectedPkg =
+    packages.find(
+      (x) =>
+        x.category === refCategory &&
+        Number(x.referrals) === Number(referralCount) &&
+        (isFreeStarter(referralCount, refCategory) ? Number(x.price_usd) === 0 : Number(x.price_usd) > 0)
+    ) ||
+    packages.find((x) => x.category === refCategory && Number(x.referrals) === Number(referralCount)) ||
+    packages.find((x) => x.id === packageId)
+
+  const quotePrice = priceForReferrals(referralCount, refCategory)
+  const isFree = isFreeStarter(referralCount, refCategory)
+  const effectivePrice = isFree ? 0 : Math.max(MIN_ORDER_NGN, quotePrice)
+
+  // Keep packageId in sync when tiers change
+  // (applied in effects below)
 
   const uploadSample = async (): Promise<string | null> => {
     if (!sampleFile || !user) return null
@@ -339,7 +380,7 @@ export default function Promote() {
 
   const saveDraft = async () => {
     if (!user || !packageId) {
-      setErr('Choose a package, title and URL to save a draft')
+      setErr('Choose referral count, title and URL to save a draft')
       return
     }
     setErr(null)
@@ -395,8 +436,16 @@ export default function Promote() {
     e.preventDefault()
     setErr(null)
     setMsg(null)
-    const pkg = packages.find((x) => x.id === packageId)
-    if (!pkg || !user) return
+    const pkg = selectedPkg || packages.find((x) => x.id === packageId)
+    if (!user) return
+    if (!isFree && effectivePrice < MIN_ORDER_NGN) {
+      setErr(`Minimum order is ${formatMoney(MIN_ORDER_NGN)}`)
+      return
+    }
+    if (!pkg && !isFree) {
+      setErr('Select a referral amount from the list (run packages_ngn.sql if empty).')
+      return
+    }
     setCreating(true)
     try {
       let sampleUrl: string | null = null
@@ -409,8 +458,8 @@ export default function Promote() {
       const desc = description.trim() || null
 
       // Free Starter — one per account, no crypto payment
-      if (Number(pkg.price_usd) === 0) {
-        if (freeUsed) throw new Error('You already used your Free Starter (50 referrals). Choose a paid package.')
+      if (isFree) {
+        if (freeUsed) throw new Error('You already used your Free Starter (50 referrals). Choose a paid amount.')
         const { error: freeErr } = await supabase.rpc('claim_free_starter', {
           p_title: title,
           p_target_url: url,
@@ -442,8 +491,8 @@ export default function Promote() {
             target_url: url,
             description: desc,
             sample_screenshot_url: sampleUrl,
-            package_id: packageId,
-            paid_amount: pkg.price_usd,
+            package_id: (pkg?.id || packageId),
+            paid_amount: effectivePrice,
             status: 'pending_payment',
           })
           .eq('id', campId)
@@ -453,13 +502,13 @@ export default function Promote() {
           .from('campaigns')
           .insert({
             user_id: user.id,
-            package_id: packageId,
+            package_id: (pkg?.id || packageId),
             title,
             target_url: url,
             description: desc,
             sample_screenshot_url: sampleUrl,
             status: 'pending_payment',
-            paid_amount: pkg.price_usd,
+            paid_amount: effectivePrice,
             crypto_chain: payMethod === 'flutterwave' ? 'ngn_flw' : chain,
           })
           .select('*')
@@ -476,7 +525,7 @@ export default function Promote() {
             campaignId: campId,
             email: user.email,
             name: user.user_metadata?.full_name || user.email,
-            amountNgn: pkg.price_usd,
+            amountNgn: effectivePrice,
           }),
         })
         const init = await initRes.json()
@@ -487,7 +536,7 @@ export default function Promote() {
       }
 
       // Crypto path
-      const qRes = await fetch(`/api/payments/quote?usd=${pkg.price_usd}&chain=${chain}`)
+      const qRes = await fetch(`/api/payments/quote?usd=${effectivePrice}&chain=${chain}`)
       const quote = await qRes.json()
       if (!qRes.ok) throw new Error(quote.error || 'Could not get payment quote')
 
@@ -507,7 +556,7 @@ export default function Promote() {
       await supabase.from('payment_orders').insert({
         user_id: user.id,
         campaign_id: campId,
-        amount_usd: pkg.price_usd,
+        amount_usd: effectivePrice,
         amount_crypto: quote.amount_crypto,
         unique_suffix: quote.unique_suffix,
         rate_usd: quote.rate_usd,
@@ -565,23 +614,77 @@ export default function Promote() {
           <h5 className="fw-bold">New order</h5>
           <Form onSubmit={create}>
             <Form.Group className="mb-3">
-              <Form.Label>Package</Form.Label>
-              <Form.Select value={packageId} onChange={(e) => setPackageId(e.target.value)} required>
-                {packages.map((p) => {
-                  const free = Number(p.price_usd) === 0
-                  const disabled = free && freeUsed
-                  return (
-                    <option key={p.id} value={p.id} disabled={disabled}>
-                      {free
-                        ? `${p.name} — FREE${freeUsed ? ' (used)' : ' (once)'} · signup only`
-                        : `${p.name} — ${formatMoney(p.price_usd)} · ${
-                            p.category === 'gambling' ? 'account + deposit' : 'signup only'
-                          }`}
-                    </option>
-                  )
-                })}
-              </Form.Select>
+              <Form.Label>Type</Form.Label>
+              <div className="d-flex flex-wrap gap-2">
+                <Button
+                  type="button"
+                  size="sm"
+                  variant={refCategory === 'regular' ? 'primary' : 'outline-primary'}
+                  onClick={() => { setRefCategory('regular'); setReferralCount(1000) }}
+                >
+                  Regular (signup only)
+                </Button>
+                <Button
+                  type="button"
+                  size="sm"
+                  variant={refCategory === 'gambling' ? 'primary' : 'outline-primary'}
+                  onClick={() => { setRefCategory('gambling'); setReferralCount(1000) }}
+                >
+                  Investment / deposit
+                </Button>
+              </div>
+              <Form.Text className="text-muted">Sites, channels, bots, and groups</Form.Text>
             </Form.Group>
+
+            <Form.Group className="mb-3">
+              <Form.Label>How many referrals?</Form.Label>
+              <div className="d-flex flex-wrap gap-2 mb-2">
+                {refCategory === 'regular' && (
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant={referralCount === FREE_STARTER_REFS ? 'success' : 'outline-success'}
+                    disabled={freeUsed}
+                    onClick={() => setReferralCount(FREE_STARTER_REFS)}
+                  >
+                    Free 50{freeUsed ? ' (used)' : ''}
+                  </Button>
+                )}
+                {(refCategory === 'regular' ? REGULAR_TIERS : INVESTMENT_TIERS).map(([refs]) => (
+                  <Button
+                    key={refs}
+                    type="button"
+                    size="sm"
+                    variant={referralCount === refs ? 'primary' : 'outline-secondary'}
+                    onClick={() => setReferralCount(refs)}
+                  >
+                    {refs.toLocaleString()}
+                  </Button>
+                ))}
+              </div>
+              <Form.Control
+                type="number"
+                min={refCategory === 'regular' ? FREE_STARTER_REFS : 1000}
+                step={100}
+                value={referralCount}
+                onChange={(e) => setReferralCount(Math.max(0, parseInt(e.target.value, 10) || 0))}
+              />
+              <Form.Text className="text-muted">
+                Or type a custom amount. Paid orders: minimum {formatMoney(MIN_ORDER_NGN)}.
+              </Form.Text>
+            </Form.Group>
+
+            <Alert variant={isFree ? 'success' : 'light'} className="py-2 border">
+              <div className="d-flex justify-content-between align-items-center flex-wrap gap-2">
+                <span>
+                  <strong>{referralCount.toLocaleString()}</strong> referrals ·{' '}
+                  {refCategory === 'gambling' ? 'deposit type' : 'signup only'}
+                </span>
+                <span className="fs-5 fw-bold text-primary">
+                  {isFree ? 'FREE' : formatMoney(effectivePrice)}
+                </span>
+              </div>
+            </Alert>
             <Form.Group className="mb-3">
               <Form.Label>Title</Form.Label>
               <Form.Control value={title} onChange={(e) => setTitle(e.target.value)} required placeholder="e.g. My app invite" />
@@ -651,7 +754,7 @@ export default function Promote() {
               <p className="small text-muted">No payment needed for Free Starter. One claim per account.</p>
             )}
             <div className="d-flex flex-wrap gap-2">
-              <Button type="submit" disabled={creating || (isFree && freeUsed)} variant={isFree ? 'success' : 'primary'}>
+              <Button type="submit" disabled={creating || (isFree && freeUsed) || (!isFree && effectivePrice < MIN_ORDER_NGN)} variant={isFree ? 'success' : 'primary'}>
                 {creating
                   ? 'Working…'
                   : isFree

@@ -17,6 +17,7 @@ export type Package = {
   name: string
   category: 'regular' | 'gambling'
   referrals: number
+  /** Price in Naira (column name price_usd for legacy) */
   price_usd: number
   active?: boolean
 }

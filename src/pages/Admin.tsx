@@ -18,7 +18,7 @@ export default function Admin() {
   const [loading, setLoading] = useState(true)
   const [msg, setMsg] = useState<string | null>(null)
   const [err, setErr] = useState<string | null>(null)
-  const [pkgForm, setPkgForm] = useState({ name: '', category: 'regular', referrals: 1000, price_usd: 50 })
+  const [pkgForm, setPkgForm] = useState({ name: '', category: 'regular', referrals: 1000, price_usd: 15000 })
 
   const [showPkg, setShowPkg] = useState(false)
   const [search, setSearch] = useState('')
@@ -189,7 +189,7 @@ export default function Admin() {
     else {
       flash('Package added')
       setShowPkg(false)
-      setPkgForm({ name: '', category: 'regular', referrals: 1000, price_usd: 50 })
+      setPkgForm({ name: '', category: 'regular', referrals: 1000, price_usd: 15000 })
       void load()
     }
   }
@@ -545,7 +545,7 @@ export default function Admin() {
                   <tr key={String(s.id)}>
                     <td className="small">{String((s.profiles as { email?: string })?.email || '')}</td>
                     <td className="small">{String((s.tasks as { campaigns?: { title?: string } })?.campaigns?.title || '')}</td>
-                    <td>${Number((s.tasks as { reward_amount?: number })?.reward_amount || 0).toFixed(2)}</td>
+                    <td>{Number((s.tasks as { reward_amount?: number })?.reward_amount || 0).toFixed(2)}</td>
                     <td><a href={String(s.screenshot_url)} target="_blank" rel="noreferrer">View</a></td>
                     <td><Badge className="badge-status" bg={s.status === 'pending' ? 'warning' : s.status === 'approved' ? 'success' : 'danger'}>{String(s.status)}</Badge></td>
                     <td className="text-nowrap">
@@ -638,7 +638,7 @@ export default function Admin() {
               />
               <Table size="sm" responsive hover>
                 <thead>
-                  <tr><th>Name</th><th>Category</th><th>Referrals</th><th>Price</th><th>Active</th><th></th></tr>
+                  <tr><th>Name</th><th>Category</th><th>Referrals</th><th>Price (₦)</th><th>Active</th><th></th></tr>
                 </thead>
                 <tbody>
                   {pkgPage.slice.map((p) => (
@@ -682,7 +682,7 @@ export default function Admin() {
                       <Form.Control type="number" value={pkgForm.referrals} onChange={(e) => setPkgForm({ ...pkgForm, referrals: Number(e.target.value) })} />
                     </Form.Group>
                     <Form.Group className="mb-2">
-                      <Form.Label>Price USD</Form.Label>
+                      <Form.Label>Price (₦)</Form.Label>
                       <Form.Control type="number" value={pkgForm.price_usd} onChange={(e) => setPkgForm({ ...pkgForm, price_usd: Number(e.target.value) })} />
                     </Form.Group>
                   </Modal.Body>

@@ -28,3 +28,5 @@ Auth: **Confirm email = OFF**. Optional MFA for 2FA.
 | 16 | `flutterwave.sql` | FLW payment columns |
 
 | 17 | `payment_orders_unique.sql` | One order per campaign + idempotent approve |
+
+| 18 | `packages_ngn.sql` | Naira package list & prices |

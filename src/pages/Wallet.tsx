@@ -16,7 +16,7 @@ type W = {
   created_at: string
 }
 
-const MIN_USD = 100
+const MIN_NGN = 100
 
 function statusBadge(status: string) {
   const map: Record<string, string> = {
@@ -71,8 +71,8 @@ export default function Wallet() {
     setMsg(null)
     const a = Number(amount)
     if (!supabaseConfigured || !user) return
-    if (!a || a < MIN_USD) {
-      setErr(`Minimum withdrawal is ₦${MIN_USD.toFixed(2)}`)
+    if (!a || a < MIN_NGN) {
+      setErr(`Minimum withdrawal is ${formatMoney(MIN_NGN)}`)
       return
     }
     if (a > Number(profile?.balance || 0)) {
@@ -153,14 +153,14 @@ export default function Wallet() {
       <Card className="rs-card rs-card-static mb-4">
         <Card.Body>
           <h5 className="fw-bold">Request withdrawal</h5>
-          <p className="small text-muted">Minimum {formatMoney(MIN_USD)}. Admin sends crypto to your address after review.</p>
+          <p className="small text-muted">Minimum {formatMoney(MIN_NGN)}. Admin sends crypto to your address after review.</p>
           <Form onSubmit={request} className="row g-3">
             <div className="col-md-4">
-              <Form.Label>Amount (USD)</Form.Label>
+              <Form.Label>Amount (₦)</Form.Label>
               <Form.Control
                 type="number"
                 step="0.01"
-                min={MIN_USD}
+                min={MIN_NGN}
                 max={bal || undefined}
                 value={amount}
                 onChange={(e) => setAmount(e.target.value)}
@@ -191,7 +191,7 @@ export default function Wallet() {
               />
             </div>
             <div className="col-12">
-              <Button type="submit" disabled={submitting || bal < MIN_USD}>
+              <Button type="submit" disabled={submitting || bal < MIN_NGN}>
                 {submitting ? 'Submitting…' : 'Request withdrawal'}
               </Button>
             </div>

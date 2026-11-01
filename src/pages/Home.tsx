@@ -4,20 +4,23 @@ import Logo from '../components/Logo'
 import { useAuth } from '../contexts/AuthContext'
 import { BRAND, TG, IG, IG_HANDLE } from '../lib/brand'
 import { formatMoney } from '../lib/money'
+import { REGULAR_TIERS, INVESTMENT_TIERS, FREE_STARTER_REFS } from '../lib/pricing'
 import { FloatBlobs, Reveal, Stagger } from '../components/Animated'
 
 const REGULAR_PACKS = [
-  { name: 'Free Starter', refs: 50, price: 0, free: true },
-  { name: 'Starter', refs: 1000, price: 25000 },
-  { name: 'Growth', refs: 1900, price: 50000 },
-  { name: 'Scale', refs: 3800, price: 100000 },
+  { name: 'Free Starter', refs: FREE_STARTER_REFS, price: 0, free: true },
+  ...REGULAR_TIERS.map(([refs, price]) => ({
+    name: `${refs.toLocaleString()} referrals`,
+    refs,
+    price,
+  })),
 ]
 
-const GAMBLING_PACKS = [
-  { name: 'Deposit Starter', refs: 1000, price: 50000 },
-  { name: 'Deposit Growth', refs: 1900, price: 100000 },
-  { name: 'Deposit Scale', refs: 3800, price: 200000 },
-]
+const GAMBLING_PACKS = INVESTMENT_TIERS.map(([refs, price]) => ({
+  name: `${refs.toLocaleString()} deposit refs`,
+  refs,
+  price,
+}))
 
 const TRUST = [
   { icon: 'bi-person-plus', label: 'Regular = signup only' },
@@ -100,7 +103,7 @@ export default function Home() {
       </div>
 
       <Reveal><h2 className="text-center mb-2 fw-bold">Two paths</h2></Reveal>
-      <p className="text-center text-muted mb-4">Same account — promote or earn.</p>
+      <p className="text-center text-muted mb-4">For sites, channels, bots, and groups — promote or earn.</p>
       <Stagger className="mb-5"><Row className="g-3">
         <Col md={6}>
           <Card className="rs-card h-100 border-primary graphic-top">
@@ -140,7 +143,10 @@ export default function Home() {
         </Col>
       </Row></Stagger>
 
-      <Reveal><h2 className="text-center fw-bold mb-1">{BRAND} packages</h2></Reveal>
+      <Reveal>
+        <h2 className="text-center fw-bold mb-1">{BRAND} packages</h2>
+        <p className="text-center text-muted small mb-3">For sites, channels, bots, and groups</p>
+      </Reveal>
       <p className="text-center text-muted mb-4">Signup-only vs deposit packages — clear pricing</p>
 
       <h3 className="h6 text-uppercase text-muted fw-bold mb-3">Regular — signup only</h3>
@@ -153,7 +159,7 @@ export default function Home() {
                 <div className="package-refs">{p.refs.toLocaleString()}</div>
                 <div className="small text-muted mb-2">referrals</div>
                 <div className="fw-bold mb-1">{p.name}</div>
-                <div className="package-price mb-2">{p.free ? <span className="text-success">$0</span> : formatMoney(p.price)}</div>
+                <div className="package-price mb-2">{p.free ? <span className="text-success">₦0</span> : formatMoney(p.price)}</div>
                 <div className="small text-muted mt-auto">No deposit required</div>
               </Card.Body>
             </Card>
