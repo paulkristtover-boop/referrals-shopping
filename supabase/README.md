@@ -30,3 +30,5 @@ Auth: **Confirm email = OFF**. Optional MFA for 2FA.
 | 17 | `payment_orders_unique.sql` | One order per campaign + idempotent approve |
 
 | 18 | `packages_ngn.sql` | Naira package list & prices |
+
+| 19 | `audit_cancel.sql` | Audit logs, cancel & delete orders |

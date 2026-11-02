@@ -49,9 +49,17 @@ export async function verifyByTxRef(txRef) {
 
 export function assertWebhookHash(req) {
   const secret = process.env.FLW_SECRET_HASH || process.env.FLW_WEBHOOK_HASH || ''
-  if (!secret) return true // optional in test
-  const header = req.headers['verif-hash'] || req.headers['Verif-Hash']
-  return header && secret && header === secret
+  if (!secret) {
+    console.warn('FLW_SECRET_HASH not set — accepting webhook without hash check')
+    return true
+  }
+  const headers = req.headers || {}
+  const header =
+    headers['verif-hash'] ||
+    headers['Verif-Hash'] ||
+    headers['VERIF-HASH'] ||
+    Object.entries(headers).find(([k]) => k.toLowerCase() === 'verif-hash')?.[1]
+  return Boolean(header && String(header) === String(secret))
 }
 
 export function isSuccessfulFlw(data) {

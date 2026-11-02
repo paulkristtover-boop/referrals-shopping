@@ -1513,3 +1513,45 @@ main .container-fluid {
     opacity: 1 !important;
   }
 }
+
+/* List / cancel animations */
+.anim-row {
+  animation: rowIn 0.4s ease both;
+}
+@keyframes rowIn {
+  from { opacity: 0; transform: translateX(-8px); }
+  to { opacity: 1; transform: none; }
+}
+.order-card-exit {
+  animation: cardOut 0.35s ease forwards;
+}
+@keyframes cardOut {
+  to { opacity: 0; transform: scale(0.96); height: 0; margin: 0; padding: 0; }
+}
+.btn-loading {
+  position: relative;
+  pointer-events: none;
+}
+.btn-loading::after {
+  content: '';
+  width: 1em;
+  height: 1em;
+  margin-left: 0.5em;
+  border: 2px solid currentColor;
+  border-right-color: transparent;
+  border-radius: 50%;
+  display: inline-block;
+  animation: spinBtn 0.6s linear infinite;
+  vertical-align: -0.15em;
+}
+@keyframes spinBtn {
+  to { transform: rotate(360deg); }
+}
+.success-pop {
+  animation: successPop 0.5s ease;
+}
+@keyframes successPop {
+  0% { transform: scale(0.8); opacity: 0; }
+  60% { transform: scale(1.05); }
+  100% { transform: scale(1); opacity: 1; }
+}

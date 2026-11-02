@@ -27,3 +27,13 @@ Disable email confirmation. Optional MFA (Security page).
 - **Regular packages**: referred user signs up only
 - **Gambling packages**: signup + deposit
 - Free Starter: 50 regular referrals, once per account
+
+
+## Flutterwave webhooks
+Dashboard webhook URL:
+`https://YOUR_VERCEL_DOMAIN/api/payments/flutterwave-webhook`
+
+Health check (must return 200):
+`https://YOUR_VERCEL_DOMAIN/api/payments/flutterwave-health`
+
+Env: `FLW_SECRET_KEY`, `FLW_SECRET_HASH` (same as dashboard secret hash), `APP_URL`

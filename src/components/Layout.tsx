@@ -141,6 +141,9 @@ export default function Layout() {
               </NavItem>
               {user && !isAdmin && (
                 <>
+                  <NavItem to="/history" icon="bi-clock-history">
+                    History
+                  </NavItem>
                   <NavItem to="/proofs" icon="bi-check2-square">
                     Proofs
                   </NavItem>

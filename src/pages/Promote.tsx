@@ -432,6 +432,32 @@ export default function Promote() {
     window.scrollTo({ top: 0, behavior: 'smooth' })
   }
 
+
+  const cancelOrder = async (id: string) => {
+    if (!confirm('Cancel this order?')) return
+    setErr(null)
+    const { error } = await supabase.rpc('cancel_campaign', { p_campaign_id: id })
+    if (error) {
+      setErr(error.message + ' — run audit_cancel.sql')
+      return
+    }
+    setMsg('Order cancelled')
+    void load()
+  }
+
+  const deleteOrder = async (id: string) => {
+    if (!confirm('Permanently delete this order?')) return
+    setErr(null)
+    const { error } = await supabase.rpc('delete_campaign', { p_campaign_id: id })
+    if (error) {
+      setErr(error.message + ' — run audit_cancel.sql')
+      return
+    }
+    setMsg('Order deleted')
+    if (draftId === id) setDraftId(null)
+    void load()
+  }
+
   const create = async (e: React.FormEvent) => {
     e.preventDefault()
     setErr(null)
@@ -784,6 +810,7 @@ export default function Promote() {
           statusOptions={[
             { value: 'all', label: 'All statuses' },
             { value: 'draft', label: 'Drafts' },
+            { value: 'cancelled', label: 'Cancelled' },
             { value: 'pending_payment', label: 'Awaiting payment' },
             { value: 'pending_approval', label: 'Checking / submitted' },
             { value: 'approved', label: 'Promoting' },
@@ -864,8 +891,20 @@ export default function Promote() {
                 <p className="small text-success mt-2 mb-0">Promoting your link — track progress on Dashboard.</p>
               )}
               {c.status === 'draft' && (
-                <div className="mt-2">
+                <div className="mt-2 d-flex flex-wrap gap-2">
                   <Button size="sm" variant="primary" onClick={() => continueDraft(c)}>Continue draft</Button>
+                  <Button size="sm" variant="outline-warning" onClick={() => void cancelOrder(c.id)}>Cancel</Button>
+                  <Button size="sm" variant="outline-danger" onClick={() => void deleteOrder(c.id)}>Delete</Button>
+                </div>
+              )}
+              {c.status === 'pending_payment' && (
+                <div className="mt-2">
+                  <Button size="sm" variant="outline-warning" onClick={() => void cancelOrder(c.id)}>Cancel order</Button>
+                </div>
+              )}
+              {c.status === 'cancelled' && (
+                <div className="mt-2">
+                  <Button size="sm" variant="outline-danger" onClick={() => void deleteOrder(c.id)}>Delete</Button>
                 </div>
               )}
               {c.status === 'completed' && (
