@@ -2,15 +2,26 @@ import { useEffect, useState } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
 import { Alert, Button, Card, Form, Spinner } from 'react-bootstrap'
 import { supabase, supabaseConfigured } from '../lib/supabase'
+import { useAuth } from '../contexts/AuthContext'
+
+type AppSession = {
+  id: string
+  device_label: string | null
+  user_agent: string | null
+  last_seen_at: string
+  created_at: string
+  is_current: boolean | null
+  revoked_at: string | null
+}
 
 /**
- * Authenticator 2FA (TOTP) — used instead of email confirmation.
- * Supabase: Authentication → Providers → Email → Confirm email OFF
- * Optional: Authentication → Multi-Factor → enable enrollment
+ * Sessions + Authenticator 2FA (TOTP)
  */
 export default function Security() {
   const [params] = useSearchParams()
   const setupMode = params.get('setup') === '1'
+  const { session, signOut, signOutEverywhere, signOutOthers, touchSession } = useAuth()
+
   const [factorId, setFactorId] = useState<string | null>(null)
   const [qr, setQr] = useState<string | null>(null)
   const [secret, setSecret] = useState<string | null>(null)
@@ -19,6 +30,24 @@ export default function Security() {
   const [msg, setMsg] = useState<string | null>(null)
   const [err, setErr] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
+  const [sessions, setSessions] = useState<AppSession[]>([])
+  const [sessMsg, setSessMsg] = useState<string | null>(null)
+  const [sessErr, setSessErr] = useState<string | null>(null)
+
+  const loadSessions = async () => {
+    if (!supabaseConfigured) return
+    const { data, error } = await supabase
+      .from('app_sessions')
+      .select('*')
+      .is('revoked_at', null)
+      .order('last_seen_at', { ascending: false })
+      .limit(30)
+    if (error) setSessErr(error.message + ' — run supabase/sessions.sql')
+    else {
+      setSessErr(null)
+      setSessions((data as AppSession[]) || [])
+    }
+  }
 
   const refresh = async () => {
     if (!supabaseConfigured) {
@@ -33,6 +62,8 @@ export default function Security() {
 
   useEffect(() => {
     void refresh()
+    void loadSessions()
+    void touchSession()
   }, [])
 
   const enroll = async () => {
@@ -42,7 +73,7 @@ export default function Security() {
     if (error) {
       setErr(
         error.message +
-          ' — In Supabase enable MFA under Authentication → Multi-Factor (or Factors) if enrollment is blocked.'
+          ' — In Supabase enable MFA under Authentication → Multi-Factor if enrollment is blocked.'
       )
       return
     }
@@ -80,7 +111,7 @@ export default function Security() {
     const { error } = await supabase.auth.mfa.unenroll({ factorId: id })
     if (error) setErr(error.message)
     else {
-      setMsg('2FA factor removed.')
+      setMsg('Factor removed')
       void refresh()
     }
   }
@@ -97,35 +128,117 @@ export default function Security() {
 
   return (
     <div className="page-enter">
-      <h1 className="fw-bold mb-2">Security · 2FA</h1>
-      <p className="text-muted mb-3">
-        We do <strong>not</strong> use email confirmation. Protect your account with an authenticator app (Google
-        Authenticator, Authy, etc.).
-      </p>
+      <h1 className="fw-bold mb-2">Security</h1>
+      <p className="text-muted mb-3">Sessions, sign-out controls, and two-factor authentication.</p>
 
-      {setupMode && (
-        <Alert variant="info">
-          Account created. You can enable 2FA now, or{' '}
-          <Link to="/dashboard">skip and go to dashboard</Link>.
+      {err && (
+        <Alert variant="danger" dismissible onClose={() => setErr(null)}>
+          {err}
+        </Alert>
+      )}
+      {msg && (
+        <Alert variant="success" dismissible onClose={() => setMsg(null)}>
+          {msg}
         </Alert>
       )}
 
-      {err && <Alert variant="danger">{err}</Alert>}
-      {msg && <Alert variant="success">{msg}</Alert>}
-
       <Card className="rs-card rs-card-static mb-4">
         <Card.Body>
-          <h5 className="fw-bold">Status</h5>
+          <h5 className="fw-bold">Sessions</h5>
+          <p className="small text-muted">Devices signed in to your account. Revoke anything you do not recognise.</p>
+          {sessErr && <Alert variant="warning" className="py-2 small">{sessErr}</Alert>}
+          {sessMsg && <Alert variant="success" className="py-2 small">{sessMsg}</Alert>}
+          {session && (
+            <p className="small mb-2">
+              Current access expires:{' '}
+              <strong>{session.expires_at ? new Date(session.expires_at * 1000).toLocaleString() : '—'}</strong>
+            </p>
+          )}
+          <ul className="list-unstyled mb-3">
+            {sessions.length === 0 && (
+              <li className="text-muted small">No tracked sessions yet (run supabase/sessions.sql after deploy).</li>
+            )}
+            {sessions.map((s) => (
+              <li key={s.id} className="d-flex justify-content-between align-items-start gap-2 border-bottom py-2">
+                <div>
+                  <div className="fw-semibold">
+                    <i
+                      className={`bi ${/Mobile|iPhone|Android/i.test(s.user_agent || '') ? 'bi-phone' : 'bi-laptop'} me-1`}
+                    />
+                    {s.device_label || 'Device'}
+                    {s.is_current ? <span className="badge bg-success ms-2">This device</span> : null}
+                  </div>
+                  <div className="small text-muted">Last active {new Date(s.last_seen_at).toLocaleString()}</div>
+                </div>
+                {!s.is_current && (
+                  <Button
+                    size="sm"
+                    variant="outline-danger"
+                    onClick={async () => {
+                      const { error } = await supabase.rpc('revoke_app_session', { p_session_id: s.id })
+                      if (error) setSessErr(error.message)
+                      else {
+                        setSessMsg('Session revoked')
+                        void loadSessions()
+                      }
+                    }}
+                  >
+                    Revoke
+                  </Button>
+                )}
+              </li>
+            ))}
+          </ul>
+          <div className="d-flex flex-wrap gap-2">
+            <Button
+              size="sm"
+              variant="outline-warning"
+              onClick={async () => {
+                await signOutOthers()
+                setSessMsg('Signed out other sessions')
+                void loadSessions()
+              }}
+            >
+              Sign out other devices
+            </Button>
+            <Button size="sm" variant="outline-secondary" onClick={() => void signOut()}>
+              Sign out this device
+            </Button>
+            <Button
+              size="sm"
+              variant="outline-danger"
+              onClick={async () => {
+                if (!confirm('Sign out on every device?')) return
+                await signOutEverywhere()
+              }}
+            >
+              Sign out everywhere
+            </Button>
+          </div>
+        </Card.Body>
+      </Card>
+
+      <h5 className="fw-bold mb-2">Two-factor authentication</h5>
+      <p className="text-muted small mb-3">
+        Use an authenticator app instead of email confirmation. Enable MFA in Supabase if enrollment fails.
+      </p>
+
+      {setupMode && (
+        <Alert variant="info">Finish setup for stronger account protection, or skip for now.</Alert>
+      )}
+
+      <Card className="rs-card rs-card-static mb-3">
+        <Card.Body>
           {verified.length > 0 ? (
             <Alert variant="success" className="mb-3">
-              Two-factor authentication is <strong>ON</strong>. Login will require a code from your app.
+              2FA is active ({verified.length} factor{verified.length > 1 ? 's' : ''}).
             </Alert>
           ) : (
             <Alert variant="warning" className="mb-3">
-              Two-factor authentication is <strong>OFF</strong>. Recommended after register.
+              2FA is not enabled yet.
             </Alert>
           )}
-          <ul className="mb-3">
+          <ul className="list-unstyled">
             {factors.map((f) => (
               <li key={f.id} className="d-flex justify-content-between align-items-center gap-2 flex-wrap mb-2">
                 <span>

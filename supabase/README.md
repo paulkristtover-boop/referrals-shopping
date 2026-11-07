@@ -32,3 +32,5 @@ Auth: **Confirm email = OFF**. Optional MFA for 2FA.
 | 18 | `packages_ngn.sql` | Naira package list & prices |
 
 | 19 | `audit_cancel.sql` | Audit logs, cancel & delete orders |
+
+| 20 | `sessions.sql` | Device sessions registry + revoke |
