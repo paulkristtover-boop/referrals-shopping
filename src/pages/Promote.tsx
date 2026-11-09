@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useRef } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import { Alert, Button, Card, Form, Spinner, Badge } from 'react-bootstrap'
 import { ListFilters, ListPagination, paginate } from '../components/ListControls'
@@ -271,6 +271,7 @@ export default function Promote() {
   const [statusFilter, setStatusFilter] = useState('all')
   const [page, setPage] = useState(1)
   const [pageSize, setPageSize] = useState(10)
+  const errRef = useRef<HTMLDivElement>(null)
   const [freeUsed, setFreeUsed] = useState(false)
 
   const load = async () => {
@@ -561,20 +562,32 @@ export default function Promote() {
       }
 
       if (payMethod === 'flutterwave') {
+        if (!pkg?.id && !packageId) {
+          throw new Error('No package selected. Run packages_ngn.sql or pick a referral amount again.')
+        }
         const initRes = await fetch('/api/payments/flutterwave-init', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             campaignId: campId,
             email: user.email,
-            name: user.user_metadata?.full_name || user.email,
+            name: (user.user_metadata as { full_name?: string })?.full_name || user.email,
             amountNgn: effectivePrice,
           }),
         })
-        const init = await initRes.json()
-        if (!initRes.ok || !init.link) throw new Error(init.error || 'Could not start Flutterwave checkout')
-        setMsg('Redirecting to secure Flutterwave checkout…')
-        window.location.href = init.link as string
+        let init: { link?: string; error?: string; hint?: string } = {}
+        try {
+          init = await initRes.json()
+        } catch {
+          throw new Error('Payment server returned invalid response (check Vercel function logs)')
+        }
+        if (!initRes.ok || !init.link) {
+          const parts = [init.error || `Checkout failed (${initRes.status})`, init.hint].filter(Boolean)
+          throw new Error(parts.join(' — '))
+        }
+        setMsg('Redirecting to Flutterwave…')
+        // Full navigation (not SPA) so checkout always loads
+        window.location.assign(init.link)
         return
       }
 
@@ -618,7 +631,9 @@ export default function Promote() {
       setDraftId(null)
       void load()
     } catch (ex: unknown) {
-      setErr(ex instanceof Error ? ex.message : 'Failed to create order')
+      const message = ex instanceof Error ? ex.message : 'Failed to create order'
+      setErr(message)
+      setTimeout(() => errRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' }), 50)
     } finally {
       setCreating(false)
     }
@@ -650,7 +665,12 @@ export default function Promote() {
           Free Starter already used on this account. Upgrade with a paid package for more volume.
         </Alert>
       )}
-      {err && <Alert variant="danger">{err}</Alert>}
+      {err && (
+        <Alert ref={errRef} variant="danger" dismissible onClose={() => setErr(null)}>
+          <strong>Could not start payment</strong>
+          <div className="small mt-1">{err}</div>
+        </Alert>
+      )}
       {msg && <Alert variant="success">{msg}</Alert>}
 
       <Card className="rs-card rs-card-static mb-4">
@@ -880,24 +900,32 @@ export default function Promote() {
               )}
               {c.status === 'pending_payment' && (c.crypto_chain === 'ngn_flw' || order?.crypto_chain === 'ngn_flw') && (
                 <div className="mt-3">
-                  <p className="small text-muted mb-2">Flutterwave checkout — complete payment in the window, then return here.</p>
+                  <p className="small text-muted mb-2">Flutterwave — complete payment, then you return here automatically.</p>
                   <Button
                     size="sm"
                     variant="primary"
                     onClick={async () => {
-                      const res = await fetch('/api/payments/flutterwave-init', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({
-                          campaignId: c.id,
-                          email: user?.email,
-                          name: user?.email,
-                          amountNgn: c.paid_amount,
-                        }),
-                      })
-                      const data = await res.json()
-                      if (data.link) window.location.href = data.link
-                      else setErr(data.error || 'Could not open checkout')
+                      setErr(null)
+                      try {
+                        const res = await fetch('/api/payments/flutterwave-init', {
+                          method: 'POST',
+                          headers: { 'Content-Type': 'application/json' },
+                          body: JSON.stringify({
+                            campaignId: c.id,
+                            email: user?.email,
+                            name: user?.email,
+                            amountNgn: Number(c.paid_amount) || effectivePrice,
+                          }),
+                        })
+                        const data = await res.json()
+                        if (!res.ok || !data.link) {
+                          throw new Error([data.error, data.hint].filter(Boolean).join(' — ') || 'Could not open checkout')
+                        }
+                        window.location.assign(data.link)
+                      } catch (ex: unknown) {
+                        setErr(ex instanceof Error ? ex.message : 'Checkout failed')
+                        setTimeout(() => errRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' }), 50)
+                      }
                     }}
                   >
                     Open Flutterwave checkout
