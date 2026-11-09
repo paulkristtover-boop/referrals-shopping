@@ -3,22 +3,22 @@ import { createPaymentLink, flwPublicKey, flwSecret } from '../_lib/flutterwave.
 
 /**
  * POST { campaignId, email, name, amountNgn }
- * Creates Flutterwave hosted checkout. Secret key never leaves the server.
+ * Returns { link } for Flutterwave hosted checkout.
  */
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*')
-  res.setHeader('Access-Control-Allow-Methods', 'POST,OPTIONS')
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization')
+  res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS')
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type')
   if (req.method === 'OPTIONS') return res.status(200).end()
   if (req.method !== 'POST') return res.status(405).json({ error: 'POST only' })
 
   try {
-    // Fail fast with clear message if secrets missing
     try {
       flwSecret()
-    } catch (e) {
+    } catch {
       return res.status(500).json({
-        error: 'FLW_SECRET_KEY is not set on Vercel. Add Flutterwave V3 Secret key and redeploy.',
+        error:
+          'FLW_SECRET_KEY missing on Vercel. Use Flutterwave V3 Secret key (FLWSECK_… or FLWSECK_TEST_…), then redeploy.',
       })
     }
 
@@ -34,54 +34,62 @@ export default async function handler(req, res) {
 
     const campaignId = body.campaignId
     const email = body.email
-    const name = body.name
+    const name = body.name || email
     const amountNgn = body.amountNgn ?? body.amount
-    if (!campaignId || !email || amountNgn == null) {
-      return res.status(400).json({ error: 'campaignId, email, amountNgn required' })
-    }
-    const amount = Number(amountNgn)
-    if (!Number.isFinite(amount) || amount < 100) {
-      return res.status(400).json({ error: 'Invalid amount (min ₦100)' })
-    }
+
+    if (!campaignId) return res.status(400).json({ error: 'campaignId required' })
+    if (!email) return res.status(400).json({ error: 'email required' })
 
     let sb
     try {
       sb = adminClient()
-    } catch (e) {
+    } catch {
       return res.status(500).json({
         error:
-          'Server Supabase not configured. Set SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY on Vercel (no VITE_ prefix for service role).',
+          'Set SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY on Vercel (service role is server-only, not VITE_).',
       })
     }
 
-    const { data: camp, error } = await sb
+    const { data: camp, error: campErr } = await sb
       .from('campaigns')
-      .select('id, user_id, title, status, paid_amount, package_id')
+      .select('id, user_id, title, status, paid_amount')
       .eq('id', campaignId)
-      .single()
-    if (error || !camp) {
-      return res.status(404).json({ error: 'Campaign not found', detail: error?.message })
+      .maybeSingle()
+
+    if (campErr || !camp) {
+      return res.status(404).json({ error: 'Order not found', detail: campErr?.message })
     }
+
+    // Allow re-open checkout for unpaid orders
     if (!['pending_payment', 'draft'].includes(camp.status)) {
-      return res.status(400).json({ error: `Campaign status is "${camp.status}" — cannot start payment` })
+      return res.status(400).json({
+        error: `This order is already "${camp.status}". Create a new order or use refill if needed.`,
+      })
     }
 
-    const expected = Number(camp.paid_amount || amount) || amount
-    const payAmount = expected > 0 ? expected : amount
+    const payAmount = Math.round(Number(camp.paid_amount || amountNgn || 0))
+    if (!Number.isFinite(payAmount) || payAmount < 100) {
+      return res.status(400).json({ error: 'Invalid amount (min ₦100)' })
+    }
 
-    const tx_ref = `rs_${String(campaignId).replace(/-/g, '').slice(0, 12)}_${Date.now()}`
-    const origin =
+    const shortId = String(campaignId).replace(/-/g, '').slice(0, 10)
+    const tx_ref = `rs_${shortId}_${Date.now()}`
+
+    const host =
       process.env.APP_URL ||
       process.env.VITE_APP_URL ||
       (req.headers['x-forwarded-host']
-        ? `https://${req.headers['x-forwarded-host']}`
-        : req.headers.origin
-          ? String(req.headers.origin)
-          : '')
-    if (!origin) {
-      return res.status(500).json({ error: 'Set APP_URL on Vercel to your site URL (e.g. https://your-app.vercel.app)' })
+        ? `${req.headers['x-forwarded-proto'] || 'https'}://${req.headers['x-forwarded-host']}`
+        : req.headers.origin || '')
+
+    if (!host) {
+      return res.status(500).json({
+        error: 'Set APP_URL on Vercel to your full site URL, e.g. https://referrals-shopping.vercel.app',
+      })
     }
-    const redirect_url = `${origin.replace(/\/$/, '')}/promote?flw=1&campaignId=${campaignId}&tx_ref=${encodeURIComponent(tx_ref)}`
+
+    const base = String(host).replace(/\/$/, '')
+    const redirect_url = `${base}/promote?flw=1&campaignId=${encodeURIComponent(campaignId)}&tx_ref=${encodeURIComponent(tx_ref)}`
 
     let flw
     try {
@@ -91,36 +99,34 @@ export default async function handler(req, res) {
         currency: 'NGN',
         redirect_url,
         customer: {
-          email: String(email).trim(),
-          name: String(name || email).trim().slice(0, 80),
-          phonenumber: body.phone || undefined,
+          email: String(email).trim().toLowerCase(),
+          name: String(name || email).trim().slice(0, 100),
         },
         customizations: {
           title: 'Referrals Shopping',
-          description: String(camp.title || 'Referral package').slice(0, 100),
+          description: String(camp.title || 'Referral package').slice(0, 120),
         },
         meta: {
           campaign_id: campaignId,
           user_id: camp.user_id,
-          source: 'referrals-shopping',
         },
-        payment_options: 'card,banktransfer,ussd,account',
+        payment_options: 'card,banktransfer,ussd',
       })
-    } catch (flwErr) {
+    } catch (e) {
+      console.error('flw createPaymentLink', e.message, e.raw)
       return res.status(502).json({
-        error: flwErr.message || 'Flutterwave rejected payment init',
-        hint: 'Use Flutterwave V3 Secret key (FLWSECK_…), not V4 Client Secret. Check live vs test mode.',
+        error: e.message || 'Flutterwave payment init failed',
+        hint: 'Confirm V3 secret key, live vs test mode, and that the key matches your Flutterwave account.',
+        raw: e.raw || null,
       })
     }
 
     const link = flw?.data?.link
     if (!link) {
-      return res.status(502).json({
-        error: 'Flutterwave did not return a checkout link',
-        raw: flw,
-      })
+      return res.status(502).json({ error: 'No checkout link from Flutterwave', raw: flw })
     }
 
+    // Upsert payment order
     const orderRow = {
       user_id: camp.user_id,
       campaign_id: campaignId,
@@ -132,15 +138,18 @@ export default async function handler(req, res) {
       status: 'awaiting_payment',
       expires_at: new Date(Date.now() + 60 * 60 * 1000).toISOString(),
     }
+
     const { data: existing } = await sb
       .from('payment_orders')
       .select('id')
       .eq('campaign_id', campaignId)
       .maybeSingle()
+
     if (existing?.id) {
       await sb.from('payment_orders').update(orderRow).eq('id', existing.id)
     } else {
-      await sb.from('payment_orders').insert(orderRow)
+      const ins = await sb.from('payment_orders').insert(orderRow)
+      if (ins.error) console.error('payment_orders insert', ins.error)
     }
 
     await sb
@@ -154,11 +163,12 @@ export default async function handler(req, res) {
       .eq('id', campaignId)
 
     return res.status(200).json({
+      ok: true,
       link,
       tx_ref,
-      public_key: flwPublicKey(),
       amount: payAmount,
       currency: 'NGN',
+      public_key: flwPublicKey() || undefined,
     })
   } catch (e) {
     console.error('flw-init', e)

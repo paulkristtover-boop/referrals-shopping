@@ -476,6 +476,37 @@ export default function Promote() {
     void load()
   }
 
+
+  const startFlutterwaveCheckout = async (campaignId: string, amountNgn: number) => {
+    if (!user?.email) throw new Error('You must be signed in with an email')
+    const initRes = await fetch('/api/payments/flutterwave-init', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        campaignId,
+        email: user.email,
+        name: (user.user_metadata as { full_name?: string } | undefined)?.full_name || user.email,
+        amountNgn,
+      }),
+    })
+    const text = await initRes.text()
+    let init: { link?: string; error?: string; hint?: string; ok?: boolean } = {}
+    try {
+      init = JSON.parse(text)
+    } catch {
+      throw new Error(
+        initRes.status === 404
+          ? 'Payment API not found (404). Redeploy so /api/payments/flutterwave-init is live.'
+          : `Payment server error (${initRes.status}). ${text.slice(0, 120)}`
+      )
+    }
+    if (!initRes.ok || !init.link) {
+      throw new Error([init.error, init.hint].filter(Boolean).join(' — ') || `Checkout failed (${initRes.status})`)
+    }
+    setMsg('Opening Flutterwave secure checkout…')
+    window.location.href = init.link
+  }
+
   const create = async (e: React.FormEvent) => {
     e.preventDefault()
     setErr(null)
@@ -565,29 +596,7 @@ export default function Promote() {
         if (!pkg?.id && !packageId) {
           throw new Error('No package selected. Run packages_ngn.sql or pick a referral amount again.')
         }
-        const initRes = await fetch('/api/payments/flutterwave-init', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            campaignId: campId,
-            email: user.email,
-            name: (user.user_metadata as { full_name?: string })?.full_name || user.email,
-            amountNgn: effectivePrice,
-          }),
-        })
-        let init: { link?: string; error?: string; hint?: string } = {}
-        try {
-          init = await initRes.json()
-        } catch {
-          throw new Error('Payment server returned invalid response (check Vercel function logs)')
-        }
-        if (!initRes.ok || !init.link) {
-          const parts = [init.error || `Checkout failed (${initRes.status})`, init.hint].filter(Boolean)
-          throw new Error(parts.join(' — '))
-        }
-        setMsg('Redirecting to Flutterwave…')
-        // Full navigation (not SPA) so checkout always loads
-        window.location.assign(init.link)
+        await startFlutterwaveCheckout(String(campId), effectivePrice)
         return
       }
 
@@ -907,21 +916,7 @@ export default function Promote() {
                     onClick={async () => {
                       setErr(null)
                       try {
-                        const res = await fetch('/api/payments/flutterwave-init', {
-                          method: 'POST',
-                          headers: { 'Content-Type': 'application/json' },
-                          body: JSON.stringify({
-                            campaignId: c.id,
-                            email: user?.email,
-                            name: user?.email,
-                            amountNgn: Number(c.paid_amount) || effectivePrice,
-                          }),
-                        })
-                        const data = await res.json()
-                        if (!res.ok || !data.link) {
-                          throw new Error([data.error, data.hint].filter(Boolean).join(' — ') || 'Could not open checkout')
-                        }
-                        window.location.assign(data.link)
+                        await startFlutterwaveCheckout(c.id, Number(c.paid_amount) || 0)
                       } catch (ex: unknown) {
                         setErr(ex instanceof Error ? ex.message : 'Checkout failed')
                         setTimeout(() => errRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' }), 50)
