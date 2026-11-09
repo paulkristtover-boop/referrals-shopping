@@ -163,7 +163,7 @@ function PaymentPanel({
           <div className="small text-muted mt-1">Scan to get address</div>
         </div>
         <div className="col">
-          <div className="small text-muted">Amount (must match exactly)</div>
+          <div className="small text-muted">Crypto amount (must match exactly — order priced in ₦)</div>
           <div className="d-flex flex-wrap align-items-center gap-2 mb-3">
             <span className="pay-code">{amountStr} {chain}</span>
             <CopyBtn value={amountStr} label="Copy amount" />
@@ -579,7 +579,7 @@ export default function Promote() {
       }
 
       // Crypto path
-      const qRes = await fetch(`/api/payments/quote?usd=${effectivePrice}&chain=${chain}`)
+      const qRes = await fetch(`/api/payments/quote?ngn=${effectivePrice}&chain=${chain}`)
       const quote = await qRes.json()
       if (!qRes.ok) throw new Error(quote.error || 'Could not get payment quote')
 
@@ -610,7 +610,7 @@ export default function Promote() {
         status: 'awaiting_payment',
       })
 
-      setMsg(`Send exactly ${Number(quote.amount_crypto).toFixed(6)} ${chain.toUpperCase()} within 15 minutes.`)
+      setMsg(`Order ${formatMoney(effectivePrice)}. Send exactly ${Number(quote.amount_crypto).toFixed(6)} ${chain.toUpperCase()} within 15 minutes.`)
       setTitle('')
       setUrl('')
       setDescription('')

@@ -14,9 +14,16 @@ type W = {
   wallet_address: string
   status: string
   created_at: string
+  method?: string | null
+  bank_name?: string | null
+  account_number?: string | null
+  account_name?: string | null
 }
 
-const MIN_NGN = 100
+type Bank = { code: string; name: string }
+
+/** Minimum withdrawal in Naira */
+const MIN_NGN = 1000
 
 function statusBadge(status: string) {
   const map: Record<string, string> = {
@@ -35,8 +42,15 @@ export default function Wallet() {
   const { user, profile, refreshProfile } = useAuth()
   const [list, setList] = useState<W[]>([])
   const [amount, setAmount] = useState('')
+  const [method, setMethod] = useState<'bank' | 'crypto'>('bank')
   const [chain, setChain] = useState('trx')
   const [addr, setAddr] = useState('')
+  const [banks, setBanks] = useState<Bank[]>([])
+  const [bankCode, setBankCode] = useState('')
+  const [bankName, setBankName] = useState('')
+  const [accountNumber, setAccountNumber] = useState('')
+  const [accountName, setAccountName] = useState('')
+  const [banksErr, setBanksErr] = useState<string | null>(null)
   const [err, setErr] = useState<string | null>(null)
   const [msg, setMsg] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
@@ -65,6 +79,24 @@ export default function Wallet() {
     void load()
   }, [user?.id])
 
+  useEffect(() => {
+    if (method !== 'bank') return
+    ;(async () => {
+      try {
+        const res = await fetch('/api/payments/flutterwave-banks')
+        const j = await res.json()
+        if (!res.ok) {
+          setBanksErr(j.error || 'Could not load banks')
+          return
+        }
+        setBanks(j.banks || [])
+        setBanksErr(null)
+      } catch (e) {
+        setBanksErr((e as Error).message)
+      }
+    })()
+  }, [method])
+
   const request = async (e: React.FormEvent) => {
     e.preventDefault()
     setErr(null)
@@ -79,29 +111,49 @@ export default function Wallet() {
       setErr('Amount exceeds available balance')
       return
     }
-    if (addr.trim().length < 8) {
-      setErr('Enter a valid wallet address')
-      return
-    }
     setSubmitting(true)
     try {
-      const { error } = await supabase.rpc('request_withdrawal', {
-        p_amount: a,
-        p_chain: chain,
-        p_wallet: addr.trim(),
-      })
-      if (error) {
-        // Fallback if SQL not run yet (unsafe path — warn)
-        if (error.message.toLowerCase().includes('function') || error.message.toLowerCase().includes('does not exist')) {
-          setErr('Run supabase/withdrawals_safe.sql in Supabase, then try again.')
-        } else {
-          setErr(error.message)
+      if (method === 'bank') {
+        const { error } = await supabase.rpc('request_bank_withdrawal', {
+          p_amount: a,
+          p_bank_code: bankCode,
+          p_bank_name: bankName,
+          p_account_number: accountNumber.replace(/\D/g, ''),
+          p_account_name: accountName.trim(),
+        })
+        if (error) {
+          setErr(
+            error.message.includes('function')
+              ? 'Run supabase/withdrawals_bank.sql in Supabase, then try again.'
+              : error.message
+          )
+          return
         }
-        return
+        setMsg(`Bank withdrawal of ${formatMoney(a)} requested. Paid to your account after admin / Flutterwave processing.`)
+        setAccountNumber('')
+        setAccountName('')
+      } else {
+        if (addr.trim().length < 8) {
+          setErr('Enter a valid wallet address')
+          return
+        }
+        const { error } = await supabase.rpc('request_withdrawal', {
+          p_amount: a,
+          p_chain: chain,
+          p_wallet: addr.trim(),
+        })
+        if (error) {
+          setErr(
+            error.message.includes('function')
+              ? 'Run supabase/withdrawals_safe.sql and withdrawals_bank.sql'
+              : error.message
+          )
+          return
+        }
+        setMsg(`Crypto withdrawal of ${formatMoney(a)} requested. Admin sends ${chain.toUpperCase()} after review.`)
+        setAddr('')
       }
-      setMsg('Withdrawal requested. Balance held until admin pays or rejects (refund on reject).')
       setAmount('')
-      setAddr('')
       await refreshProfile()
       void load()
     } finally {
@@ -122,14 +174,22 @@ export default function Wallet() {
   const filtered = list.filter((w) => {
     if (status !== 'all' && w.status !== status) return false
     if (!q) return true
-    return w.wallet_address.toLowerCase().includes(q) || w.crypto_chain.toLowerCase().includes(q)
+    return (
+      (w.wallet_address || '').toLowerCase().includes(q) ||
+      (w.crypto_chain || '').toLowerCase().includes(q) ||
+      (w.account_name || '').toLowerCase().includes(q) ||
+      (w.bank_name || '').toLowerCase().includes(q)
+    )
   })
   const pg = paginate(filtered, page, pageSize)
 
   return (
     <div className="page-enter">
       <h1 className="mb-1 fw-bold">Wallet</h1>
-      <p className="text-muted mb-4">Earn rewards on {BRAND} — withdraw in TRX, SOL, or TON</p>
+      <p className="text-muted mb-4">
+        Balance in <strong>₦ Naira</strong> on {BRAND}. Withdraw to <strong>Nigerian bank</strong> (Flutterwave) or crypto.
+        Minimum {formatMoney(MIN_NGN)}.
+      </p>
 
       {err && (
         <Alert variant="danger" dismissible onClose={() => setErr(null)}>
@@ -144,8 +204,8 @@ export default function Wallet() {
 
       <Card className="rs-card rs-card-static mb-4">
         <Card.Body>
-          <div className="text-muted small">Available balance</div>
-          <div className="fs-2 fw-bold text-primary">${bal.toFixed(2)}</div>
+          <div className="text-muted small">Available balance (₦)</div>
+          <div className="fs-2 fw-bold text-primary">{formatMoney(bal)}</div>
           <p className="small text-muted mb-0">Pending withdrawals reduce this balance until paid or rejected.</p>
         </Card.Body>
       </Card>
@@ -153,46 +213,103 @@ export default function Wallet() {
       <Card className="rs-card rs-card-static mb-4">
         <Card.Body>
           <h5 className="fw-bold">Request withdrawal</h5>
-          <p className="small text-muted">Minimum {formatMoney(MIN_NGN)}. Admin sends crypto to your address after review.</p>
+          <p className="small text-muted">Minimum {formatMoney(MIN_NGN)}. Amounts are always in Naira.</p>
+
+          <div className="d-flex flex-wrap gap-2 mb-3">
+            <Button type="button" size="sm" variant={method === 'bank' ? 'primary' : 'outline-primary'} onClick={() => setMethod('bank')}>
+              <i className="bi bi-bank me-1" />
+              Nigerian bank
+            </Button>
+            <Button type="button" size="sm" variant={method === 'crypto' ? 'primary' : 'outline-secondary'} onClick={() => setMethod('crypto')}>
+              <i className="bi bi-currency-bitcoin me-1" />
+              Crypto
+            </Button>
+          </div>
+
           <Form onSubmit={request} className="row g-3">
             <div className="col-md-4">
               <Form.Label>Amount (₦)</Form.Label>
               <Form.Control
                 type="number"
-                step="0.01"
                 min={MIN_NGN}
-                max={bal || undefined}
+                step="1"
                 value={amount}
                 onChange={(e) => setAmount(e.target.value)}
                 required
+                placeholder={String(MIN_NGN)}
               />
-              <Form.Text>
-                <button type="button" className="btn btn-link btn-sm p-0" onClick={() => setAmount(bal > 0 ? bal.toFixed(2) : '')}>
-                  Use max (${bal.toFixed(2)})
-                </button>
-              </Form.Text>
+              <button
+                type="button"
+                className="btn btn-link btn-sm p-0"
+                onClick={() => setAmount(bal > 0 ? String(Math.floor(bal)) : '')}
+              >
+                Use max ({formatMoney(bal)})
+              </button>
             </div>
-            <div className="col-md-4">
-              <Form.Label>Chain</Form.Label>
-              <Form.Select value={chain} onChange={(e) => setChain(e.target.value)}>
-                <option value="trx">TRX (Tron)</option>
-                <option value="sol">SOL (Solana)</option>
-                <option value="ton">TON</option>
-              </Form.Select>
-            </div>
-            <div className="col-md-4">
-              <Form.Label>Wallet address</Form.Label>
-              <Form.Control
-                value={addr}
-                onChange={(e) => setAddr(e.target.value)}
-                required
-                placeholder="Your receive address"
-                className="font-monospace"
-              />
-            </div>
+
+            {method === 'bank' ? (
+              <>
+                <div className="col-md-8">
+                  <Form.Label>Bank</Form.Label>
+                  {banksErr && <div className="small text-danger mb-1">{banksErr}</div>}
+                  <Form.Select
+                    value={bankCode}
+                    onChange={(e) => {
+                      const code = e.target.value
+                      setBankCode(code)
+                      setBankName(banks.find((b) => b.code === code)?.name || '')
+                    }}
+                    required
+                  >
+                    <option value="">Select bank…</option>
+                    {banks.map((b) => (
+                      <option key={b.code} value={b.code}>
+                        {b.name}
+                      </option>
+                    ))}
+                  </Form.Select>
+                </div>
+                <div className="col-md-4">
+                  <Form.Label>Account number</Form.Label>
+                  <Form.Control
+                    value={accountNumber}
+                    onChange={(e) => setAccountNumber(e.target.value.replace(/\D/g, '').slice(0, 10))}
+                    required
+                    inputMode="numeric"
+                    placeholder="10 digits"
+                  />
+                </div>
+                <div className="col-md-4">
+                  <Form.Label>Account name</Form.Label>
+                  <Form.Control value={accountName} onChange={(e) => setAccountName(e.target.value)} required placeholder="As on bank account" />
+                </div>
+              </>
+            ) : (
+              <>
+                <div className="col-md-4">
+                  <Form.Label>Chain</Form.Label>
+                  <Form.Select value={chain} onChange={(e) => setChain(e.target.value)}>
+                    <option value="trx">TRX</option>
+                    <option value="sol">SOL</option>
+                    <option value="ton">TON</option>
+                  </Form.Select>
+                </div>
+                <div className="col-md-4">
+                  <Form.Label>Wallet address</Form.Label>
+                  <Form.Control
+                    value={addr}
+                    onChange={(e) => setAddr(e.target.value)}
+                    required
+                    placeholder="Your receive address"
+                    className="font-monospace"
+                  />
+                </div>
+              </>
+            )}
+
             <div className="col-12">
               <Button type="submit" disabled={submitting || bal < MIN_NGN}>
-                {submitting ? 'Submitting…' : 'Request withdrawal'}
+                {submitting ? 'Submitting…' : method === 'bank' ? 'Request bank payout' : 'Request crypto withdrawal'}
               </Button>
             </div>
           </Form>
@@ -206,7 +323,7 @@ export default function Wallet() {
           setSearch(v)
           setPage(1)
         }}
-        placeholder="Address, chain…"
+        placeholder="Bank, name, address…"
         status={status}
         onStatus={(v) => {
           setStatus(v)
@@ -228,9 +345,9 @@ export default function Wallet() {
         <Table size="sm" responsive className="mb-0">
           <thead>
             <tr>
-              <th>Amount</th>
-              <th>Chain</th>
-              <th>Address</th>
+              <th>Amount (₦)</th>
+              <th>Method</th>
+              <th>Destination</th>
               <th>Status</th>
               <th>Date</th>
             </tr>
@@ -239,9 +356,18 @@ export default function Wallet() {
             {pg.slice.map((w) => (
               <tr key={w.id}>
                 <td>{formatMoney(w.amount)}</td>
-                <td>{w.crypto_chain.toUpperCase()}</td>
-                <td className="small font-monospace text-truncate" style={{ maxWidth: 140 }}>
-                  {w.wallet_address}
+                <td>{w.method === 'bank' || w.crypto_chain === 'ngn_bank' ? 'Bank' : (w.crypto_chain || '').toUpperCase()}</td>
+                <td className="small">
+                  {w.method === 'bank' || w.crypto_chain === 'ngn_bank' ? (
+                    <>
+                      {w.bank_name || 'Bank'} · {w.account_number || w.wallet_address}
+                      {w.account_name ? <div className="text-muted">{w.account_name}</div> : null}
+                    </>
+                  ) : (
+                    <span className="font-monospace text-truncate d-inline-block" style={{ maxWidth: 140 }}>
+                      {w.wallet_address}
+                    </span>
+                  )}
                 </td>
                 <td>{statusBadge(w.status)}</td>
                 <td className="small">{new Date(w.created_at).toLocaleString()}</td>

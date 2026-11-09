@@ -36,3 +36,5 @@ Auth: **Confirm email = OFF**. Optional MFA for 2FA.
 | 20 | `sessions.sql` | Device sessions registry + revoke |
 
 | 21 | `refill_campaign.sql` | Refill incomplete promotions |
+
+| 22 | `withdrawals_bank.sql` | Bank withdrawals ₦1,000 min + FLW |

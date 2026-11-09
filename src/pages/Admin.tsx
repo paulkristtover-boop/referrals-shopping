@@ -116,6 +116,24 @@ export default function Admin() {
     void load()
   }, [])
 
+
+  const payBankFlw = async (id: string) => {
+    setErr(null)
+    try {
+      const res = await fetch('/api/payments/flutterwave-transfer', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ withdrawalId: id }),
+      })
+      const j = await res.json()
+      if (!res.ok) throw new Error(j.error || 'Transfer failed')
+      flash('Flutterwave bank transfer initiated')
+      void load()
+    } catch (e) {
+      setErr((e as Error).message)
+    }
+  }
+
   const flash = (m: string) => {
     setMsg(m)
     setTimeout(() => setMsg(null), 3000)
@@ -584,20 +602,29 @@ export default function Admin() {
             />
             <Table size="sm" responsive hover>
               <thead>
-                <tr><th>User</th><th>Amount</th><th>Chain</th><th>Address</th><th>Status</th><th></th></tr>
+                <tr><th>User</th><th>Amount (₦)</th><th>Method</th><th>Destination</th><th>Status</th><th></th></tr>
               </thead>
               <tbody>
                 {wdPage.slice.map((w) => (
                   <tr key={String(w.id)}>
                     <td className="small">{String((w.profiles as { email?: string })?.email || '')}</td>
                     <td>{formatMoney(w.amount)}</td>
-                    <td>{String(w.crypto_chain).toUpperCase()}</td>
-                    <td className="small">{String(w.wallet_address)}</td>
+                    <td className="small">{w.method === 'bank' || w.crypto_chain === 'ngn_bank' ? 'Bank' : String(w.crypto_chain).toUpperCase()}</td>
+                    <td className="small">{w.method === 'bank' || w.crypto_chain === 'ngn_bank'
+                      ? `${w.bank_name || 'Bank'} · ${w.account_number || w.wallet_address}${w.account_name ? ' · ' + w.account_name : ''}`
+                      : String(w.wallet_address)}</td>
                     <td><Badge className="badge-status" bg="secondary">{String(w.status)}</Badge></td>
                     <td className="text-nowrap">
                       {w.status === 'pending' && (
                         <>
-                          <Button size="sm" variant="success" className="me-1" onClick={() => void payWithdrawal(String(w.id))}>Paid</Button>
+                          {(w.method === 'bank' || w.crypto_chain === 'ngn_bank') && (
+                            <Button size="sm" variant="primary" className="me-1" onClick={() => void payBankFlw(String(w.id))}>
+                              Pay bank (FLW)
+                            </Button>
+                          )}
+                          <Button size="sm" variant="success" className="me-1" onClick={() => void payWithdrawal(String(w.id))}>
+                            Mark paid
+                          </Button>
                           <Button
                             size="sm"
                             variant="outline-danger"
