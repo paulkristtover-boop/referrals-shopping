@@ -9,7 +9,7 @@ import BottomTabBar from './BottomTabBar'
 import OfflineNotice from './OfflineNotice'
 import SlowConnection from './SlowConnection'
 
-import { TG, IG, IG_HANDLE, BRAND } from '../lib/brand'
+import { TG, IG, IG_HANDLE, BRAND, BRAND_AI, BRAND_TAGLINE, CURRENCY_NOTE } from '../lib/brand'
 
 function NavItem({ to, icon, children, end }: { to: string; icon: string; children: ReactNode; end?: boolean }) {
   return (
@@ -226,7 +226,11 @@ export default function Layout() {
           </div>
           <div className="d-flex justify-content-center align-items-center gap-2">
             <Logo size={20} showText={false} />
-            <span>© {new Date().getFullYear()} {BRAND}</span>
+            <div className="d-flex flex-column align-items-center gap-1">
+              <span>© {new Date().getFullYear()} {BRAND} · {BRAND_TAGLINE}</span>
+              <span className="ai-line"><i className="bi bi-stars me-1" />{BRAND_AI}</span>
+              <span className="small">{CURRENCY_NOTE}</span>
+            </div>
           </div>
         </Container>
       </footer>

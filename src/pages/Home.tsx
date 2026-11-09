@@ -2,7 +2,7 @@ import { Link } from 'react-router-dom'
 import { Row, Col, Card } from 'react-bootstrap'
 import Logo from '../components/Logo'
 import { useAuth } from '../contexts/AuthContext'
-import { BRAND, TG, IG, IG_HANDLE } from '../lib/brand'
+import { BRAND, BRAND_TAGLINE, BRAND_SUB, BRAND_AI, TG, IG, IG_HANDLE, CURRENCY_NOTE } from '../lib/brand'
 import { formatMoney } from '../lib/money'
 import { REGULAR_PACKAGES, INVESTMENT_PACKAGES, FREE_STARTER_REFS } from '../lib/pricing'
 import { FloatBlobs, Reveal, Stagger } from '../components/Animated'
@@ -39,15 +39,21 @@ export default function Home() {
     <div className="page-enter">
       <div className="hero-section text-center position-relative">
         <FloatBlobs />
+        <div className="ng-flag-bar" aria-hidden />
         <div className="hero-with-art">
           <div className="hero-copy">
         <div className="d-flex justify-content-center justify-content-lg-start mb-3">
           <Logo size={48} showText={false} />
         </div>
         <p className="text-uppercase small fw-semibold mb-2 opacity-75 letter-space">{BRAND}</p>
+            <div className="d-flex flex-wrap gap-2 justify-content-center justify-content-lg-start mb-2">
+              <span className="ng-ai-badge"><span className="dot" /> {BRAND_AI}</span>
+              <span className="ng-ai-badge">₦ Naira · NG</span>
+            </div>
+            <p className="small opacity-90 mb-2">{BRAND_TAGLINE}</p>
         <h1 className="display-5 fw-bold mb-2">Promote links. Earners complete the tasks.</h1>
         <p className="lead mb-3 opacity-90">
-          A marketplace: pay for referral volume on Promote, or get paid on Earn by completing verified tasks on those links.
+          {BRAND_SUB} Pay and withdraw in ₦. Built for sites, channels, bots, and groups across Nigeria.
         </p>
         <div className="avatar-stack mb-3 justify-content-center justify-content-lg-start">
           <span className="av" title="Members">A</span>
@@ -102,6 +108,11 @@ export default function Home() {
         </div>
       </div>
 
+      <div className="ng-strip">
+        <span><strong>NG</strong> · Built for Nigeria</span>
+        <span>{CURRENCY_NOTE}</span>
+        <span><i className="bi bi-cpu me-1" />{BRAND_AI}</span>
+      </div>
       <Reveal><h2 className="text-center mb-2 fw-bold">Two paths</h2></Reveal>
       <p className="text-center text-muted mb-4">For sites, channels, bots, and groups — promote or earn.</p>
       <Stagger className="mb-5"><Row className="g-3">

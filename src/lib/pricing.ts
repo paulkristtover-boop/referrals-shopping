@@ -1,4 +1,7 @@
-/** Referral pricing in Naira — tier ratio from published USD × 1600 */
+/**
+ * Realistic Naira package prices for NG market.
+ * Aimed to leave room for earner rewards (~₦40–80/task regular) + platform margin + fees.
+ */
 
 export type RefCategory = 'regular' | 'gambling'
 
@@ -8,37 +11,39 @@ export type Tier = {
   priceNgn: number
 }
 
-/** Regular: sites / channels / bots / groups — signup only */
+/** Regular: signup only — ~₦25–35 effective per ref, volume discounts at top end */
 export const REGULAR_PACKAGES: Tier[] = [
-  { name: 'Spark', referrals: 1000, priceNgn: 12800 },
-  { name: 'Pulse', referrals: 2000, priceNgn: 16000 },
-  { name: 'Wave', referrals: 3000, priceNgn: 24000 },
-  { name: 'Boost', referrals: 4000, priceNgn: 32000 },
-  { name: 'Surge', referrals: 5000, priceNgn: 40000 },
-  { name: 'Orbit', referrals: 10000, priceNgn: 80000 },
-  { name: 'Nova', referrals: 20000, priceNgn: 160000 },
-  { name: 'Galaxy', referrals: 30000, priceNgn: 240000 },
+  { name: 'Spark', referrals: 1000, priceNgn: 30000 },
+  { name: 'Pulse', referrals: 2000, priceNgn: 55000 },
+  { name: 'Wave', referrals: 3000, priceNgn: 80000 },
+  { name: 'Boost', referrals: 4000, priceNgn: 100000 },
+  { name: 'Surge', referrals: 5000, priceNgn: 120000 },
+  { name: 'Orbit', referrals: 10000, priceNgn: 220000 },
+  { name: 'Nova', referrals: 20000, priceNgn: 400000 },
+  { name: 'Galaxy', referrals: 30000, priceNgn: 550000 },
 ]
 
-/** Investment / deposit — signup + deposit */
+/** Investment / deposit — harder action, ~1.8–2× regular */
 export const INVESTMENT_PACKAGES: Tier[] = [
-  { name: 'Vault Lite', referrals: 1000, priceNgn: 25600 },
-  { name: 'Vault Plus', referrals: 2000, priceNgn: 32000 },
-  { name: 'Vault Pro', referrals: 3000, priceNgn: 48000 },
-  { name: 'Vault Max', referrals: 4000, priceNgn: 64000 },
-  { name: 'Vault Elite', referrals: 5000, priceNgn: 80000 },
-  { name: 'Vault Ultra', referrals: 10000, priceNgn: 160000 },
-  { name: 'Vault Prime', referrals: 20000, priceNgn: 320000 },
-  { name: 'Vault Titan', referrals: 30000, priceNgn: 480000 },
+  { name: 'Vault Lite', referrals: 1000, priceNgn: 60000 },
+  { name: 'Vault Plus', referrals: 2000, priceNgn: 110000 },
+  { name: 'Vault Pro', referrals: 3000, priceNgn: 160000 },
+  { name: 'Vault Max', referrals: 4000, priceNgn: 200000 },
+  { name: 'Vault Elite', referrals: 5000, priceNgn: 240000 },
+  { name: 'Vault Ultra', referrals: 10000, priceNgn: 420000 },
+  { name: 'Vault Prime', referrals: 20000, priceNgn: 780000 },
+  { name: 'Vault Titan', referrals: 30000, priceNgn: 1100000 },
 ]
 
-/** Legacy tuple form for older callers */
 export const REGULAR_TIERS: [number, number][] = REGULAR_PACKAGES.map((p) => [p.referrals, p.priceNgn])
 export const INVESTMENT_TIERS: [number, number][] = INVESTMENT_PACKAGES.map((p) => [p.referrals, p.priceNgn])
 
 export const MIN_ORDER_NGN = 1000
 export const FREE_STARTER_REFS = 50
 export const FREE_STARTER_NAME = 'Free Starter'
+
+/** Earn reward per completed regular-style task (Naira) */
+export const DEFAULT_TASK_REWARD_NGN = 50
 
 export function packagesFor(category: RefCategory): Tier[] {
   return category === 'gambling' ? INVESTMENT_PACKAGES : REGULAR_PACKAGES
@@ -75,6 +80,19 @@ export function priceForReferrals(referrals: number, category: RefCategory): num
   }
   const rate = best.priceNgn / best.referrals
   return Math.max(MIN_ORDER_NGN, Math.round(n * rate))
+}
+
+export function refillPriceNgn(
+  remainingRefs: number,
+  orderedRefs: number,
+  originalPaidNgn: number,
+  category: RefCategory
+): number {
+  if (remainingRefs <= 0) return 0
+  if (orderedRefs > 0 && originalPaidNgn > 0) {
+    return Math.max(MIN_ORDER_NGN, Math.round((remainingRefs / orderedRefs) * originalPaidNgn))
+  }
+  return priceForReferrals(remainingRefs, category)
 }
 
 export function isFreeStarter(referrals: number, category: RefCategory) {

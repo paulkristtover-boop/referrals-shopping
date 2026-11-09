@@ -34,3 +34,5 @@ Auth: **Confirm email = OFF**. Optional MFA for 2FA.
 | 19 | `audit_cancel.sql` | Audit logs, cancel & delete orders |
 
 | 20 | `sessions.sql` | Device sessions registry + revoke |
+
+| 21 | `refill_campaign.sql` | Refill incomplete promotions |

@@ -446,6 +446,22 @@ export default function Promote() {
     void load()
   }
 
+  const refillOrder = async (id: string) => {
+    if (!confirm('Create a refill order for remaining referrals? You will pay again for what is left.')) return
+    setErr(null)
+    const { data, error } = await supabase.rpc('refill_campaign', { p_campaign_id: id })
+    if (error) {
+      setErr(error.message + ' — run supabase/refill_campaign.sql')
+      return
+    }
+    setMsg('Refill order created — complete payment to renew promotion.')
+    void load()
+    if (data) {
+      // scroll to top to see new pending_payment order
+      window.scrollTo({ top: 0, behavior: 'smooth' })
+    }
+  }
+
   const deleteOrder = async (id: string) => {
     if (!confirm('Permanently delete this order?')) return
     setErr(null)
@@ -892,7 +908,12 @@ export default function Promote() {
                 <p className="small text-info mt-2 mb-0">Payment submitted — waiting for admin confirmation.</p>
               )}
               {c.status === 'approved' && (
-                <p className="small text-success mt-2 mb-0">Promoting your link — track progress on Dashboard.</p>
+                <div className="mt-2">
+                  <p className="small text-success mb-2">Promoting your link — track progress on Dashboard.</p>
+                  <Button size="sm" variant="outline-primary" onClick={() => void refillOrder(c.id)}>
+                    Refill remaining
+                  </Button>
+                </div>
               )}
               {c.status === 'draft' && (
                 <div className="mt-2 d-flex flex-wrap gap-2">
@@ -912,7 +933,12 @@ export default function Promote() {
                 </div>
               )}
               {c.status === 'completed' && (
-                <p className="small text-success mt-2 mb-0">Order complete — referral target reached.</p>
+                <div className="mt-2">
+                  <p className="small text-success mb-2">Order complete — referral target reached.</p>
+                  <Button size="sm" variant="outline-primary" onClick={() => void refillOrder(c.id)}>
+                    Order again / refill
+                  </Button>
+                </div>
               )}
               <div className="mt-3 pt-2 border-top d-flex flex-wrap justify-content-between align-items-center gap-2">
                 <span className="small text-muted">Share referral link</span>

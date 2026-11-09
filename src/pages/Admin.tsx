@@ -125,7 +125,7 @@ export default function Admin() {
     const { error } = await supabase.rpc('admin_approve_campaign', { p_campaign_id: id })
     if (error) {
       await supabase.from('campaigns').update({ status: 'approved', approved_at: new Date().toISOString() }).eq('id', id)
-      await supabase.from('tasks').insert({ campaign_id: id, reward_amount: 0.1, wait_seconds: 15, active: true })
+      await supabase.from('tasks').insert({ campaign_id: id, reward_amount: 50, wait_seconds: 15, active: true })
     }
     flash('Campaign approved')
     void load()
@@ -545,7 +545,7 @@ export default function Admin() {
                   <tr key={String(s.id)}>
                     <td className="small">{String((s.profiles as { email?: string })?.email || '')}</td>
                     <td className="small">{String((s.tasks as { campaigns?: { title?: string } })?.campaigns?.title || '')}</td>
-                    <td>{Number((s.tasks as { reward_amount?: number })?.reward_amount || 0).toFixed(2)}</td>
+                    <td>{formatMoney((s.tasks as { reward_amount?: number })?.reward_amount || 0)}</td>
                     <td><a href={String(s.screenshot_url)} target="_blank" rel="noreferrer">View</a></td>
                     <td><Badge className="badge-status" bg={s.status === 'pending' ? 'warning' : s.status === 'approved' ? 'success' : 'danger'}>{String(s.status)}</Badge></td>
                     <td className="text-nowrap">

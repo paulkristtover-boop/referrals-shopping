@@ -3,21 +3,27 @@
    ═══════════════════════════════════════════ */
 
 :root {
-  --rs-primary: #2563eb;
-  --rs-primary-dark: #1d4ed8;
-  --rs-primary-soft: rgba(37, 99, 235, 0.1);
-  --rs-success: #16a34a;
-  --rs-success-soft: rgba(22, 163, 74, 0.12);
-  --rs-danger: #dc2626;
-  --rs-warning: #d97706;
+  /* Nigeria-forward palette: green + warm gold + deep navy AI accent */
+  --rs-ng-green: #008751;
+  --rs-ng-green-dark: #006b41;
+  --rs-ng-gold: #e6b422;
+  --rs-primary: #008751;
+  --rs-primary-dark: #006b41;
+  --rs-primary-soft: rgba(0, 135, 81, 0.12);
+  --rs-ai: #0f766e;
+  --rs-ai-soft: rgba(15, 118, 110, 0.12);
+  --rs-success: #008751;
+  --rs-success-soft: rgba(0, 135, 81, 0.12);
+  --rs-danger: #c41e3a;
+  --rs-warning: #c9a227;
   --rs-radius: 1rem;
   --rs-radius-sm: 0.65rem;
-  --rs-shadow: 0 1px 3px rgba(15, 23, 42, 0.06), 0 8px 24px rgba(15, 23, 42, 0.04);
-  --rs-shadow-hover: 0 4px 12px rgba(15, 23, 42, 0.08), 0 16px 40px rgba(37, 99, 235, 0.08);
+  --rs-shadow: 0 1px 3px rgba(15, 23, 42, 0.06), 0 8px 24px rgba(0, 107, 65, 0.06);
+  --rs-shadow-hover: 0 4px 12px rgba(15, 23, 42, 0.08), 0 16px 40px rgba(0, 135, 81, 0.12);
   --rs-surface: var(--bs-body-bg);
   --rs-muted: var(--bs-secondary-color);
   --rs-border: color-mix(in srgb, var(--bs-border-color) 85%, transparent);
-  --rs-font: "Inter", system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --rs-font: "Plus Jakarta Sans", "Inter", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
 }
 
 
@@ -32,8 +38,9 @@ html, body, #root {
 body {
   font-family: var(--rs-font);
   background:
-    radial-gradient(1200px 600px at 10% -10%, rgba(37, 99, 235, 0.07), transparent 55%),
-    radial-gradient(900px 500px at 100% 0%, rgba(22, 163, 74, 0.05), transparent 50%),
+    radial-gradient(1200px 600px at 10% -10%, rgba(0, 135, 81, 0.09), transparent 55%),
+    radial-gradient(900px 500px at 100% 0%, rgba(230, 180, 34, 0.06), transparent 50%),
+    radial-gradient(600px 400px at 50% 100%, rgba(15, 118, 110, 0.04), transparent 40%),
     var(--bs-body-bg);
   color: var(--bs-body-color);
   -webkit-font-smoothing: antialiased;
@@ -42,7 +49,7 @@ body {
 
 [data-bs-theme="dark"] body {
   background:
-    radial-gradient(1000px 500px at 0% 0%, rgba(37, 99, 235, 0.15), transparent 50%),
+    radial-gradient(1000px 500px at 0% 0%, rgba(0, 135, 81, 0.18), transparent 50%),
     radial-gradient(800px 400px at 100% 0%, rgba(15, 23, 42, 0.9), transparent 45%),
     var(--bs-body-bg);
 }
@@ -113,8 +120,10 @@ a {
 /* ── Hero ── */
 .hero-section {
   background:
-    linear-gradient(145deg, #1d4ed8 0%, #2563eb 45%, #3b82f6 100%);
+    linear-gradient(135deg, #006b41 0%, #008751 42%, #0f766e 78%, #134e4a 100%);
   color: #fff;
+  position: relative;
+  overflow: hidden;
   border-radius: calc(var(--rs-radius) + 0.25rem);
   padding: clamp(2rem, 5vw, 3.25rem) clamp(1.25rem, 4vw, 2rem);
   margin-bottom: 1.5rem;
@@ -1554,4 +1563,90 @@ main .container-fluid {
   0% { transform: scale(0.8); opacity: 0; }
   60% { transform: scale(1.05); }
   100% { transform: scale(1); opacity: 1; }
+}
+
+
+/* ── Nigeria + AI branding structure ── */
+.ng-ai-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  padding: 0.28rem 0.65rem;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.16);
+  border: 1px solid rgba(255, 255, 255, 0.28);
+  color: #fff;
+}
+.ng-ai-badge .dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #e6b422;
+  box-shadow: 0 0 0 3px rgba(230, 180, 34, 0.25);
+  animation: aiPulse 2s ease infinite;
+}
+@keyframes aiPulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.45; }
+}
+
+.ng-strip {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem 1rem;
+  align-items: center;
+  justify-content: center;
+  padding: 0.55rem 1rem;
+  margin-bottom: 1rem;
+  border-radius: var(--rs-radius-sm);
+  background: linear-gradient(90deg, rgba(0, 135, 81, 0.1), rgba(230, 180, 34, 0.08), rgba(15, 118, 110, 0.08));
+  border: 1px solid color-mix(in srgb, var(--rs-ng-green) 20%, transparent);
+  font-size: 0.8rem;
+  color: var(--bs-body-color);
+}
+.ng-strip strong { color: var(--rs-primary); }
+
+.btn-primary {
+  --bs-btn-bg: var(--rs-primary);
+  --bs-btn-border-color: var(--rs-primary);
+  --bs-btn-hover-bg: var(--rs-primary-dark);
+  --bs-btn-hover-border-color: var(--rs-primary-dark);
+  --bs-btn-active-bg: var(--rs-primary-dark);
+  --bs-btn-active-border-color: var(--rs-primary-dark);
+}
+
+.text-primary {
+  color: var(--rs-primary) !important;
+}
+
+.stat-card {
+  border-top: 3px solid var(--rs-primary);
+}
+
+.rs-footer {
+  border-top: 1px solid var(--rs-border);
+  padding: 1.25rem 1rem 1.5rem;
+  font-size: 0.8rem;
+}
+.rs-footer .ai-line {
+  color: var(--rs-ai);
+  font-weight: 600;
+  font-size: 0.75rem;
+}
+.hero-section .ng-flag-bar {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 4px;
+  background: linear-gradient(90deg, #008751 0%, #008751 33%, #f5f5f5 33%, #f5f5f5 66%, #008751 66%);
+  opacity: 0.9;
+}
+
+[data-bs-theme="dark"] .ng-strip {
+  background: linear-gradient(90deg, rgba(0, 135, 81, 0.2), rgba(230, 180, 34, 0.1), rgba(15, 118, 110, 0.15));
 }
