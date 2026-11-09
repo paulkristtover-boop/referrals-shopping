@@ -157,9 +157,10 @@ export default function Earn() {
 
   return (
     <div className="page-enter">
-      <h1 className="mb-2 fw-bold">Earn from tasks</h1>
+      <h1 className="mb-2 fw-bold">Earn</h1>
       <p className="text-muted mb-3">
-        Open the advert link, wait the timer, upload a screenshot. You cannot earn on your own {BRAND} adverts.
+        You supply the actions that fill Promote orders. Open a task link, wait the timer, upload a clear screenshot.
+        Poster or admin reviews proof → wallet credit. You cannot earn on your own adverts.
       </p>
       {err && (
         <Alert variant="danger" dismissible onClose={() => setErr(null)}>

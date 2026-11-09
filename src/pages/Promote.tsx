@@ -9,12 +9,13 @@ import { deposits as envDeposits, loadDeposits, supabase, supabaseConfigured } f
 import { formatMoney } from '../lib/money'
 import {
   type RefCategory,
-  REGULAR_TIERS,
-  INVESTMENT_TIERS,
+  REGULAR_PACKAGES,
+  INVESTMENT_PACKAGES,
   MIN_ORDER_NGN,
   FREE_STARTER_REFS,
   priceForReferrals,
   isFreeStarter,
+  nameForReferrals,
 } from '../lib/pricing'
 import type { Campaign, Package } from '../lib/types'
 import EmptyState from '../components/EmptyState'
@@ -617,10 +618,11 @@ export default function Promote() {
 
   return (
     <>
-      <h1 className="mb-2 fw-bold">Shop referrals</h1>
+      <h1 className="mb-2 fw-bold">Promote</h1>
       <p className="text-muted mb-3">
-        <strong>Regular</strong> = signup via your link (no deposit). <strong>Gambling / investment</strong> = signup + deposit.
-        On Referrals Shopping: Free Starter is 50 regular referrals once. Paid packages use a unique crypto amount for 15 minutes.
+        Buy referral volume for sites, channels, bots, or groups. Your link becomes <strong>Earn tasks</strong> after payment and admin approval.
+        <strong>Regular</strong> = signup only. <strong>Investment</strong> = signup + deposit. Minimum paid order ₦1,000. Pay with Flutterwave (₦) or crypto.
+        Confirm earner proofs under <strong>Proofs</strong>.
       </p>
       {!freeUsed && packages.some((x) => Number(x.price_usd) === 0) && (
         <Alert variant="info" className="py-2">
@@ -676,15 +678,15 @@ export default function Promote() {
                     Free 50{freeUsed ? ' (used)' : ''}
                   </Button>
                 )}
-                {(refCategory === 'regular' ? REGULAR_TIERS : INVESTMENT_TIERS).map(([refs]) => (
+                {(refCategory === 'regular' ? REGULAR_PACKAGES : INVESTMENT_PACKAGES).map((pkg) => (
                   <Button
-                    key={refs}
+                    key={pkg.referrals}
                     type="button"
                     size="sm"
-                    variant={referralCount === refs ? 'primary' : 'outline-secondary'}
-                    onClick={() => setReferralCount(refs)}
+                    variant={referralCount === pkg.referrals ? 'primary' : 'outline-secondary'}
+                    onClick={() => setReferralCount(pkg.referrals)}
                   >
-                    {refs.toLocaleString()}
+                    {pkg.name} · {pkg.referrals.toLocaleString()}
                   </Button>
                 ))}
               </div>
@@ -703,6 +705,8 @@ export default function Promote() {
             <Alert variant={isFree ? 'success' : 'light'} className="py-2 border">
               <div className="d-flex justify-content-between align-items-center flex-wrap gap-2">
                 <span>
+                  <strong>{nameForReferrals(referralCount, refCategory)}</strong>
+                  {' · '}
                   <strong>{referralCount.toLocaleString()}</strong> referrals ·{' '}
                   {refCategory === 'gambling' ? 'deposit type' : 'signup only'}
                 </span>

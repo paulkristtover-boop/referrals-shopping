@@ -1,47 +1,57 @@
-import { Accordion, Card } from 'react-bootstrap'
 import { Link } from 'react-router-dom'
+import { Accordion, Card } from 'react-bootstrap'
 import { BRAND, TG, IG, IG_HANDLE } from '../lib/brand'
 
 export default function Faq() {
   const items = [
     {
-      q: 'What counts as a referral?',
-      a: 'Regular packages: the person opens your referral link and creates an account — no deposit required. Investment/gambling packages: they must create an account and make a deposit. We only count referrals that meet the rule for the package you bought.',
+      q: `How does ${BRAND} get referrals for my link?`,
+      a: 'We run a two-sided marketplace. When you pay for a Promote package, your link becomes Earn tasks. Users on this platform open your link, wait the timer, and submit a screenshot. You (the poster) can confirm proofs; admin handles disputes and approves links. We may also highlight offers on Telegram/Instagram when those channels are active. Delivery speed depends on earner activity—not on a fixed “bot” push.',
     },
     {
-      q: 'Why are gambling / investment packages more expensive?',
-      a: 'Those referrals must deposit, not only register. That is harder to deliver, so pricing is higher than regular (signup-only) packages.',
+      q: 'What if you have few earners?',
+      a: 'Orders fill only as tasks are completed. Large packages take longer when Earn supply is low. Check order status on Dashboard; Support can clarify capacity. We do not invent numbers—proofs and delivery counts are the record.',
     },
     {
-      q: 'After I pay for a package, how long until I receive all referrals?',
-      a: 'It depends on package size and category (regular vs deposit). In most cases delivery takes about 3 to 12 days. Deposit-based orders can take longer. Track status on your Dashboard after payment is confirmed.',
+      q: 'Regular vs investment / deposit packages?',
+      a: 'Regular: the referred person signs up via your link (no deposit). Investment/deposit: they must sign up and deposit on your offer. Deposit tasks cost more and usually fill slower.',
     },
     {
-      q: 'Do you offer a free trial?',
-      a: 'Yes — a one-time Free Starter: 50 regular-site referrals per account. No free gambling packages. After that, choose a paid package for more volume. Unlimited free trials were removed because of abuse.',
+      q: 'After I pay, how long until referrals arrive?',
+      a: 'Often about 3–12 days, depending on package size and type. Deposit orders and very large volumes can take longer. Your order timeline shows payment → approval → delivery progress.',
     },
     {
-      q: 'What is the refund / guarantee condition?',
-      a: 'We aim for at least 70% of the referrals you ordered to remain active for about a month. If your active percentage is clearly below that, open a Support ticket and share the details the admin asks for (order info, screenshots, stats). Eligible cases are reviewed for a partial or full refund path according to admin review.',
+      q: 'Is there a free trial?',
+      a: 'One-time Free Starter: 50 regular referrals per account. No free deposit packages. Unlimited free trials were removed because of abuse.',
     },
     {
-      q: 'Which cryptocurrencies can I pay with?',
-      a: 'TRX (Tron), SOL (Solana), and TON. Each order gets a unique pay code — include it in your payment note when possible, and always submit the transaction hash on the Promote page.',
+      q: 'Refund / active-referral condition?',
+      a: 'We aim for about 70% of ordered referrals to stay active for roughly a month where that can be checked. If the active rate is clearly lower, open Support with order info and anything admin asks for. Outcomes are case-by-case after review.',
+    },
+    {
+      q: 'How do I pay?',
+      a: 'Flutterwave in Naira (card, bank, USSD) or crypto (TRX, SOL, TON). Flutterwave payments are verified on our servers. Crypto orders use a unique amount window—submit the tx hash when asked.',
+    },
+    {
+      q: 'What do earners do?',
+      a: 'Open a task from Earn, visit the promoter’s link, wait the required time, upload a clear screenshot. You cannot earn on your own adverts. Balance is credited after poster or admin approval; withdraw from Wallet.',
     },
     {
       q: 'How do invite codes work?',
-      a: 'Every user gets a personal invite code and link. When someone registers with your code, they are linked as your invite. Use Invite in the menu to copy your link.',
+      a: 'Each account has an invite code and link under Invite. When someone registers with your code, they are linked to you.',
     },
     {
-      q: 'How do I contact customer service?',
-      a: 'Use Support on the website to open a ticket, or follow us on Telegram and Instagram (@referralshopping) for announcements.',
+      q: 'Customer service?',
+      a: `Use Support on the site for tickets. Announcements: Telegram and Instagram (${IG_HANDLE}).`,
     },
   ]
 
   return (
     <div className="page-enter">
       <h1 className="fw-bold mb-2">FAQ</h1>
-      <p className="text-muted mb-4">Frequently asked questions about {BRAND}.</p>
+      <p className="text-muted mb-4">
+        Honest answers about how {BRAND} delivers referrals through Promote + Earn.
+      </p>
       <Card className="rs-card rs-card-static">
         <Card.Body>
           <Accordion alwaysOpen>
@@ -56,9 +66,15 @@ export default function Faq() {
       </Card>
       <p className="mt-3 small">
         Still need help? <Link to="/support">Open a support ticket</Link> or{' '}
-        <a href={TG} target="_blank" rel="noreferrer">Telegram</a>
+        <a href={TG} target="_blank" rel="noreferrer">
+          Telegram
+        </a>
         {' · '}
-        <a href={IG} target="_blank" rel="noreferrer">{IG_HANDLE}</a>.
+        <a href={IG} target="_blank" rel="noreferrer">
+          {IG_HANDLE}
+        </a>
+        {' · '}
+        <Link to="/guide">Full guide</Link>.
       </p>
     </div>
   )

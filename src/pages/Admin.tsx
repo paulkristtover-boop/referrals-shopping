@@ -364,7 +364,7 @@ export default function Admin() {
       <div className="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
         <div>
           <h1 className="fw-bold mb-0 text-white">{BRAND} Admin</h1>
-          <p className="text-white-50 small mb-0">Adverts, proofs, payouts, packages & users</p>
+          <p className="text-white-50 small mb-0">Marketplace ops: approve links, delivery, proofs, disputes, payouts, packages</p>
         </div>
         <Button size="sm" variant="outline-secondary" onClick={() => void load()}>
           <i className="bi bi-arrow-clockwise me-1" />Refresh
@@ -425,7 +425,7 @@ export default function Admin() {
             <div>
               <h5 className="fw-bold mb-3">Quick actions</h5>
               <p className="text-muted">
-                Run {BRAND}: approve referral adverts, update delivery counts, review earn proofs, process withdrawals, and edit packages (regular = signup only, gambling = deposit).
+                Run the marketplace: approve Promote links so Earn tasks go live; update delivery counts; review proofs and disputes; process withdrawals; manage packages. Delivery = completed earner tasks, not automatic magic.
               </p>
               <ul className="mb-3">
                 <li>Adverts waiting payment review: <strong>{pendingC}</strong></li>

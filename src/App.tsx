@@ -17,6 +17,7 @@ import Security from './pages/Security'
 import Account from './pages/Account'
 import PosterProofs from './pages/PosterProofs'
 import History from './pages/History'
+import Receipts from './pages/Receipts'
 import Admin from './pages/Admin'
 import AdminSupport from './pages/AdminSupport'
 import { useAuth } from './contexts/AuthContext'
@@ -114,6 +115,16 @@ export default function App() {
             <Private>
               <UserOnly>
                 <Invite />
+              </UserOnly>
+            </Private>
+          }
+        />
+        <Route
+          path="receipts"
+          element={
+            <Private>
+              <UserOnly>
+                <Receipts />
               </UserOnly>
             </Private>
           }

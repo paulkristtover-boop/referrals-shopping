@@ -151,13 +151,13 @@ export default function Dashboard() {
             <p className="small text-uppercase fw-semibold text-primary mb-1 letter-space">{BRAND}</p>
             <h1 className="mb-1 fw-bold">Your dashboard</h1>
             <p className="text-muted small mb-0">
-              Welcome{profile?.full_name ? `, ${profile.full_name}` : ''} — shop referrals, track adverts, and earn
+              Welcome{profile?.full_name ? `, ${profile.full_name}` : ''} — Promote orders become Earn tasks after approval; delivery follows confirmed proofs.
             </p>
           </div>
           <div className="d-flex flex-wrap gap-2">
             <Link to="/promote" className="btn btn-primary btn-sm">
               <i className="bi bi-shop me-1" />
-              Shop referrals
+              Promote
             </Link>
             <Link to="/earn" className="btn btn-success btn-sm">
               <i className="bi bi-cash-coin me-1" />
@@ -286,7 +286,7 @@ export default function Dashboard() {
           <p className="mb-1 fw-semibold">No referral packages ordered yet</p>
           <p className="small text-muted mb-3">Start with Free Starter (50 signup-only) or a paid {BRAND} package.</p>
           <Link to="/promote" className="btn btn-primary btn-sm">
-            Shop referrals
+            Promote
           </Link>
         </div>
       ) : (

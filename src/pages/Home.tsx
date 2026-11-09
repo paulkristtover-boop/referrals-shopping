@@ -4,22 +4,22 @@ import Logo from '../components/Logo'
 import { useAuth } from '../contexts/AuthContext'
 import { BRAND, TG, IG, IG_HANDLE } from '../lib/brand'
 import { formatMoney } from '../lib/money'
-import { REGULAR_TIERS, INVESTMENT_TIERS, FREE_STARTER_REFS } from '../lib/pricing'
+import { REGULAR_PACKAGES, INVESTMENT_PACKAGES, FREE_STARTER_REFS } from '../lib/pricing'
 import { FloatBlobs, Reveal, Stagger } from '../components/Animated'
 
 const REGULAR_PACKS = [
   { name: 'Free Starter', refs: FREE_STARTER_REFS, price: 0, free: true },
-  ...REGULAR_TIERS.map(([refs, price]) => ({
-    name: `${refs.toLocaleString()} referrals`,
-    refs,
-    price,
+  ...REGULAR_PACKAGES.map((p) => ({
+    name: p.name,
+    refs: p.referrals,
+    price: p.priceNgn,
   })),
 ]
 
-const GAMBLING_PACKS = INVESTMENT_TIERS.map(([refs, price]) => ({
-  name: `${refs.toLocaleString()} deposit refs`,
-  refs,
-  price,
+const GAMBLING_PACKS = INVESTMENT_PACKAGES.map((p) => ({
+  name: p.name,
+  refs: p.referrals,
+  price: p.priceNgn,
 }))
 
 const TRUST = [
@@ -45,16 +45,16 @@ export default function Home() {
           <Logo size={48} showText={false} />
         </div>
         <p className="text-uppercase small fw-semibold mb-2 opacity-75 letter-space">{BRAND}</p>
-        <h1 className="display-5 fw-bold mb-2">Buy real referrals for your links</h1>
+        <h1 className="display-5 fw-bold mb-2">Promote links. Earners complete the tasks.</h1>
         <p className="lead mb-3 opacity-90">
-          Order a package — we promote your referral link until it fills. Or earn by completing simple tasks.
+          A marketplace: pay for referral volume on Promote, or get paid on Earn by completing verified tasks on those links.
         </p>
         <div className="avatar-stack mb-3 justify-content-center justify-content-lg-start">
           <span className="av" title="Members">A</span>
           <span className="av a2">B</span>
           <span className="av a3">C</span>
           <span className="av a4">+</span>
-          <span className="small ms-2 opacity-75">People growing with {BRAND}</span>
+          <span className="small ms-2 opacity-75">Promoters + earners on {BRAND}</span>
         </div>
         <div className="d-flex gap-2 justify-content-center flex-wrap hero-cta">
           {!loggedIn ? (
@@ -109,11 +109,10 @@ export default function Home() {
           <Card className="rs-card h-100 border-primary graphic-top">
             <Card.Body className="p-4 d-flex flex-column">
               <img className="feature-art" src="/illustrations/hero-people.svg" alt="" width={400} height={160} />
-              <h3 className="h5 fw-bold">Shop referrals</h3>
+              <h3 className="h5 fw-bold">Promote</h3>
               <p className="text-muted small flex-grow-1">
-                Pay for a package. We drive people to your link.
-                <strong> Regular:</strong> account signup only.
-                <strong> Gambling:</strong> signup + deposit.
+                Buy a package; your link becomes Earn tasks. <strong>Regular:</strong> signup only.
+                <strong> Investment:</strong> signup + deposit. Delivery tracks completed proofs.
               </p>
               <Link
                 to={loggedIn && !isAdmin ? '/promote' : '/register?intent=promote'}
@@ -128,10 +127,8 @@ export default function Home() {
           <Card className="rs-card h-100 border-success graphic-top">
             <Card.Body className="p-4 d-flex flex-column">
               <img className="feature-art" src="/illustrations/earn-people.svg" alt="" width={400} height={160} />
-              <h3 className="h5 fw-bold">Earn on tasks</h3>
-              <p className="text-muted small flex-grow-1">
-                Open task links, wait the timer, upload a screenshot. Get paid after approval.
-              </p>
+              <h3 className="h5 fw-bold">Earn (fill the tasks)</h3>
+              <p className="text-muted small flex-grow-1">Open live tasks from paid Promote orders. Wait the timer, upload proof, get credited after review. This is how referrals are delivered.</p>
               <Link
                 to={loggedIn && !isAdmin ? '/earn' : '/register?intent=earn'}
                 className="btn btn-success"
