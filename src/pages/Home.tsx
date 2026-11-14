@@ -13,6 +13,7 @@ const REGULAR_PACKS = [
     name: p.name,
     refs: p.referrals,
     price: p.priceNgn,
+    free: false,
   })),
 ]
 

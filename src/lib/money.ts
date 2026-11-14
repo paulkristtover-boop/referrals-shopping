@@ -4,7 +4,7 @@ export const CURRENCY_SYMBOL = '₦'
 export const CURRENCY_LABEL = 'Naira'
 
 /** Format amount stored as Naira (packages.price_usd column holds NGN values) */
-export function formatMoney(amount: number | string | null | undefined): string {
+export function formatMoney(amount: number | string | null | undefined | unknown): string {
   const n = Number(amount ?? 0)
   if (!Number.isFinite(n)) return `${CURRENCY_SYMBOL}0`
   return (

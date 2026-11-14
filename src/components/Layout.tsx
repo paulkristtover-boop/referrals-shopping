@@ -7,6 +7,7 @@ import { useTheme } from '../contexts/ThemeContext'
 import Logo from './Logo'
 import BottomTabBar from './BottomTabBar'
 import OfflineNotice from './OfflineNotice'
+import SlowConnection from './SlowConnection'
 import PageCoach from './PageCoach'
 
 import { TG, IG, IG_HANDLE, BRAND, BRAND_AI, BRAND_TAGLINE, CURRENCY_NOTE } from '../lib/brand'

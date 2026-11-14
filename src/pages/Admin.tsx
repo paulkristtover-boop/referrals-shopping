@@ -120,11 +120,12 @@ export default function Admin() {
     const { data: dep } = await supabase.rpc('get_deposit_addresses')
     if (dep && typeof dep === 'object') {
       const d = dep as Record<string, string>
-      setSettings({
+      setSettings((prev) => ({
+        ...prev,
         deposit_trx: d.trx || '',
         deposit_sol: d.sol || '',
         deposit_ton: d.ton || '',
-      })
+      }))
     }
     setLoading(false)
   }

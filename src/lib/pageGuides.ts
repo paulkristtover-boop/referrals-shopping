@@ -177,21 +177,33 @@ function readStore(): Store {
 }
 
 export function shouldShowGuide(pathname: string) {
-  const seen = readStore()[guideKey(pathname)]
-  if (!seen) return true
-  return Date.now() - seen > DAY
+  try {
+    const seen = readStore()[guideKey(pathname)]
+    if (!seen) return true
+    return Date.now() - seen > DAY
+  } catch {
+    return false
+  }
 }
 
 export function markGuideSeen(pathname: string) {
-  const store = readStore()
-  store[guideKey(pathname)] = Date.now()
-  localStorage.setItem(STORE, JSON.stringify(store))
+  try {
+    const store = readStore()
+    store[guideKey(pathname)] = Date.now()
+    localStorage.setItem(STORE, JSON.stringify(store))
+  } catch {
+    /* private mode */
+  }
 }
 
 export function clearGuideSeen(pathname: string) {
-  const store = readStore()
-  delete store[guideKey(pathname)]
-  localStorage.setItem(STORE, JSON.stringify(store))
+  try {
+    const store = readStore()
+    delete store[guideKey(pathname)]
+    localStorage.setItem(STORE, JSON.stringify(store))
+  } catch {
+    /* private mode */
+  }
 }
 
 export const NAME_COOLDOWN_MS = DAY
