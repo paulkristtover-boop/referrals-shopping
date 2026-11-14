@@ -6,6 +6,7 @@ import { supabase, supabaseConfigured } from '../lib/supabase'
 import { BRAND } from '../lib/brand'
 import { formatMoney } from '../lib/money'
 import EmptyState from '../components/EmptyState'
+import { useToast } from '../contexts/ToastContext'
 
 type W = {
   id: string
@@ -59,6 +60,7 @@ export default function Wallet() {
   const [status, setStatus] = useState('all')
   const [page, setPage] = useState(1)
   const [pageSize, setPageSize] = useState(10)
+  const toast = useToast()
 
   const load = async () => {
     if (!user || !supabaseConfigured) {
@@ -105,6 +107,7 @@ export default function Wallet() {
     if (!supabaseConfigured || !user) return
     if (!a || a < MIN_NGN) {
       setErr(`Minimum withdrawal is ${formatMoney(MIN_NGN)}`)
+      toast.error(`Minimum withdrawal is ${formatMoney(MIN_NGN)}`)
       return
     }
     if (a > Number(profile?.balance || 0)) {
@@ -130,6 +133,7 @@ export default function Wallet() {
           return
         }
         setMsg(`Bank withdrawal of ${formatMoney(a)} requested. Paid to your account after admin / Flutterwave processing.`)
+        toast.success('Bank withdrawal requested')
         setAccountNumber('')
         setAccountName('')
       } else {
@@ -151,6 +155,7 @@ export default function Wallet() {
           return
         }
         setMsg(`Crypto withdrawal of ${formatMoney(a)} requested. Admin sends ${chain.toUpperCase()} after review.`)
+        toast.success('Crypto withdrawal requested')
         setAddr('')
       }
       setAmount('')

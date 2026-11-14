@@ -1,10 +1,12 @@
 import { useEffect, useState } from 'react'
-import { Alert, Badge, Button, Form, Nav, Spinner, Table, Row, Col, Modal } from 'react-bootstrap'
+import { Alert, Badge, Button, Form, Nav, Spinner, Table, Row, Col, Modal, Card } from 'react-bootstrap'
 import { supabase, supabaseConfigured } from '../lib/supabase'
 import type { Package } from '../lib/types'
 import { ListFilters, ListPagination, paginate } from '../components/ListControls'
 import { BRAND, TG, IG, IG_HANDLE } from '../lib/brand'
 import { formatMoney } from '../lib/money'
+import { openWhatsAppUpdate } from '../lib/whatsapp'
+import { useToast } from '../contexts/ToastContext'
 
 type TabKey = 'overview' | 'campaigns' | 'submissions' | 'withdrawals' | 'packages' | 'users' | 'settings'
 
@@ -25,8 +27,22 @@ export default function Admin() {
   const [status, setStatus] = useState('all')
   const [page, setPage] = useState(1)
   const [pageSize, setPageSize] = useState(10)
-  const [settings, setSettings] = useState({ deposit_trx: '', deposit_sol: '', deposit_ton: '' })
+  const [settings, setSettings] = useState({
+    deposit_trx: '',
+    deposit_sol: '',
+    deposit_ton: '',
+    tax_enabled: 'true',
+    tax_rate_percent: '7.5',
+    tax_mode: 'inclusive',
+    tax_region: 'NG',
+    tax_id: '',
+    tax_supplier_name: 'Referrals Shopping',
+    tax_supplier_address: '',
+    tax_id_label: 'Tax ID / VAT No.',
+  })
   const [settingsSaving, setSettingsSaving] = useState(false)
+  const [waMsg, setWaMsg] = useState('New tasks are live on Referrals Shopping. Open the app to Promote or Earn.')
+  const toast = useToast()
 
   // reset page when tab/filter changes
   useEffect(() => { setPage(1) }, [tab, search, status, pageSize])
@@ -145,7 +161,23 @@ export default function Admin() {
       await supabase.from('campaigns').update({ status: 'approved', approved_at: new Date().toISOString() }).eq('id', id)
       await supabase.from('tasks').insert({ campaign_id: id, reward_amount: 50, wait_seconds: 15, active: true })
     }
-    flash('Campaign approved')
+    flash('Campaign approved — tasks live')
+    try {
+      const { data: sess } = await supabase.auth.getSession()
+      const token = sess.session?.access_token
+      if (token) {
+        await fetch('/api/whatsapp/notify', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({ event: 'task_live', campaignId: id }),
+        })
+      }
+    } catch {
+      /* WhatsApp optional */
+    }
     void load()
   }
 
@@ -1022,6 +1054,138 @@ export default function Admin() {
                   </Button>
                 </div>
               </Form>
+
+              <Card className="rs-card rs-card-static mt-4">
+                <Card.Body>
+                  <h5 className="fw-bold">WhatsApp group update</h5>
+                  <p className="small text-muted mb-2">
+                    Opens WhatsApp with this message. Set env <code>VITE_WA_GROUP</code> to a group invite URL or phone (digits).
+                    Cloud API auto-alerts go to WHATSAPP_NOTIFY_TO numbers (Meta does not post into normal groups). Put those phones in your ops group.
+                  </p>
+                  <Form.Control
+                    as="textarea"
+                    rows={3}
+                    className="mb-2"
+                    value={waMsg}
+                    onChange={(e) => setWaMsg(e.target.value)}
+                  />
+                  <Button
+                    size="sm"
+                    variant="success"
+                    onClick={() => {
+                      openWhatsAppUpdate(waMsg)
+                      toast.success('WhatsApp opened')
+                    }}
+                  >
+                    <i className="bi bi-whatsapp me-1" />
+                    Share update on WhatsApp
+                  </Button>
+                </Card.Body>
+              </Card>
+              <Card className="rs-card rs-card-static mt-4">
+                <Card.Body>
+                  <h5 className="fw-bold">Tax compliance</h5>
+                  <p className="small text-muted">
+                    Configure VAT/GST-style breakdown on receipts. Default mirrors Nigeria VAT 7.5% (inclusive).
+                    You still must register and file with tax authorities where required — this only supports invoicing records.
+                    Run <code>supabase/tax_compliance.sql</code>.
+                  </p>
+                  <div className="row g-2">
+                    <div className="col-md-4">
+                      <Form.Label className="small">Tax enabled</Form.Label>
+                      <Form.Select
+                        value={settings.tax_enabled}
+                        onChange={(e) => setSettings((s) => ({ ...s, tax_enabled: e.target.value }))}
+                      >
+                        <option value="true">Yes</option>
+                        <option value="false">No</option>
+                      </Form.Select>
+                    </div>
+                    <div className="col-md-4">
+                      <Form.Label className="small">Rate %</Form.Label>
+                      <Form.Control
+                        value={settings.tax_rate_percent}
+                        onChange={(e) => setSettings((s) => ({ ...s, tax_rate_percent: e.target.value }))}
+                      />
+                    </div>
+                    <div className="col-md-4">
+                      <Form.Label className="small">Mode</Form.Label>
+                      <Form.Select
+                        value={settings.tax_mode}
+                        onChange={(e) => setSettings((s) => ({ ...s, tax_mode: e.target.value }))}
+                      >
+                        <option value="inclusive">Inclusive (price includes tax)</option>
+                        <option value="none">No tax line</option>
+                      </Form.Select>
+                    </div>
+                    <div className="col-md-6">
+                      <Form.Label className="small">Supplier name</Form.Label>
+                      <Form.Control
+                        value={settings.tax_supplier_name}
+                        onChange={(e) => setSettings((s) => ({ ...s, tax_supplier_name: e.target.value }))}
+                      />
+                    </div>
+                    <div className="col-md-6">
+                      <Form.Label className="small">Tax / VAT ID</Form.Label>
+                      <Form.Control
+                        value={settings.tax_id}
+                        onChange={(e) => setSettings((s) => ({ ...s, tax_id: e.target.value }))}
+                        placeholder="Your registered tax number"
+                      />
+                    </div>
+                    <div className="col-12">
+                      <Form.Label className="small">Supplier address</Form.Label>
+                      <Form.Control
+                        value={settings.tax_supplier_address}
+                        onChange={(e) => setSettings((s) => ({ ...s, tax_supplier_address: e.target.value }))}
+                      />
+                    </div>
+                    <div className="col-md-4">
+                      <Form.Label className="small">Region code</Form.Label>
+                      <Form.Control
+                        value={settings.tax_region}
+                        onChange={(e) => setSettings((s) => ({ ...s, tax_region: e.target.value }))}
+                        placeholder="NG"
+                      />
+                    </div>
+                    <div className="col-12">
+                      <Button
+                        size="sm"
+                        variant="primary"
+                        disabled={settingsSaving}
+                        onClick={async () => {
+                          setSettingsSaving(true)
+                          setErr(null)
+                          try {
+                            for (const [key, value] of [
+                              ['tax_enabled', settings.tax_enabled],
+                              ['tax_rate_percent', settings.tax_rate_percent],
+                              ['tax_mode', settings.tax_mode],
+                              ['tax_region', settings.tax_region],
+                              ['tax_id', settings.tax_id],
+                              ['tax_supplier_name', settings.tax_supplier_name],
+                              ['tax_supplier_address', settings.tax_supplier_address],
+                              ['tax_id_label', settings.tax_id_label],
+                            ] as const) {
+                              const { error } = await supabase.rpc('admin_set_setting', { p_key: key, p_value: value })
+                              if (error) throw error
+                            }
+                            flash('Tax settings saved')
+                            toast.success('Tax settings saved')
+                          } catch (e: unknown) {
+                            setErr(e instanceof Error ? e.message : 'Tax save failed')
+                          } finally {
+                            setSettingsSaving(false)
+                          }
+                        }}
+                      >
+                        Save tax settings
+                      </Button>
+                    </div>
+                  </div>
+                </Card.Body>
+              </Card>
+
             </>
           )}
 

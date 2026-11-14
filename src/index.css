@@ -1650,3 +1650,71 @@ main .container-fluid {
 [data-bs-theme="dark"] .ng-strip {
   background: linear-gradient(90deg, rgba(0, 135, 81, 0.2), rgba(230, 180, 34, 0.1), rgba(15, 118, 110, 0.15));
 }
+
+
+/* ── Floating timed toasts (bottom) ── */
+.rs-toast-stack {
+  position: fixed;
+  left: 50%;
+  bottom: calc(1rem + env(safe-area-inset-bottom, 0px));
+  transform: translateX(-50%);
+  z-index: 2000;
+  display: flex;
+  flex-direction: column-reverse;
+  gap: 0.5rem;
+  width: min(420px, calc(100vw - 1.5rem));
+  pointer-events: none;
+}
+@media (min-width: 992px) {
+  .rs-toast-stack {
+    bottom: 1.25rem;
+  }
+}
+/* Above bottom tab bar on mobile */
+body:has(.has-bottom-nav) .rs-toast-stack {
+  bottom: calc(4.25rem + env(safe-area-inset-bottom, 0px));
+}
+.rs-toast {
+  pointer-events: auto;
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+  padding: 0.65rem 0.75rem;
+  border-radius: 0.75rem;
+  box-shadow: 0 8px 28px rgba(15, 23, 42, 0.18);
+  font-size: 0.875rem;
+  line-height: 1.35;
+  animation: toastIn 0.28s ease both;
+  backdrop-filter: blur(10px);
+}
+@keyframes toastIn {
+  from { opacity: 0; transform: translateY(12px); }
+  to { opacity: 1; transform: none; }
+}
+.rs-toast-success {
+  background: color-mix(in srgb, #008751 92%, #000);
+  color: #fff;
+}
+.rs-toast-error {
+  background: color-mix(in srgb, #c41e3a 94%, #000);
+  color: #fff;
+}
+.rs-toast-info {
+  background: color-mix(in srgb, #0f766e 92%, #000);
+  color: #fff;
+}
+.rs-toast-icon { flex-shrink: 0; opacity: 0.95; margin-top: 0.05rem; }
+.rs-toast-text { flex: 1; min-width: 0; word-break: break-word; }
+.rs-toast-close {
+  border: 0;
+  background: transparent;
+  color: inherit;
+  opacity: 0.8;
+  padding: 0 0.15rem;
+  line-height: 1;
+  flex-shrink: 0;
+}
+.rs-toast-close:hover { opacity: 1; }
+@media (prefers-reduced-motion: reduce) {
+  .rs-toast { animation: none; }
+}

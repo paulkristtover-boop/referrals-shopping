@@ -5,6 +5,11 @@ import { BRAND, TG, IG, IG_HANDLE } from '../lib/brand'
 export default function Faq() {
   const items = [
     {
+      q: 'Do I get a tax invoice?',
+      a: 'Yes. Open Receipts for net, tax, and total in ₦, then print a tax invoice. Supplier tax details come from platform settings. Tax rules vary by country — this is a payment record, not personalised tax advice.',
+    },
+
+    {
       q: `How does ${BRAND} get referrals for my link?`,
       a: 'We run a two-sided marketplace. When you pay for a Promote package, your link becomes Earn tasks. Users on this platform open your link, wait the timer, and submit a screenshot. You (the poster) can confirm proofs; admin handles disputes and approves links. We may also highlight offers on Telegram/Instagram when those channels are active. Delivery speed depends on earner activity—not on a fixed “bot” push.',
     },

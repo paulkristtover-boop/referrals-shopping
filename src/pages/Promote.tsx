@@ -19,6 +19,7 @@ import {
 } from '../lib/pricing'
 import type { Campaign, Package } from '../lib/types'
 import EmptyState from '../components/EmptyState'
+import { useToast } from '../contexts/ToastContext'
 
 type PayOrder = {
   id: string
@@ -271,6 +272,7 @@ export default function Promote() {
   const [statusFilter, setStatusFilter] = useState('all')
   const [page, setPage] = useState(1)
   const [pageSize, setPageSize] = useState(10)
+  const toast = useToast()
   const errRef = useRef<HTMLDivElement>(null)
   const [freeUsed, setFreeUsed] = useState(false)
 
@@ -444,6 +446,7 @@ export default function Promote() {
       return
     }
     setMsg('Order cancelled')
+    toast.success('Order cancelled')
     void load()
   }
 
@@ -456,6 +459,7 @@ export default function Promote() {
       return
     }
     setMsg('Refill order created — complete payment to renew promotion.')
+    toast.success('Refill order created')
     void load()
     if (data) {
       // scroll to top to see new pending_payment order
@@ -504,6 +508,7 @@ export default function Promote() {
       throw new Error([init.error, init.hint].filter(Boolean).join(' — ') || `Checkout failed (${initRes.status})`)
     }
     setMsg('Opening Flutterwave secure checkout…')
+    toast.info('Opening Flutterwave…')
     window.location.href = init.link
   }
 
@@ -642,6 +647,7 @@ export default function Promote() {
     } catch (ex: unknown) {
       const message = ex instanceof Error ? ex.message : 'Failed to create order'
       setErr(message)
+      toast.error(message)
       setTimeout(() => errRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' }), 50)
     } finally {
       setCreating(false)

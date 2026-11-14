@@ -1,3 +1,4 @@
+import { broadcastWhatsApp, formatPaidOrderMessage } from '../_lib/whatsapp.js'
 import { adminClient } from '../_lib/supabaseAdmin.js'
 import { verifyByTxRef, verifyTransactionId, isSuccessfulFlw } from '../_lib/flutterwave.js'
 
@@ -93,7 +94,24 @@ export default async function handler(req, res) {
       })
       .eq('campaign_id', campId)
 
-    // Optional: auto-create task only after admin approve — keep existing flow
+    try {
+      await sb.rpc('apply_order_tax', { p_campaign_id: campId })
+    } catch (taxErr) {
+      console.error('apply_order_tax', taxErr)
+    }
+
+    try {
+      await broadcastWhatsApp(
+        formatPaidOrderMessage({
+          title: camp.title,
+          amountNgn: camp.paid_amount || paid,
+          campaignId: campId,
+        })
+      )
+    } catch (waErr) {
+      console.error('wa verify notify', waErr)
+    }
+
     return res.json({
       status: 'confirmed',
       campaignId: campId,

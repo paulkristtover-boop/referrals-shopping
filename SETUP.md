@@ -37,3 +37,17 @@ Health check (must return 200):
 `https://YOUR_VERCEL_DOMAIN/api/payments/flutterwave-health`
 
 Env: `FLW_SECRET_KEY`, `FLW_SECRET_HASH` (same as dashboard secret hash), `APP_URL`
+
+
+## WhatsApp Business Cloud API (auto updates)
+1. Create a Meta app → WhatsApp → Cloud API
+2. Get Temporary or permanent **Access token** and **Phone number ID**
+3. Vercel env:
+   - `WHATSAPP_TOKEN`
+   - `WHATSAPP_PHONE_NUMBER_ID`
+   - `WHATSAPP_NOTIFY_TO` = comma-separated numbers in international form without + (e.g. `2348012345678,2348098765432`)
+   - Optional `WHATSAPP_NOTIFY_SECRET` for server-to-server calls
+4. Events:
+   - Paid order → Flutterwave webhook/verify
+   - Tasks live → Admin approves campaign
+Note: Cloud API messages users 1:1; it cannot inject into a random WhatsApp group. Use notify numbers as your ops alert line.

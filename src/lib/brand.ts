@@ -17,3 +17,10 @@ export const SOCIAL = {
   telegram: TG,
   instagram: IG,
 } as const
+
+
+/** WhatsApp group or business number for updates (digits only for wa.me, or full group invite URL) */
+export const WA_GROUP =
+  (typeof import.meta !== 'undefined' && (import.meta as { env?: Record<string, string> }).env?.VITE_WA_GROUP) ||
+  ''
+export const WA_UPDATES_ENABLED = Boolean(WA_GROUP)

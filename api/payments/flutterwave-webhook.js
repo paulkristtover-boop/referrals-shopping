@@ -5,6 +5,7 @@ import {
   verifyByTxRef,
   verifyTransactionId,
 } from '../_lib/flutterwave.js'
+import { broadcastWhatsApp, formatPaidOrderMessage } from '../_lib/whatsapp.js'
 
 /**
  * Flutterwave webhook endpoint
@@ -115,6 +116,28 @@ export default async function handler(req, res) {
           })
         } catch {
           /* table may not exist yet */
+        }
+        try {
+          const { data: full } = await sb
+            .from('campaigns')
+            .select('title, paid_amount, profiles(email)')
+            .eq('id', id)
+            .maybeSingle()
+          try {
+          await sb.rpc('apply_order_tax', { p_campaign_id: id })
+        } catch (taxErr) {
+          console.error('apply_order_tax', taxErr)
+        }
+        await broadcastWhatsApp(
+            formatPaidOrderMessage({
+              title: full?.title,
+              amountNgn: full?.paid_amount || v.amount,
+              campaignId: id,
+              email: full?.profiles?.email,
+            })
+          )
+        } catch (waErr) {
+          console.error('wa notify paid', waErr)
         }
       }
     }

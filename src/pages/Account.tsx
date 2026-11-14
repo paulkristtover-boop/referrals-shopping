@@ -7,10 +7,18 @@ import { formatMoney } from '../lib/money'
 
 export default function Account() {
   const { user, profile, refreshProfile, signOut } = useAuth()
+  useEffect(() => {
+    if (profile) {
+      setTaxId((profile as { tax_id?: string }).tax_id || '')
+      setBillingName((profile as { billing_name?: string }).billing_name || profile.full_name || '')
+    }
+  }, [profile?.id])
   const nav = useNavigate()
   const [fullName, setFullName] = useState(profile?.full_name || '')
   const [msg, setMsg] = useState<string | null>(null)
   const [err, setErr] = useState<string | null>(null)
+  const [taxId, setTaxId] = useState('')
+  const [billingName, setBillingName] = useState('')
   const [saving, setSaving] = useState(false)
   const [pw, setPw] = useState({ next: '', confirm: '' })
   const [pwLoading, setPwLoading] = useState(false)
@@ -137,6 +145,38 @@ export default function Account() {
               {saving ? <><Spinner size="sm" className="me-1" />Saving…</> : 'Save profile'}
             </Button>
           </Form>
+      <Card className="rs-card rs-card-static mb-3 mt-3">
+        <Card.Body>
+          <h5 className="fw-bold">Billing / tax</h5>
+          <p className="small text-muted">Optional — shown on tax invoices where provided.</p>
+          <Form
+            onSubmit={async (e) => {
+              e.preventDefault()
+              setErr(null)
+              const { error } = await supabase
+                .from('profiles')
+                .update({ tax_id: taxId.trim() || null, billing_name: billingName.trim() || null })
+                .eq('id', user!.id)
+              if (error) setErr(error.message + ' — run tax_compliance.sql')
+              else {
+                setMsg('Billing details saved')
+                void refreshProfile()
+              }
+            }}
+          >
+            <Form.Group className="mb-2">
+              <Form.Label>Billing name</Form.Label>
+              <Form.Control value={billingName} onChange={(e) => setBillingName(e.target.value)} placeholder="Name on invoice" />
+            </Form.Group>
+            <Form.Group className="mb-2">
+              <Form.Label>Tax ID</Form.Label>
+              <Form.Control value={taxId} onChange={(e) => setTaxId(e.target.value)} placeholder="Optional VAT/TIN" />
+            </Form.Group>
+            <Button type="submit" size="sm">Save billing</Button>
+          </Form>
+        </Card.Body>
+      </Card>
+
         </Card.Body>
       </Card>
 
