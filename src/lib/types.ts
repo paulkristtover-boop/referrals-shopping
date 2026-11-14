@@ -10,6 +10,11 @@ export type Profile = {
   free_starter_used_at?: string | null
   referred_by?: string | null
   totp_enabled?: boolean
+  name_changed_at?: string | null
+  name_verified?: boolean | null
+  created_at?: string | null
+  tax_id?: string | null
+  billing_name?: string | null
 }
 
 export type Package = {

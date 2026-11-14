@@ -7,7 +7,7 @@ import { useTheme } from '../contexts/ThemeContext'
 import Logo from './Logo'
 import BottomTabBar from './BottomTabBar'
 import OfflineNotice from './OfflineNotice'
-import SlowConnection from './SlowConnection'
+import PageCoach from './PageCoach'
 
 import { TG, IG, IG_HANDLE, BRAND, BRAND_AI, BRAND_TAGLINE, CURRENCY_NOTE } from '../lib/brand'
 
@@ -77,6 +77,7 @@ export default function Layout() {
         </div>
         <main className={`flex-grow-1 py-3 py-md-4 rs-main admin-main ${showBottom ? 'has-bottom-nav' : ''}`}>
           <Container fluid className="px-3 px-lg-4 page-enter">
+            <PageCoach />
             <Outlet />
           </Container>
         </main>
@@ -213,6 +214,7 @@ export default function Layout() {
 
       <main className={`flex-grow-1 py-3 py-md-4 rs-main ${showBottom ? 'has-bottom-nav' : ''}`}>
         <Container className="page-enter">
+          <PageCoach />
           <Outlet />
         </Container>
       </main>

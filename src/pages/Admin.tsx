@@ -908,6 +908,22 @@ export default function Admin() {
                     <Row className="g-2 mb-3 small">
                       <Col md={6}><strong>Email:</strong> {String(userDetail.email || '—')}</Col>
                       <Col md={6}><strong>Name:</strong> {String(userDetail.full_name || '—')}</Col>
+                      <Col md={6}>
+                        <Button
+                          size="sm"
+                          variant="outline-primary"
+                          onClick={async () => {
+                            const { error } = await supabase.rpc('admin_verify_display_name', { p_user_id: String(userDetail.id) })
+                            if (error) setErr(error.message + ' — run name_lock.sql')
+                            else {
+                              flash('Name verified — user can change it once')
+                              setUserDetail({ ...userDetail, name_verified: true })
+                            }
+                          }}
+                        >
+                          Verify name (unlock one change)
+                        </Button>
+                      </Col>
                       <Col md={6}><strong>Role:</strong> {String(userDetail.role || 'user')}</Col>
                       <Col md={6}><strong>Balance:</strong> {formatMoney(userDetail.balance || 0)}</Col>
                       <Col md={6}><strong>Invite code:</strong> <code>{String(userDetail.invite_code || '—')}</code></Col>

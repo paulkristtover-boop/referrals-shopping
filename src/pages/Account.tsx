@@ -1,18 +1,29 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { Alert, Button, Card, Form, ListGroup, Spinner } from 'react-bootstrap'
 import { useAuth } from '../contexts/AuthContext'
 import { supabase, supabaseConfigured } from '../lib/supabase'
 import { formatMoney } from '../lib/money'
+import { NAME_COOLDOWN_MS } from '../lib/pageGuides'
+
+function nameUnlockAt(profile: {
+  role?: string
+  name_verified?: boolean | null
+  name_changed_at?: string | null
+  created_at?: string | null
+  full_name?: string | null
+} | null) {
+  if (!profile) return null
+  if (profile.role === 'admin' || profile.name_verified) return null
+  if (!profile.full_name) return null
+  const anchor = new Date(profile.name_changed_at || profile.created_at || 0).getTime()
+  if (!anchor) return null
+  const until = anchor + NAME_COOLDOWN_MS
+  return until > Date.now() ? new Date(until) : null
+}
 
 export default function Account() {
   const { user, profile, refreshProfile, signOut } = useAuth()
-  useEffect(() => {
-    if (profile) {
-      setTaxId((profile as { tax_id?: string }).tax_id || '')
-      setBillingName((profile as { billing_name?: string }).billing_name || profile.full_name || '')
-    }
-  }, [profile?.id])
   const nav = useNavigate()
   const [fullName, setFullName] = useState(profile?.full_name || '')
   const [msg, setMsg] = useState<string | null>(null)
@@ -26,24 +37,35 @@ export default function Account() {
 
   useEffect(() => {
     setFullName(profile?.full_name || '')
-  }, [profile?.full_name])
+    setTaxId(profile?.tax_id || '')
+    setBillingName(profile?.billing_name || profile?.full_name || '')
+  }, [profile?.id, profile?.full_name, profile?.tax_id, profile?.billing_name])
+
+  const lockedUntil = useMemo(() => nameUnlockAt(profile), [profile])
+  const nameLocked = Boolean(lockedUntil)
 
   const saveProfile = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!user || !supabaseConfigured) return
+    if (nameLocked && fullName.trim() !== (profile?.full_name || '')) {
+      setErr(`Name is locked until ${lockedUntil!.toLocaleDateString()}. An admin can verify you for an earlier change.`)
+      return
+    }
     setSaving(true)
     setErr(null)
     setMsg(null)
-    const { error } = await supabase
-      .from('profiles')
-      .update({ full_name: fullName.trim() || null })
-      .eq('id', user.id)
+    const { error } = await supabase.rpc('update_display_name', { p_name: fullName.trim() })
     setSaving(false)
-    if (error) setErr(error.message)
-    else {
-      setMsg('Profile saved.')
-      await refreshProfile()
+    if (error) {
+      if (error.message.toLowerCase().includes('function') || error.message.includes('schema cache')) {
+        setErr('Run supabase/name_lock.sql, then try again.')
+      } else {
+        setErr(error.message)
+      }
+      return
     }
+    setMsg('Name saved. The next change is available in 14 days unless an admin verifies you.')
+    await refreshProfile()
   }
 
   const changePassword = async (e: React.FormEvent) => {
@@ -82,73 +104,89 @@ export default function Account() {
     )
   }
 
+  const initial = (fullName || user.email || '?').slice(0, 1).toUpperCase()
+
   return (
     <div className="page-enter">
       <h1 className="fw-bold mb-1">Account</h1>
-      <p className="text-muted mb-4">Settings, security, and logout</p>
+      <p className="text-muted mb-3">Profile, billing, security, and how to use the site.</p>
 
       {err && <Alert variant="danger" onClose={() => setErr(null)} dismissible>{err}</Alert>}
       {msg && <Alert variant="success" onClose={() => setMsg(null)} dismissible>{msg}</Alert>}
 
+      <div className="account-hero">
+        <div className="account-avatar" aria-hidden>{initial}</div>
+        <div className="min-w-0">
+          <div className="fw-bold text-truncate">{fullName || 'Add your name'}</div>
+          <div className="small text-muted text-truncate">{user.email}</div>
+          <div className="small mt-1 d-flex flex-wrap gap-2 align-items-center">
+            <span className="badge text-bg-secondary">{profile?.role || 'user'}</span>
+            <code>{profile?.account_id || '…'}</code>
+            {profile?.name_verified && <span className="badge text-bg-success">Name verified — one change</span>}
+          </div>
+        </div>
+      </div>
+
+      <div className="d-flex flex-wrap gap-2 mb-3">
+        <Button
+          size="sm"
+          variant="outline-primary"
+          onClick={() => window.dispatchEvent(new Event('rs-replay-guide'))}
+        >
+          <i className="bi bi-question-circle me-1" />
+          Show this page guide
+        </Button>
+        <Button
+          size="sm"
+          variant="outline-secondary"
+          disabled={!profile?.account_id}
+          onClick={() =>
+            void navigator.clipboard.writeText(profile?.account_id || '').then(() => setMsg('Account ID copied'))
+          }
+        >
+          Copy Account ID
+        </Button>
+      </div>
+
       <Card className="rs-card rs-card-static mb-3">
         <Card.Body>
-          <div className="d-flex align-items-center gap-3 mb-3">
-            <div
-              className="rounded-circle d-flex align-items-center justify-content-center text-white fw-bold"
-              style={{ width: 56, height: 56, background: 'var(--rs-primary)', fontSize: '1.25rem' }}
-            >
-              {(fullName || user.email || '?').slice(0, 1).toUpperCase()}
-            </div>
-            <div className="min-w-0">
-              <div className="fw-semibold text-truncate">{fullName || 'No name set'}</div>
-              <div className="small text-muted text-truncate">{user.email}</div>
-              <div className="small">
-                <span className="badge text-bg-secondary">{profile?.role || 'user'}</span>
-                {profile?.invite_code && (
-                  <span className="ms-2 text-muted">Invite: {profile.invite_code}</span>
-                )}
-              </div>
-            </div>
-          </div>
-
-          <Form.Group className="mb-3">
-            <Form.Label>Account ID</Form.Label>
-            <div className="d-flex flex-wrap gap-2 align-items-center">
-              <code className="user-select-all fs-5 fw-bold">{profile?.account_id || '…'}</code>
-              <Button
-                type="button"
-                size="sm"
-                variant="outline-secondary"
-                disabled={!profile?.account_id}
-                onClick={() =>
-                  void navigator.clipboard.writeText(profile?.account_id || '').then(() => setMsg('Account ID copied'))
-                }
-              >
-                Copy
-              </Button>
-            </div>
-            <Form.Text className="text-muted">
-              Share this with support (e.g. RS-10042). Your system UUID stays private.
-            </Form.Text>
-          </Form.Group>
-
+          <h5 className="fw-bold">Display name</h5>
+          <p className="small text-muted">
+            {profile?.role === 'admin'
+              ? 'Admins can change their name any time.'
+              : profile?.name_verified
+                ? 'An admin verified you. You can change your name once now. It locks again for 14 days.'
+                : nameLocked
+                  ? `Locked until ${lockedUntil!.toLocaleDateString()}. Ask support if the name is wrong and needs verification.`
+                  : 'You can change your name now. After you save, the next change waits 14 days.'}
+          </p>
           <Form onSubmit={saveProfile}>
             <Form.Group className="mb-3">
               <Form.Label>Full name</Form.Label>
-              <Form.Control value={fullName} onChange={(e) => setFullName(e.target.value)} placeholder="Your name" />
+              <Form.Control
+                value={fullName}
+                onChange={(e) => setFullName(e.target.value)}
+                placeholder="Your name"
+                disabled={nameLocked}
+                minLength={2}
+                maxLength={80}
+              />
             </Form.Group>
             <Form.Group className="mb-3">
               <Form.Label>Email</Form.Label>
               <Form.Control value={user.email || ''} disabled readOnly />
             </Form.Group>
-            <Button type="submit" disabled={saving}>
-              {saving ? <><Spinner size="sm" className="me-1" />Saving…</> : 'Save profile'}
+            <Button type="submit" disabled={saving || nameLocked}>
+              {saving ? <><Spinner size="sm" className="me-1" />Saving…</> : 'Save name'}
             </Button>
           </Form>
-      <Card className="rs-card rs-card-static mb-3 mt-3">
+        </Card.Body>
+      </Card>
+
+      <Card className="rs-card rs-card-static mb-3">
         <Card.Body>
           <h5 className="fw-bold">Billing / tax</h5>
-          <p className="small text-muted">Optional — shown on tax invoices where provided.</p>
+          <p className="small text-muted">Optional. Shown on tax invoices. This is not your display name.</p>
           <Form
             onSubmit={async (e) => {
               e.preventDefault()
@@ -156,7 +194,7 @@ export default function Account() {
               const { error } = await supabase
                 .from('profiles')
                 .update({ tax_id: taxId.trim() || null, billing_name: billingName.trim() || null })
-                .eq('id', user!.id)
+                .eq('id', user.id)
               if (error) setErr(error.message + ' — run tax_compliance.sql')
               else {
                 setMsg('Billing details saved')
@@ -172,11 +210,8 @@ export default function Account() {
               <Form.Label>Tax ID</Form.Label>
               <Form.Control value={taxId} onChange={(e) => setTaxId(e.target.value)} placeholder="Optional VAT/TIN" />
             </Form.Group>
-            <Button type="submit" size="sm">Save billing</Button>
+            <Button type="submit" size="sm" variant="outline-primary">Save billing</Button>
           </Form>
-        </Card.Body>
-      </Card>
-
         </Card.Body>
       </Card>
 
@@ -222,22 +257,26 @@ export default function Account() {
             <span><i className="bi bi-shield-check me-2 text-primary" />Two-factor authentication</span>
             <i className="bi bi-chevron-right text-muted" />
           </ListGroup.Item>
+          <ListGroup.Item action as={Link} to="/guide" className="d-flex justify-content-between align-items-center">
+            <span><i className="bi bi-book me-2 text-primary" />How the site works</span>
+            <i className="bi bi-chevron-right text-muted" />
+          </ListGroup.Item>
           {profile?.role !== 'admin' && (
             <>
               <ListGroup.Item action as={Link} to="/receipts" className="d-flex justify-content-between align-items-center">
-            <span><i className="bi bi-receipt me-2 text-primary" />Receipts</span>
-            <i className="bi bi-chevron-right text-muted" />
-          </ListGroup.Item>
-          <ListGroup.Item action as={Link} to="/history" className="d-flex justify-content-between align-items-center">
-            <span><i className="bi bi-check2-square me-2 text-primary" />Confirm proofs</span>
-            <i className="bi bi-chevron-right text-muted" />
-          </ListGroup.Item>
-          <ListGroup.Item action as={Link} to="/invite" className="d-flex justify-content-between align-items-center">
+                <span><i className="bi bi-receipt me-2 text-primary" />Receipts</span>
+                <i className="bi bi-chevron-right text-muted" />
+              </ListGroup.Item>
+              <ListGroup.Item action as={Link} to="/history" className="d-flex justify-content-between align-items-center">
+                <span><i className="bi bi-check2-square me-2 text-primary" />Confirm proofs</span>
+                <i className="bi bi-chevron-right text-muted" />
+              </ListGroup.Item>
+              <ListGroup.Item action as={Link} to="/invite" className="d-flex justify-content-between align-items-center">
                 <span><i className="bi bi-people me-2 text-primary" />Invite friends</span>
                 <i className="bi bi-chevron-right text-muted" />
               </ListGroup.Item>
               <ListGroup.Item action as={Link} to="/wallet" className="d-flex justify-content-between align-items-center">
-                <span><i className="bi bi-wallet2 me-2 text-primary" />Wallet</span>
+                <span><i className="bi bi-wallet2 me-2 text-primary" />Wallet · {formatMoney(profile?.balance || 0)}</span>
                 <i className="bi bi-chevron-right text-muted" />
               </ListGroup.Item>
               <ListGroup.Item action as={Link} to="/support" className="d-flex justify-content-between align-items-center">
@@ -261,7 +300,7 @@ export default function Account() {
             <i className="bi bi-box-arrow-right me-2" />Logout
           </h5>
           <p className="text-muted small mb-3">Sign out of Referrals Shopping on this device.</p>
-          <Button variant="danger" className="w-100 w-md-auto" disabled={loggingOut} onClick={() => void logout()}>
+          <Button variant="danger" disabled={loggingOut} onClick={() => void logout()}>
             {loggingOut ? (
               <><Spinner size="sm" className="me-1" />Signing out…</>
             ) : (

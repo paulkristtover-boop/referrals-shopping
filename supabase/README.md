@@ -40,3 +40,4 @@ Auth: **Confirm email = OFF**. Optional MFA for 2FA.
 | 22 | `withdrawals_bank.sql` | Bank withdrawals ₦1,000 min + FLW |
 
 | 23 | `tax_compliance.sql` | VAT lines, invoice numbers, tax settings |
+| 24 | `name_lock.sql` | Display name changes every 14 days; admin verify unlocks once |
