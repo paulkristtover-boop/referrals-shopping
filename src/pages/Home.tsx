@@ -108,6 +108,10 @@ export default function Home() {
         </div>
       </div>
 
+      <p className="legal-note text-center small text-muted mb-3 px-2">
+        Transparent ₦ pricing · Marketplace (Promote + Earn) · No guaranteed investment returns ·{' '}
+        <Link to="/legal">Legal</Link>
+      </p>
       <div className="ng-strip">
         <span><strong>NG</strong> · Built for Nigeria</span>
         <span>{CURRENCY_NOTE}</span>

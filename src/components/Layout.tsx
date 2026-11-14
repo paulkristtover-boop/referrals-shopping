@@ -80,7 +80,14 @@ export default function Layout() {
             <Outlet />
           </Container>
         </main>
-        <BottomTabBar />
+        <div className="legal-bar text-center small text-muted py-2 d-lg-none">
+        <Link to="/legal">Legal</Link>
+        {' · '}
+        <Link to="/privacy">Privacy</Link>
+        {' · '}
+        <Link to="/terms">Terms</Link>
+      </div>
+      <BottomTabBar />
       </>
     )
   }
@@ -213,10 +220,13 @@ export default function Layout() {
       <footer className={`rs-footer text-center text-muted d-none d-lg-block ${showBottom ? 'has-bottom-nav' : ''}`}>
         <Container>
           <div className="d-flex flex-wrap justify-content-center gap-3 mb-2">
+            <Link to="/legal">Legal</Link>
+            <Link to="/terms">Terms</Link>
+            <Link to="/privacy">Privacy</Link>
+            <Link to="/refunds">Refunds</Link>
             <Link to="/guide">Guide</Link>
             <Link to="/faq">FAQ</Link>
             <Link to="/support">Support</Link>
-            <Link to="/terms">Terms</Link>
             <a href={TG} target="_blank" rel="noreferrer">
               <i className="bi bi-telegram" /> Telegram
             </a>
@@ -235,6 +245,13 @@ export default function Layout() {
         </Container>
       </footer>
 
+      <div className="legal-bar text-center small text-muted py-2 d-lg-none">
+        <Link to="/legal">Legal</Link>
+        {' · '}
+        <Link to="/privacy">Privacy</Link>
+        {' · '}
+        <Link to="/terms">Terms</Link>
+      </div>
       <BottomTabBar />
     </>
   )

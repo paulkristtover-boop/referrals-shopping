@@ -1,3 +1,4 @@
+import { Link } from 'react-router-dom'
 import { useEffect, useState } from 'react'
 import { Alert, Badge, Button, Form, Nav, Spinner, Table, Row, Col, Modal, Card } from 'react-bootstrap'
 import { supabase, supabaseConfigured } from '../lib/supabase'
@@ -411,10 +412,11 @@ export default function Admin() {
 
   return (
     <div className="page-enter">
-      <div className="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+      <div className="admin-shell d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
         <div>
-          <h1 className="fw-bold mb-0 text-white">{BRAND} Admin</h1>
-          <p className="text-white-50 small mb-0">Marketplace ops: approve links, delivery, proofs, disputes, payouts, packages</p>
+          <p className="small text-uppercase mb-1 opacity-75 fw-semibold">CMS</p>
+          <h1 className="fw-bold mb-0 h3">{BRAND} Admin</h1>
+          <p className="small mb-0 opacity-90">Approve links · delivery · proofs · payouts · packages · compliance</p>
         </div>
         <Button size="sm" variant="outline-secondary" onClick={() => void load()}>
           <i className="bi bi-arrow-clockwise me-1" />Refresh
@@ -451,8 +453,8 @@ export default function Admin() {
         </Col>
       </Row>
 
-      <div className="admin-shell">
-        <Nav className="admin-side">
+      <div className="admin-layout">
+        <Nav className="admin-nav admin-side">
           {(
             [
               ['overview', 'Overview'],
@@ -472,6 +474,23 @@ export default function Admin() {
 
         <div className="admin-panel">
           {tab === 'overview' && (
+            <>
+
+            <Card className="rs-card rs-card-static mb-4">
+              <Card.Body>
+                <h5 className="fw-bold">Compliance checklist</h5>
+                <p className="small text-muted">Keep these current for a lawful marketplace posture.</p>
+                <ul className="admin-check-list">
+                  <li><i className="bi bi-shield-check" /><span><Link to="/terms">Terms</Link>, <Link to="/privacy">Privacy</Link>, <Link to="/refunds">Refunds</Link> published on the site</span></li>
+                  <li><i className="bi bi-cash-stack" /><span>Tax settings: supplier name + tax ID (Settings tab)</span></li>
+                  <li><i className="bi bi-credit-card" /><span>Flutterwave keys + webhook live; only real payments marked paid</span></li>
+                  <li><i className="bi bi-link-45deg" /><span>Reject illegal or deceptive campaign links before approval</span></li>
+                  <li><i className="bi bi-people" /><span>Earn proofs reviewed fairly; no self-task abuse</span></li>
+                  <li><i className="bi bi-bank" /><span>Withdrawals: ₦ minimum enforced; bank payouts only to verified requests</span></li>
+                </ul>
+              </Card.Body>
+            </Card>
+
             <div>
               <h5 className="fw-bold mb-3">Quick actions</h5>
               <p className="text-muted">
@@ -489,8 +508,10 @@ export default function Admin() {
                 <a href={IG} target="_blank" rel="noreferrer" className="btn btn-sm btn-outline-danger">
                   <i className="bi bi-instagram me-1" />{IG_HANDLE}
                 </a>
+                <a href="/legal" className="btn btn-sm btn-outline-secondary">Legal hub</a>
               </div>
             </div>
+            </>
           )}
 
           {tab === 'campaigns' && (

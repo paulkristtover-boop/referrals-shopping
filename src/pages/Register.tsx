@@ -19,6 +19,7 @@ export default function Register() {
   const [invite, setInvite] = useState(refCode)
   const [showInvite, setShowInvite] = useState(!!refCode)
   const [terms, setTerms] = useState(false)
+  const [ageOk, setAgeOk] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
 
@@ -47,7 +48,11 @@ export default function Register() {
   const onSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!terms) {
-      setError('Please accept the terms.')
+      setError('Please accept the Terms and Privacy Policy.')
+      return
+    }
+    if (!ageOk) {
+      setError('You must confirm you are 18 or older.')
       return
     }
     if (!supabaseConfigured) {
@@ -169,12 +174,20 @@ export default function Register() {
                 type="checkbox"
                 label={
                   <>
-                    I agree to the <Link to="/terms">terms</Link>
+                    I agree to the <Link to="/terms">Terms of Service</Link> and <Link to="/privacy">Privacy Policy</Link>
                   </>
                 }
                 checked={terms}
                 onChange={(e) => setTerms(e.target.checked)}
                 required
+              />
+              <Form.Check
+                className="mb-2"
+                type="checkbox"
+                id="age-ok"
+                label="I confirm I am 18 years of age or older"
+                checked={ageOk}
+                onChange={(e) => setAgeOk(e.target.checked)}
               />
               <Button type="submit" className="w-100 btn-lg" disabled={loading}>
                 {loading ? 'Creating…' : 'Create account'}

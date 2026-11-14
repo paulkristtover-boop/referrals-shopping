@@ -668,7 +668,7 @@ export default function Promote() {
       <p className="text-muted mb-3">
         Buy referral volume for sites, channels, bots, or groups. Your link becomes <strong>Earn tasks</strong> after payment and admin approval.
         <strong>Regular</strong> = signup only. <strong>Investment</strong> = signup + deposit. Minimum paid order ₦1,000. Pay with Flutterwave (₦) or crypto.
-        Confirm earner proofs under <strong>Proofs</strong>.
+        Confirm earner proofs under <strong>Proofs</strong>. Prices are ₦ as shown. <a href="/terms">Terms</a> · <a href="/refunds">Refunds</a>.
       </p>
       {!freeUsed && packages.some((x) => Number(x.price_usd) === 0) && (
         <Alert variant="info" className="py-2">

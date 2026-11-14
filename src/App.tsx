@@ -4,6 +4,9 @@ import Layout from './components/Layout'
 import Home from './pages/Home'
 import Guide from './pages/Guide'
 import Terms from './pages/Terms'
+import Privacy from './pages/Privacy'
+import Refunds from './pages/Refunds'
+import Legal from './pages/Legal'
 import Faq from './pages/Faq'
 import Support from './pages/Support'
 import Login from './pages/Login'
@@ -67,6 +70,9 @@ export default function App() {
         <Route path="faq" element={<Faq />} />
         <Route path="support" element={<Support />} />
         <Route path="terms" element={<Terms />} />
+        <Route path="privacy" element={<Privacy />} />
+        <Route path="refunds" element={<Refunds />} />
+        <Route path="legal" element={<Legal />} />
         <Route path="login" element={<Login />} />
         <Route path="register" element={<Register />} />
         <Route
