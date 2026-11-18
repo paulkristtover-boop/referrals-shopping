@@ -41,3 +41,16 @@ Auth: **Confirm email = OFF**. Optional MFA for 2FA.
 
 | 23 | `tax_compliance.sql` | VAT lines, invoice numbers, tax settings |
 | 24 | `name_lock.sql` | Display name changes every 14 days; admin verify unlocks once |
+
+
+## Additional migrations for the rebuilt deployment
+
+Apply these after the numbered core migrations above:
+
+| # | File | Purpose |
+|---|------|---------|
+| 25 | `packages_smallbiz.sql` | Reconciles active package tiers/prices with the current app and sets the task reward baseline to ₦50 |
+| 26 | `bill_payments.sql` | Electricity/utility bill ledger, wallet debit and confirmed-failure refund RPCs |
+| 27 | `security_hardening.sql` | Protects wallet balances, campaign approval/payment fields, submission reviews and payment-order mutations; run last |
+
+`flutterwave.sql` is already listed as migration 16 above. The bill-payment migration creates the database ledger and RPCs; it does not by itself add a user-interface/API bill-payment feature. Apply the migrations in Supabase SQL Editor only after taking a database backup. Test the bill-payment RPCs in a staging project before enabling live payments.
