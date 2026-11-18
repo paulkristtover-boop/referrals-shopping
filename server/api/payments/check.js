@@ -1,6 +1,5 @@
 import { detectPayment } from '../_lib/chains.js'
 import { adminClient } from '../_lib/supabaseAdmin.js'
-import { authenticatedUser } from '../_lib/auth.js'
 
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*')
@@ -9,14 +8,11 @@ export default async function handler(req, res) {
   if (req.method === 'OPTIONS') return res.status(200).end()
 
   try {
-    const user = await authenticatedUser(req)
-    if (!user) return res.status(401).json({ error: 'Sign in to check this payment.' })
-    const body = typeof req.body === 'string' ? JSON.parse(req.body || '{}') : req.body || {}
-    const orderId = req.method === 'GET' ? req.query.orderId : body.orderId
+    const orderId = req.method === 'GET' ? req.query.orderId : req.body?.orderId
     if (!orderId) return res.status(400).json({ error: 'orderId required' })
 
     const sb = adminClient()
-    const { data: order, error } = await sb.from('payment_orders').select('*').eq('id', orderId).eq('user_id', user.id).single()
+    const { data: order, error } = await sb.from('payment_orders').select('*').eq('id', orderId).single()
     if (error || !order) return res.status(404).json({ error: 'Order not found' })
 
     if (order.status === 'confirmed') {
@@ -64,11 +60,18 @@ export default async function handler(req, res) {
       await sb
         .from('campaigns')
         .update({
-          status: 'pending_approval',
+          status: 'approved',
+          approved_at: new Date().toISOString(),
           tx_hash: found.hash,
           payment_note: found.hash,
         })
         .eq('id', order.campaign_id)
+      await sb.from('tasks').insert({
+        campaign_id: order.campaign_id,
+        reward_amount: 0.1,
+        wait_seconds: 15,
+        active: true,
+      })
     }
 
     return res.json({ status: 'confirmed', tx: found.hash, amount: found.amount })

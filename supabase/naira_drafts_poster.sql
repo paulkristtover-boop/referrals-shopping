@@ -58,7 +58,6 @@ begin
   if p_target_url is null or btrim(p_target_url) = '' then raise exception 'URL required'; end if;
 
   if p_campaign_id is not null then
-    perform set_config('rs.internal_campaign_update','on',true);
     update public.campaigns set
       title = btrim(p_title),
       target_url = btrim(p_target_url),
@@ -114,14 +113,12 @@ begin
     raise exception 'Submission is not awaiting confirmation';
   end if;
 
-  perform set_config('rs.internal_submission_update','on',true);
   update public.task_submissions
   set status = 'approved',
       poster_reviewed_at = now(),
       reviewed_at = now()
   where id = p_submission_id;
 
-  perform set_config('rs.internal_profile_update','on',true);
   update public.profiles
   set balance = balance + r.reward_amount
   where id = r.user_id;
@@ -155,7 +152,6 @@ begin
     raise exception 'Cannot dispute this status';
   end if;
 
-  perform set_config('rs.internal_submission_update','on',true);
   update public.task_submissions
   set status = 'disputed',
       dispute_reason = nullif(btrim(p_reason), ''),
@@ -199,7 +195,6 @@ begin
     set status = 'approved', reviewed_at = now(), poster_note = p_note
     where id = p_submission_id;
     if r.status <> 'approved' then
-      perform set_config('rs.internal_profile_update','on',true);
       update public.profiles set balance = balance + r.reward_amount where id = r.user_id;
     end if;
   else

@@ -128,8 +128,6 @@ export default function Account() {
       </div>
 
       <div className="d-flex flex-wrap gap-2 mb-3">
-        <Link to="/settings" className="btn btn-sm btn-outline-primary"><i className="bi bi-sliders me-1" />Settings</Link>
-        <Link to="/security" className="btn btn-sm btn-outline-secondary"><i className="bi bi-shield-lock me-1" />Security & sessions</Link>
         <Button
           size="sm"
           variant="outline-primary"
@@ -187,8 +185,8 @@ export default function Account() {
 
       <Card className="rs-card rs-card-static mb-3">
         <Card.Body>
-          <h5 className="fw-bold">Billing details</h5>
-          <p className="small text-muted">Optional billing information shown on eligible invoices. It does not change your public display name.</p>
+          <h5 className="fw-bold">Billing / tax</h5>
+          <p className="small text-muted">Optional. Shown on tax invoices. This is not your display name.</p>
           <Form
             onSubmit={async (e) => {
               e.preventDefault()

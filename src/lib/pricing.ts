@@ -1,8 +1,6 @@
 /**
- * Sustainable NGN pricing model (18 Nov 2026).
- * Each approved referral costs the platform ₦15 in earner rewards.
- * Package prices target roughly 30–46% contribution before gateway fees,
- * support, tax and fixed operating costs. Smaller entry tiers help SMEs start.
+ * Realistic Naira package prices for NG market.
+ * Aimed to leave room for earner rewards (~₦40–80/task regular) + platform margin + fees.
  */
 
 export type RefCategory = 'regular' | 'gambling'
@@ -13,32 +11,28 @@ export type Tier = {
   priceNgn: number
 }
 
-/** Regular packages: signup only; no deposit required. */
+/** Regular: signup only — ~₦25–35 effective per ref, volume discounts at top end */
 export const REGULAR_PACKAGES: Tier[] = [
-  { name: 'Mini', referrals: 250, priceNgn: 6900 },
-  { name: 'Starter', referrals: 500, priceNgn: 13500 },
-  { name: 'Spark', referrals: 1000, priceNgn: 25900 },
-  { name: 'Pulse', referrals: 2000, priceNgn: 49900 },
-  { name: 'Wave', referrals: 3000, priceNgn: 73900 },
-  { name: 'Boost', referrals: 4000, priceNgn: 97900 },
-  { name: 'Surge', referrals: 5000, priceNgn: 119900 },
-  { name: 'Orbit', referrals: 10000, priceNgn: 229000 },
-  { name: 'Nova', referrals: 20000, priceNgn: 449000 },
-  { name: 'Galaxy', referrals: 30000, priceNgn: 649000 },
+  { name: 'Spark', referrals: 1000, priceNgn: 30000 },
+  { name: 'Pulse', referrals: 2000, priceNgn: 55000 },
+  { name: 'Wave', referrals: 3000, priceNgn: 80000 },
+  { name: 'Boost', referrals: 4000, priceNgn: 100000 },
+  { name: 'Surge', referrals: 5000, priceNgn: 120000 },
+  { name: 'Orbit', referrals: 10000, priceNgn: 220000 },
+  { name: 'Nova', referrals: 20000, priceNgn: 400000 },
+  { name: 'Galaxy', referrals: 30000, priceNgn: 550000 },
 ]
 
-/** Deposit-required campaigns carry a 10% service/risk-review premium. */
+/** Investment / deposit — harder action, ~1.8–2× regular */
 export const INVESTMENT_PACKAGES: Tier[] = [
-  { name: 'Vault Mini', referrals: 250, priceNgn: 7500 },
-  { name: 'Vault Starter', referrals: 500, priceNgn: 14900 },
-  { name: 'Vault Lite', referrals: 1000, priceNgn: 28500 },
-  { name: 'Vault Plus', referrals: 2000, priceNgn: 54900 },
-  { name: 'Vault Pro', referrals: 3000, priceNgn: 81500 },
-  { name: 'Vault Max', referrals: 4000, priceNgn: 107500 },
-  { name: 'Vault Elite', referrals: 5000, priceNgn: 131500 },
-  { name: 'Vault Ultra', referrals: 10000, priceNgn: 252000 },
-  { name: 'Vault Prime', referrals: 20000, priceNgn: 494000 },
-  { name: 'Vault Titan', referrals: 30000, priceNgn: 714000 },
+  { name: 'Vault Lite', referrals: 1000, priceNgn: 60000 },
+  { name: 'Vault Plus', referrals: 2000, priceNgn: 110000 },
+  { name: 'Vault Pro', referrals: 3000, priceNgn: 160000 },
+  { name: 'Vault Max', referrals: 4000, priceNgn: 200000 },
+  { name: 'Vault Elite', referrals: 5000, priceNgn: 240000 },
+  { name: 'Vault Ultra', referrals: 10000, priceNgn: 420000 },
+  { name: 'Vault Prime', referrals: 20000, priceNgn: 780000 },
+  { name: 'Vault Titan', referrals: 30000, priceNgn: 1100000 },
 ]
 
 export const REGULAR_TIERS: [number, number][] = REGULAR_PACKAGES.map((p) => [p.referrals, p.priceNgn])
@@ -48,8 +42,8 @@ export const MIN_ORDER_NGN = 1000
 export const FREE_STARTER_REFS = 50
 export const FREE_STARTER_NAME = 'Free Starter'
 
-/** Earner reward for each approved task/referral (Naira). */
-export const DEFAULT_TASK_REWARD_NGN = 15
+/** Earn reward per completed regular-style task (Naira) */
+export const DEFAULT_TASK_REWARD_NGN = 50
 
 export function packagesFor(category: RefCategory): Tier[] {
   return category === 'gambling' ? INVESTMENT_PACKAGES : REGULAR_PACKAGES

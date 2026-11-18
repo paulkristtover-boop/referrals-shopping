@@ -43,7 +43,6 @@ begin
     raise exception 'Insufficient balance';
   end if;
 
-  perform set_config('rs.internal_profile_update','on',true);
   update public.profiles set balance = balance - p_amount where id = uid;
 
   insert into public.withdrawals (user_id, amount, crypto_chain, wallet_address, status)

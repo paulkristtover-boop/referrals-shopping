@@ -12,12 +12,9 @@
 
 1. **Supabase** → SQL Editor → run `supabase/schema.sql`  
 2. Create Storage bucket **`screenshots`** (public)  
-3. Copy project URL + anon key
-4. Run the feature migrations in `supabase/README.md`, including `packages_smallbiz.sql` for the current sustainable NGN pricing.
+3. Copy project URL + anon key  
 
-  
-
-5. **Vercel** env variables:
+4. **Vercel** env variables:
 
 ```
 VITE_SUPABASE_URL=
@@ -27,9 +24,9 @@ VITE_DEPOSIT_SOL=
 VITE_DEPOSIT_TON=
 ```
 
-6. Node.js version on Vercel: **24.x**
+5. Node.js version on Vercel: **24.x**
 
-7. Make admin after register:
+6. Make admin after register:
 
 ```sql
 update profiles set role = 'admin' where email = 'you@example.com';
@@ -45,8 +42,6 @@ npm run dev
 ```
 
 ## Deploy
-
-Vercel detects Vite from `package.json`, installs the project dependencies, runs `npm run build`, and serves the `dist` folder. If detection is not automatic, select **Vite** as the Framework Preset, use `npm run build` as the Build Command, and `dist` as the Output Directory. Keep `package.json` (and preferably a committed `package-lock.json`) in the repository root.
 
 ```bash
 git add -A
@@ -84,3 +79,7 @@ Hobby plan has no per-minute cron. Detection runs in the browser:
 - Server endpoint: `GET /api/payments/check?orderId=...`
 
 Still set `SUPABASE_SERVICE_ROLE_KEY` and deposit/API keys for the check API.
+
+## Vercel Hobby API routing
+
+The deployment exposes one Serverless Function at `api/[...path].js`. Its implementation modules are stored in `server/api/` so Vercel does not discover each handler as a separate function. Existing `/api/...` URLs are routed by the catch-all handler. See `VERCEL_HOBBY_DEPLOY.md` for deployment settings.

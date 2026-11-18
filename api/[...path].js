@@ -1,41 +1,40 @@
-// Single Vercel Serverless Function router.
-// Keeping the API behind one catch-all function makes the project deployable
-// on Vercel Hobby's 12-function limit without changing the public API URLs.
-import billsCatalog from '../server/api/bills-catalog.js'
-import billsPay from '../server/api/bills-pay.js'
-import billsStatus from '../server/api/bills-status.js'
-import paymentCheck from '../server/api/payments/check.js'
-import cryptoInit from '../server/api/payments/crypto-init.js'
-import flutterwaveBanks from '../server/api/payments/flutterwave-banks.js'
-import flutterwaveHealth from '../server/api/payments/flutterwave-health.js'
-import flutterwaveInit from '../server/api/payments/flutterwave-init.js'
-import flutterwaveTransfer from '../server/api/payments/flutterwave-transfer.js'
-import flutterwaveVerify from '../server/api/payments/flutterwave-verify.js'
-import flutterwaveWebhook from '../server/api/payments/flutterwave-webhook.js'
-import paymentQuote from '../server/api/payments/quote.js'
-import whatsappNotify from '../server/api/whatsapp/notify.js'
-
+/**
+ * Vercel Hobby-compatible API router.
+ * Keep implementation modules in /server/api so Vercel deploys only this
+ * catch-all entry point as a Serverless Function.
+ */
 const routes = {
-  'bills-catalog': billsCatalog,
-  'bills-pay': billsPay,
-  'bills-status': billsStatus,
-  'payments/check': paymentCheck,
-  'payments/crypto-init': cryptoInit,
-  'payments/flutterwave-banks': flutterwaveBanks,
-  'payments/flutterwave-health': flutterwaveHealth,
-  'payments/flutterwave-init': flutterwaveInit,
-  'payments/flutterwave-transfer': flutterwaveTransfer,
-  'payments/flutterwave-verify': flutterwaveVerify,
-  'payments/flutterwave-webhook': flutterwaveWebhook,
-  'payments/quote': paymentQuote,
-  'whatsapp/notify': whatsappNotify,
+  'payments/check': () => import('../server/api/payments/check.js'),
+  'payments/flutterwave-banks': () => import('../server/api/payments/flutterwave-banks.js'),
+  'payments/flutterwave-health': () => import('../server/api/payments/flutterwave-health.js'),
+  'payments/flutterwave-init': () => import('../server/api/payments/flutterwave-init.js'),
+  'payments/flutterwave-transfer': () => import('../server/api/payments/flutterwave-transfer.js'),
+  'payments/flutterwave-verify': () => import('../server/api/payments/flutterwave-verify.js'),
+  'payments/flutterwave-webhook': () => import('../server/api/payments/flutterwave-webhook.js'),
+  'payments/quote': () => import('../server/api/payments/quote.js'),
+  'whatsapp/notify': () => import('../server/api/whatsapp/notify.js'),
 }
 
 export default async function handler(req, res) {
-  const pathname = new URL(req.url || '/', 'https://vercel.internal').pathname
-  const route = decodeURIComponent(pathname).replace(/^\/api\/?/, '').replace(/\/$/, '')
-  const target = routes[route]
+  const rawPath = req.query?.path
+  const path = (Array.isArray(rawPath) ? rawPath : [rawPath])
+    .filter(Boolean)
+    .join('/')
+    .replace(/^\/+|\/+$/g, '')
 
-  if (!target) return res.status(404).json({ error: 'API route not found' })
-  return target(req, res)
+  const load = routes[path]
+  if (!load) return res.status(404).json({ error: 'API route not found' })
+
+  try {
+    const module = await load()
+    if (typeof module.default !== 'function') {
+      return res.status(500).json({ error: 'API handler is not configured' })
+    }
+    return await module.default(req, res)
+  } catch (error) {
+    console.error(`API route failed: ${path}`, error)
+    if (!res.headersSent) {
+      return res.status(500).json({ error: 'Internal server error' })
+    }
+  }
 }

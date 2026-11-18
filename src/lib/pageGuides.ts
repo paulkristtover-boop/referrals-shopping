@@ -93,14 +93,6 @@ const GUIDES: Record<string, { title: string; steps: GuideStep[] }> = {
       { title: 'Sessions', body: 'See devices and sign out other sessions if something looks wrong.' },
     ],
   },
-  '/settings': {
-    title: 'Settings',
-    steps: [
-      { title: 'Appearance', body: 'Switch between light and dark mode. Your choice is saved on this device.' },
-      { title: 'Preferences', body: 'Choose which in-app update preferences you want and whether lists should be compact.' },
-      { title: 'Security', body: 'Use the links on this page to update your account details, enable 2FA, and review active sessions.' },
-    ],
-  },
   '/account': {
     title: 'Account',
     steps: [

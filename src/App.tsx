@@ -17,7 +17,6 @@ import Earn from './pages/Earn'
 import Wallet from './pages/Wallet'
 import Invite from './pages/Invite'
 import Security from './pages/Security'
-import Settings from './pages/Settings'
 import Account from './pages/Account'
 import PosterProofs from './pages/PosterProofs'
 import History from './pages/History'
@@ -172,7 +171,6 @@ export default function App() {
             </Private>
           }
         />
-        <Route path="settings" element={<Private><Settings /></Private>} />
         <Route
           path="admin"
           element={

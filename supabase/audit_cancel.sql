@@ -66,7 +66,6 @@ begin
     raise exception 'Only drafts or unpaid orders can be cancelled';
   end if;
 
-  perform set_config('rs.internal_campaign_update','on',true);
   update public.campaigns set status = 'cancelled' where id = p_campaign_id;
   update public.payment_orders set status = 'cancelled' where campaign_id = p_campaign_id and status = 'awaiting_payment';
 

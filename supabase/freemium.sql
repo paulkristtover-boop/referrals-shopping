@@ -51,7 +51,6 @@ begin
     raise exception 'Free Starter package not found';
   end if;
 
-  perform set_config('rs.internal_campaign_update','on',true);
   insert into public.campaigns (
     user_id, package_id, title, target_url, status, paid_amount, crypto_chain, payment_note, approved_at
   ) values (
@@ -60,9 +59,8 @@ begin
   returning id into camp_id;
 
   insert into public.tasks (campaign_id, reward_amount, wait_seconds, active)
-  values (camp_id, 15, 15, true);
+  values (camp_id, 0.05, 15, true);
 
-  perform set_config('rs.internal_profile_update','on',true);
   update public.profiles
   set free_starter_used_at = now()
   where id = uid;
