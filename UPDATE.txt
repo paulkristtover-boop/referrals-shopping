@@ -43,3 +43,10 @@ The source changes were reviewed and JavaScript syntax checks are run before pac
 
 Vercel deployment
 The repository is a Vite project (`vite` dependency, `dev` and `build` scripts). Vercel detects Vite and installs dependencies from the committed package manifest/lockfile, then runs `npm run build`. Set the project Framework Preset to Vite if it is not detected, Build Command to `npm run build`, and Output Directory to `dist`. No manual Vite installation step is needed. Commit `package-lock.json` for reproducible installs if npm is your package manager.
+
+VERCEL HOBBY FUNCTION LIMIT
+- API endpoints are now routed through one catch-all Vercel function at api/[...path].js.
+- Individual endpoint handlers and shared helpers live under server/api and are bundled into that single function.
+- Existing public API URLs remain unchanged, including the Flutterwave webhook URL.
+- This avoids the Vercel Hobby limit of 12 Serverless Functions; it does not require a Pro upgrade.
+- Keep api/[...path].js as the only deployable function file under api/.
