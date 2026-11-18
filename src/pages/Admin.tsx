@@ -21,7 +21,7 @@ export default function Admin() {
   const [loading, setLoading] = useState(true)
   const [msg, setMsg] = useState<string | null>(null)
   const [err, setErr] = useState<string | null>(null)
-  const [pkgForm, setPkgForm] = useState({ name: '', category: 'regular', referrals: 1000, price_usd: 15000 })
+  const [pkgForm, setPkgForm] = useState({ name: '', category: 'regular', referrals: 1000, price_usd: 25900 })
 
   const [showPkg, setShowPkg] = useState(false)
   const [search, setSearch] = useState('')
@@ -140,7 +140,7 @@ export default function Admin() {
     try {
       const res = await fetch('/api/payments/flutterwave-transfer', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${(await supabase.auth.getSession()).data.session?.access_token || ''}` },
         body: JSON.stringify({ withdrawalId: id }),
       })
       const j = await res.json()
@@ -161,7 +161,7 @@ export default function Admin() {
     const { error } = await supabase.rpc('admin_approve_campaign', { p_campaign_id: id })
     if (error) {
       await supabase.from('campaigns').update({ status: 'approved', approved_at: new Date().toISOString() }).eq('id', id)
-      await supabase.from('tasks').insert({ campaign_id: id, reward_amount: 50, wait_seconds: 15, active: true })
+      await supabase.from('tasks').insert({ campaign_id: id, reward_amount: 15, wait_seconds: 15, active: true })
     }
     flash('Campaign approved — tasks live')
     try {
@@ -241,7 +241,7 @@ export default function Admin() {
     else {
       flash('Package added')
       setShowPkg(false)
-      setPkgForm({ name: '', category: 'regular', referrals: 1000, price_usd: 15000 })
+      setPkgForm({ name: '', category: 'regular', referrals: 1000, price_usd: 25900 })
       void load()
     }
   }

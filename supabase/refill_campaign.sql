@@ -45,6 +45,7 @@ begin
     pay := greatest(1000, coalesce(pkg.price_usd, 1000));
   end if;
 
+  perform set_config('rs.internal_campaign_update','on',true);
   insert into public.campaigns (
     user_id, package_id, title, target_url, description, sample_screenshot_url,
     status, paid_amount, delivered_count, refilled_from, crypto_chain

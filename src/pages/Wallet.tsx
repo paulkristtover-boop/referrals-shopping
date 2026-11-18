@@ -22,6 +22,15 @@ type W = {
 }
 
 type Bank = { code: string; name: string }
+type ElectricityProvider = { code: string; name: string; item_code: string; meter_type: 'prepaid' | 'postpaid' }
+
+const FALLBACK_BANKS: Bank[] = ([
+  ['044','Access Bank'],['035','Wema Bank'],['023','Citibank Nigeria'],['050','Ecobank Nigeria'],
+  ['070','Fidelity Bank'],['011','First Bank of Nigeria'],['214','FCMB'],['058','Guaranty Trust Bank'],
+  ['030','Heritage Bank'],['301','Jaiz Bank'],['082','Keystone Bank'],['076','Polaris Bank'],
+  ['221','Stanbic IBTC Bank'],['068','Standard Chartered Bank'],['232','Sterling Bank'],
+  ['100','SunTrust Bank'],['032','Union Bank'],['033','United Bank for Africa'],['215','Unity Bank'],['057','Zenith Bank'],
+] as [string, string][]).map(([code,name]) => ({code, name}))
 
 /** Minimum withdrawal in Naira */
 const MIN_NGN = 1000
@@ -52,6 +61,18 @@ export default function Wallet() {
   const [accountNumber, setAccountNumber] = useState('')
   const [accountName, setAccountName] = useState('')
   const [banksErr, setBanksErr] = useState<string | null>(null)
+  const [banksLoading, setBanksLoading] = useState(false)
+  const [providers, setProviders] = useState<ElectricityProvider[]>([])
+  const [providerCode, setProviderCode] = useState('')
+  const [meterNumber, setMeterNumber] = useState('')
+  const [meterType, setMeterType] = useState<'prepaid' | 'postpaid'>('prepaid')
+  const [billAmount, setBillAmount] = useState('')
+  const [billLoading, setBillLoading] = useState(false)
+  const [billMessage, setBillMessage] = useState<string | null>(null)
+  const [billReference, setBillReference] = useState<string | null>(null)
+  const [billStatusLoading, setBillStatusLoading] = useState(false)
+  const [billToken, setBillToken] = useState<string | null>(null)
+  const [billError, setBillError] = useState<string | null>(null)
   const [err, setErr] = useState<string | null>(null)
   const [msg, setMsg] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
@@ -81,23 +102,77 @@ export default function Wallet() {
     void load()
   }, [user?.id])
 
+  const loadBanks = async () => {
+    setBanksLoading(true)
+    try {
+      const res = await fetch('/api/payments/flutterwave-banks', { headers: { Accept: 'application/json' } })
+      const j = await res.json().catch(() => ({}))
+      const received = Array.isArray(j.banks) ? j.banks.filter((b: Bank) => b?.code && b?.name) : []
+      if (!res.ok || !received.length) throw new Error(j.error || 'Live bank list unavailable')
+      setBanks(received)
+      setBanksErr(j.source === 'fallback' ? (j.warning || 'Using the backup bank list. Please verify your bank details.') : null)
+    } catch {
+      setBanks(FALLBACK_BANKS)
+      setBanksErr('Using the backup bank list because the live list is unavailable. Please confirm your bank and account details carefully.')
+    } finally { setBanksLoading(false) }
+  }
+
+  useEffect(() => { if (method === 'bank') void loadBanks() }, [method])
+
   useEffect(() => {
-    if (method !== 'bank') return
-    ;(async () => {
-      try {
-        const res = await fetch('/api/payments/flutterwave-banks')
-        const j = await res.json()
-        if (!res.ok) {
-          setBanksErr(j.error || 'Could not load banks')
-          return
-        }
-        setBanks(j.banks || [])
-        setBanksErr(null)
-      } catch (e) {
-        setBanksErr((e as Error).message)
-      }
-    })()
-  }, [method])
+    let active = true
+    fetch('/api/bills-catalog').then(async (r) => {
+      const j = await r.json().catch(() => ({}))
+      if (!r.ok) throw new Error(j.error || 'Could not load electricity providers')
+      return j.providers || []
+    }).then((rows) => { if (active) setProviders(rows) }).catch((e) => { if (active) setBillError(e.message) })
+    return () => { active = false }
+  }, [])
+
+  const payElectricity = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setBillError(null); setBillMessage(null)
+    const value = Math.round(Number(billAmount))
+    const selectedProvider = providers.find((p) => `${p.code}:${p.item_code}` === providerCode)
+    if (!selectedProvider || selectedProvider.meter_type !== meterType || !/^\d{8,15}$/.test(meterNumber) || value < 500 || !Number.isFinite(value)) {
+      setBillError('Choose a provider, enter a valid meter number and amount of at least ₦500.')
+      return
+    }
+    setBillLoading(true)
+    try {
+      const { data: sessionData } = await supabase.auth.getSession()
+      const token = sessionData.session?.access_token
+      if (!token) throw new Error('Your session has expired. Sign in again.')
+      const response = await fetch('/api/bills-pay', {
+        method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ provider_code: selectedProvider.code, item_code: selectedProvider.item_code, meter_number: meterNumber, meter_type: meterType, amount: value }),
+      })
+      const result = await response.json().catch(() => ({}))
+      if (!response.ok) throw new Error(result.error || 'Electricity payment failed')
+      setBillReference(result.reference)
+      setBillToken(null)
+      setBillMessage(`${result.message || 'Electricity payment submitted.'} Reference: ${result.reference}`)
+      setBillAmount(''); setMeterNumber('')
+      await refreshProfile()
+    } catch (e) { setBillError(e instanceof Error ? e.message : 'Electricity payment failed') }
+    finally { setBillLoading(false) }
+  }
+
+  const checkBillStatus = async () => {
+    if (!billReference) return
+    setBillStatusLoading(true); setBillError(null)
+    try {
+      const { data: sessionData } = await supabase.auth.getSession()
+      const token = sessionData.session?.access_token
+      const response = await fetch(`/api/bills-status?reference=${encodeURIComponent(billReference)}`, { headers: { Authorization: `Bearer ${token || ''}` } })
+      const result = await response.json().catch(() => ({}))
+      if (!response.ok) throw new Error(result.error || 'Could not check bill status')
+      if (result.status === 'paid') { setBillMessage('Electricity payment confirmed.'); setBillToken(result.token || null) }
+      else if (result.status === 'refunded') { setBillMessage(result.message || 'Payment failed and wallet refunded.'); await refreshProfile() }
+      else setBillMessage(result.message || 'Payment is still pending. Try again shortly.')
+    } catch (e) { setBillError(e instanceof Error ? e.message : 'Could not check payment status') }
+    finally { setBillStatusLoading(false) }
+  }
 
   const request = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -117,6 +192,8 @@ export default function Wallet() {
     setSubmitting(true)
     try {
       if (method === 'bank') {
+        if (!bankCode || !bankName) { setErr('Select a bank from the list.'); return }
+        if (!/^\d{10}$/.test(accountNumber)) { setErr('Enter a valid 10-digit Nigerian account number.'); return }
         const { error } = await supabase.rpc('request_bank_withdrawal', {
           p_amount: a,
           p_bank_code: bankCode,
@@ -256,7 +333,7 @@ export default function Wallet() {
               <>
                 <div className="col-md-8">
                   <Form.Label>Bank</Form.Label>
-                  {banksErr && <div className="small text-danger mb-1">{banksErr}</div>}
+                  {banksErr && <div className="small text-warning-emphasis mb-1">{banksErr} <button type="button" className="btn btn-link btn-sm p-0" onClick={() => void loadBanks()} disabled={banksLoading}>Retry live list</button></div>}
                   <Form.Select
                     value={bankCode}
                     onChange={(e) => {
@@ -265,8 +342,9 @@ export default function Wallet() {
                       setBankName(banks.find((b) => b.code === code)?.name || '')
                     }}
                     required
+                    disabled={banksLoading && banks.length === 0}
                   >
-                    <option value="">Select bank…</option>
+                    <option value="">{banksLoading ? 'Loading banks…' : 'Select bank…'}</option>
                     {banks.map((b) => (
                       <option key={b.code} value={b.code}>
                         {b.name}
@@ -318,6 +396,25 @@ export default function Wallet() {
               </Button>
             </div>
           </Form>
+        </Card.Body>
+      </Card>
+
+      <Card className="rs-card rs-card-static mb-4" id="electricity-bills">
+        <Card.Body>
+          <div className="d-flex align-items-center gap-2 mb-1"><i className="bi bi-lightning-charge-fill text-warning fs-4" /><h5 className="fw-bold mb-0">Electricity bill payment</h5></div>
+          <p className="small text-muted">Pay a Nigerian prepaid or postpaid meter directly from your RS wallet. Minimum payment: {formatMoney(500)}.</p>
+          {billError && <Alert variant="danger" className="py-2">{billError}</Alert>}
+          {billMessage && <Alert variant="success" className="py-2">{billMessage}{billReference && <div className="mt-2"><Button size="sm" variant="outline-success" onClick={() => void checkBillStatus()} disabled={billStatusLoading}>{billStatusLoading ? 'Checking…' : 'Check payment status'}</Button></div>}{billToken && <div className="mt-2"><strong>Meter token / provider details:</strong><div className="font-monospace">{billToken}</div></div>}</Alert>}
+          <Form onSubmit={payElectricity} className="row g-3">
+            <div className="col-md-6"><Form.Label>Electricity provider</Form.Label><Form.Select value={providerCode} onChange={(e) => setProviderCode(e.target.value)} required>
+              <option value="">Select provider…</option>{providers.filter((p) => p.meter_type === meterType).map((p) => <option key={`${p.code}:${p.item_code}`} value={`${p.code}:${p.item_code}`}>{p.name}</option>)}
+            </Form.Select>{providers.length === 0 && <div className="form-text">Provider list unavailable. Check Flutterwave biller configuration.</div>}</div>
+            <div className="col-md-6"><Form.Label>Meter type</Form.Label><Form.Select value={meterType} onChange={(e) => { setMeterType(e.target.value as 'prepaid' | 'postpaid'); setProviderCode('') }}><option value="prepaid">Prepaid</option><option value="postpaid">Postpaid</option></Form.Select></div>
+            <div className="col-md-6"><Form.Label>Meter number</Form.Label><Form.Control value={meterNumber} onChange={(e) => setMeterNumber(e.target.value.replace(/\D/g, '').slice(0,15))} inputMode="numeric" placeholder="Enter meter number" required /></div>
+            <div className="col-md-6"><Form.Label>Amount (₦)</Form.Label><Form.Control type="number" min="500" step="1" value={billAmount} onChange={(e) => setBillAmount(e.target.value)} placeholder="Minimum 500" required /></div>
+            <div className="col-12"><Button type="submit" disabled={billLoading || !providers.length || bal < 500}>{billLoading ? <><Spinner size="sm" className="me-2" />Processing…</> : 'Pay electricity bill'}</Button></div>
+          </Form>
+          <div className="small text-muted mt-2">Your wallet is debited before the provider request. Failed provider payments trigger an automatic refund; pending payments remain under review until confirmed.</div>
         </Card.Body>
       </Card>
 

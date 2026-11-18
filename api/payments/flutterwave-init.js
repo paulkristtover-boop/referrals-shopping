@@ -1,4 +1,5 @@
 import { adminClient } from '../_lib/supabaseAdmin.js'
+import { authenticatedUser } from '../_lib/auth.js'
 import { createPaymentLink, flwPublicKey, flwSecret } from '../_lib/flutterwave.js'
 
 /**
@@ -8,7 +9,7 @@ import { createPaymentLink, flwPublicKey, flwSecret } from '../_lib/flutterwave.
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*')
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS')
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type')
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization')
   if (req.method === 'OPTIONS') return res.status(200).end()
   if (req.method !== 'POST') return res.status(405).json({ error: 'POST only' })
 
@@ -32,13 +33,14 @@ export default async function handler(req, res) {
     }
     body = body || {}
 
-    const campaignId = body.campaignId
-    const email = body.email
-    const name = body.name || email
-    const amountNgn = body.amountNgn ?? body.amount
+    const authUser = await authenticatedUser(req)
+    if (!authUser) return res.status(401).json({ error: 'Sign in to start checkout.' })
 
+    const campaignId = body.campaignId
     if (!campaignId) return res.status(400).json({ error: 'campaignId required' })
-    if (!email) return res.status(400).json({ error: 'email required' })
+    const email = authUser.email
+    const name = authUser.user_metadata?.full_name || email || 'RS customer'
+    if (!email) return res.status(400).json({ error: 'Your account needs an email address before checkout.' })
 
     let sb
     try {
@@ -54,6 +56,7 @@ export default async function handler(req, res) {
       .from('campaigns')
       .select('id, user_id, title, status, paid_amount')
       .eq('id', campaignId)
+      .eq('user_id', authUser.id)
       .maybeSingle()
 
     if (campErr || !camp) {
@@ -67,7 +70,7 @@ export default async function handler(req, res) {
       })
     }
 
-    const payAmount = Math.round(Number(camp.paid_amount || amountNgn || 0))
+    const payAmount = Math.round(Number(camp.paid_amount || 0))
     if (!Number.isFinite(payAmount) || payAmount < 100) {
       return res.status(400).json({ error: 'Invalid amount (min ₦100)' })
     }
@@ -139,20 +142,27 @@ export default async function handler(req, res) {
       expires_at: new Date(Date.now() + 60 * 60 * 1000).toISOString(),
     }
 
-    const { data: existing } = await sb
+    const { data: existing, error: existingError } = await sb
       .from('payment_orders')
       .select('id')
       .eq('campaign_id', campaignId)
       .maybeSingle()
+    if (existingError) return res.status(500).json({ error: 'Could not prepare the payment record. Try again.' })
 
+    let orderWriteError = null
     if (existing?.id) {
-      await sb.from('payment_orders').update(orderRow).eq('id', existing.id)
+      const updated = await sb.from('payment_orders').update(orderRow).eq('id', existing.id)
+      orderWriteError = updated.error
     } else {
-      const ins = await sb.from('payment_orders').insert(orderRow)
-      if (ins.error) console.error('payment_orders insert', ins.error)
+      const inserted = await sb.from('payment_orders').insert(orderRow)
+      orderWriteError = inserted.error
+    }
+    if (orderWriteError) {
+      console.error('payment_orders write failed', orderWriteError)
+      return res.status(500).json({ error: 'Could not save the payment reference. No checkout link was returned; try again.' })
     }
 
-    await sb
+    const { error: campaignUpdateError } = await sb
       .from('campaigns')
       .update({
         status: 'pending_payment',
@@ -161,6 +171,10 @@ export default async function handler(req, res) {
         paid_amount: payAmount,
       })
       .eq('id', campaignId)
+    if (campaignUpdateError) {
+      console.error('campaign checkout state update failed', campaignUpdateError)
+      return res.status(500).json({ error: 'Could not update the order for checkout. Please try again.' })
+    }
 
     return res.status(200).json({
       ok: true,

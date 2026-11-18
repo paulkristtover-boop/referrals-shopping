@@ -168,6 +168,9 @@ export default function Layout() {
                   <NavItem to="/account" icon="bi-person-circle">
                     Account
                   </NavItem>
+                  <NavItem to="/settings" icon="bi-sliders">
+                    Settings
+                  </NavItem>
                 </>
               )}
               {!user && (

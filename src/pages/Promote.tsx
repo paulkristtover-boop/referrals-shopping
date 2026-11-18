@@ -32,9 +32,6 @@ type PayOrder = {
   pay_code: string
 }
 
-function payCode() {
-  return 'RS' + Math.random().toString(36).slice(2, 12).toUpperCase()
-}
 
 function useCountdown(expiresAt?: string | null) {
   const [left, setLeft] = useState(0)
@@ -105,7 +102,8 @@ function PaymentPanel({
     if (!silent) setChecking(true)
     if (!silent) setNote(null)
     try {
-      const res = await fetch(`/api/payments/check?orderId=${encodeURIComponent(order.id)}`)
+      const { data: authSession } = await supabase.auth.getSession()
+      const res = await fetch(`/api/payments/check?orderId=${encodeURIComponent(order.id)}`, { headers: { Authorization: `Bearer ${authSession.session?.access_token || ''}` } })
       const data = await res.json()
       if (data.status === 'confirmed') {
         setNote(`Payment detected automatically. TX: ${String(data.tx || '').slice(0, 18)}…`)
@@ -319,7 +317,7 @@ export default function Promote() {
       try {
         const res = await fetch('/api/payments/flutterwave-verify', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${(await supabase.auth.getSession()).data.session?.access_token || ''}` },
           body: JSON.stringify({ tx_ref, transaction_id, campaignId }),
         })
         const data = await res.json()
@@ -485,7 +483,7 @@ export default function Promote() {
     if (!user?.email) throw new Error('You must be signed in with an email')
     const initRes = await fetch('/api/payments/flutterwave-init', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${(await supabase.auth.getSession()).data.session?.access_token || ''}` },
       body: JSON.stringify({
         campaignId,
         email: user.email,
@@ -518,6 +516,10 @@ export default function Promote() {
     setMsg(null)
     const pkg = selectedPkg || packages.find((x) => x.id === packageId)
     if (!user) return
+    if (!isFree && referralCount < 250) {
+      setErr('Paid packages start at 250 referrals. Use the one-time Free Starter for 50 referrals if eligible.')
+      return
+    }
     if (!isFree && effectivePrice < MIN_ORDER_NGN) {
       setErr(`Minimum order is ${formatMoney(MIN_ORDER_NGN)}`)
       return
@@ -605,39 +607,20 @@ export default function Promote() {
         return
       }
 
-      // Crypto path
-      const qRes = await fetch(`/api/payments/quote?ngn=${effectivePrice}&chain=${chain}`)
-      const quote = await qRes.json()
-      if (!qRes.ok) throw new Error(quote.error || 'Could not get payment quote')
-
-      const code = payCode()
-      const expires = quote.expires_at as string
-
-      await supabase
-        .from('campaigns')
-        .update({
-          crypto_chain: chain,
-          pay_code: code,
-          amount_crypto: quote.amount_crypto,
-          expires_at: expires,
-        })
-        .eq('id', campId)
-
-      await supabase.from('payment_orders').insert({
-        user_id: user.id,
-        campaign_id: campId,
-        amount_usd: effectivePrice,
-        amount_crypto: quote.amount_crypto,
-        unique_suffix: quote.unique_suffix,
-        rate_usd: quote.rate_usd,
-        crypto_chain: chain,
-        pay_code: code,
-        deposit_address: quote.deposit_address || walletDeposits[chain as 'trx' | 'sol' | 'ton'] || envDeposits[chain as 'trx' | 'sol' | 'ton'],
-        expires_at: expires,
-        status: 'awaiting_payment',
+      // Crypto orders are created server-side so the client cannot set its own amount or deposit address.
+      const sessionToken = (await supabase.auth.getSession()).data.session?.access_token || ''
+      const cryptoRes = await fetch('/api/payments/crypto-init', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${sessionToken}` },
+        body: JSON.stringify({ campaignId: campId, chain }),
       })
+      const cryptoOrder = await cryptoRes.json().catch(() => ({}))
+      if (!cryptoRes.ok) throw new Error(cryptoOrder.error || 'Could not create crypto payment')
+      const amountCrypto = Number(cryptoOrder.amount_crypto)
+      const depositAddress = String(cryptoOrder.deposit_address || '')
+      const expires = String(cryptoOrder.expires_at || '')
 
-      setMsg(`Order ${formatMoney(effectivePrice)}. Send exactly ${Number(quote.amount_crypto).toFixed(6)} ${chain.toUpperCase()} within 15 minutes.`)
+      setMsg(`Order ${formatMoney(effectivePrice)}. Send exactly ${amountCrypto.toFixed(6)} ${chain.toUpperCase()} to ${depositAddress} within 15 minutes. Payment reference: ${cryptoOrder.pay_code}.`)
       setTitle('')
       setUrl('')
       setDescription('')
@@ -743,13 +726,13 @@ export default function Promote() {
               </div>
               <Form.Control
                 type="number"
-                min={refCategory === 'regular' ? FREE_STARTER_REFS : 1000}
+                min={isFree ? FREE_STARTER_REFS : 250}
                 step={100}
                 value={referralCount}
                 onChange={(e) => setReferralCount(Math.max(0, parseInt(e.target.value, 10) || 0))}
               />
               <Form.Text className="text-muted">
-                Or type a custom amount. Paid orders: minimum {formatMoney(MIN_ORDER_NGN)}.
+                Or type a custom amount. Paid orders: minimum {formatMoney(MIN_ORDER_NGN)}. Small-business packages start at 250 referrals.
               </Form.Text>
             </Form.Group>
 

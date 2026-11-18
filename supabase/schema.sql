@@ -36,7 +36,7 @@ create table if not exists public.campaigns (
 create table if not exists public.tasks (
   id uuid primary key default gen_random_uuid(),
   campaign_id uuid not null references public.campaigns(id) on delete cascade,
-  reward_amount numeric(10,2) not null default 0.10,
+  reward_amount numeric(10,2) not null default 15,
   wait_seconds int not null default 15,
   active boolean not null default true,
   created_at timestamptz not null default now()
@@ -128,7 +128,7 @@ begin
     raise exception 'not admin';
   end if;
   update campaigns set status = 'approved', approved_at = now() where id = p_campaign_id and status = 'pending_approval';
-  insert into tasks (campaign_id, reward_amount, wait_seconds, active) values (p_campaign_id, 0.10, 15, true);
+  insert into tasks (campaign_id, reward_amount, wait_seconds, active) values (p_campaign_id, 15, 15, true);
 end;
 $$;
 
@@ -142,6 +142,7 @@ begin
   select s.*, t.reward_amount into r from task_submissions s join tasks t on t.id = s.task_id where s.id = p_submission_id and s.status = 'pending';
   if not found then return; end if;
   update task_submissions set status = 'approved', reviewed_at = now() where id = p_submission_id;
+  perform set_config('rs.internal_profile_update','on',true);
   update profiles set balance = balance + r.reward_amount where id = r.user_id;
 end;
 $$;

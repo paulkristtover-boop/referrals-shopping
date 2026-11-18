@@ -68,6 +68,7 @@ begin
     raise exception 'Transaction hash required';
   end if;
 
+  perform set_config('rs.internal_campaign_update','on',true);
   update public.campaigns
   set
     tx_hash = btrim(p_tx_hash),

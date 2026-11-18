@@ -37,6 +37,8 @@ begin
     return;
   end if;
 
+  perform set_config('rs.internal_profile_update','on',true);
+
   if coalesce(p.role, 'user') = 'admin' or coalesce(p.name_verified, false) then
     update public.profiles
       set full_name = next_name,

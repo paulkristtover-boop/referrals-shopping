@@ -12,9 +12,12 @@
 
 1. **Supabase** → SQL Editor → run `supabase/schema.sql`  
 2. Create Storage bucket **`screenshots`** (public)  
-3. Copy project URL + anon key  
+3. Copy project URL + anon key
+4. Run the feature migrations in `supabase/README.md`, including `packages_smallbiz.sql` for the current sustainable NGN pricing.
 
-4. **Vercel** env variables:
+  
+
+5. **Vercel** env variables:
 
 ```
 VITE_SUPABASE_URL=
@@ -24,9 +27,9 @@ VITE_DEPOSIT_SOL=
 VITE_DEPOSIT_TON=
 ```
 
-5. Node.js version on Vercel: **24.x**
+6. Node.js version on Vercel: **24.x**
 
-6. Make admin after register:
+7. Make admin after register:
 
 ```sql
 update profiles set role = 'admin' where email = 'you@example.com';
@@ -42,6 +45,8 @@ npm run dev
 ```
 
 ## Deploy
+
+Vercel detects Vite from `package.json`, installs the project dependencies, runs `npm run build`, and serves the `dist` folder. If detection is not automatic, select **Vite** as the Framework Preset, use `npm run build` as the Build Command, and `dist` as the Output Directory. Keep `package.json` (and preferably a committed `package-lock.json`) in the repository root.
 
 ```bash
 git add -A

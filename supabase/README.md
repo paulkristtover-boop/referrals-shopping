@@ -41,3 +41,9 @@ Auth: **Confirm email = OFF**. Optional MFA for 2FA.
 
 | 23 | `tax_compliance.sql` | VAT lines, invoice numbers, tax settings |
 | 24 | `name_lock.sql` | Display name changes every 14 days; admin verify unlocks once |
+| 25 | `packages_smallbiz.sql` | Current 250+ referral tiers and sustainable ₦15/task economics |
+
+
+## Current package economics
+
+Run `packages_smallbiz.sql` after `packages_ngn.sql` and after the core task/submission tables exist. It is the authoritative package price migration. Each approved referral pays the earner ₦15; current paid packages start at 250 referrals, and the free 50-referral starter is a capped acquisition promotion. The migration preserves the reward on any task that already has submissions.

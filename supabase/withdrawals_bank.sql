@@ -41,6 +41,8 @@ begin
   if bal is null then raise exception 'Profile not found'; end if;
   if bal < p_amount then raise exception 'Insufficient balance'; end if;
 
+  perform set_config('rs.internal_profile_update','on',true);
+  perform set_config('rs.internal_profile_update','on',true);
   update public.profiles set balance = balance - p_amount where id = uid;
 
   insert into public.withdrawals (user_id, amount, crypto_chain, wallet_address, status, method)
@@ -87,6 +89,7 @@ begin
   if bal is null then raise exception 'Profile not found'; end if;
   if bal < p_amount then raise exception 'Insufficient balance'; end if;
 
+  perform set_config('rs.internal_profile_update','on',true);
   update public.profiles set balance = balance - p_amount where id = uid;
 
   insert into public.withdrawals (

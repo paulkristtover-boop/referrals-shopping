@@ -789,11 +789,14 @@ a {
 .social-floats {
   position: fixed;
   right: 1rem;
-  bottom: calc(1rem + env(safe-area-inset-bottom));
+  bottom: calc(5.25rem + env(safe-area-inset-bottom));
   z-index: 1050;
   display: flex;
   flex-direction: column;
   gap: 0.65rem;
+}
+@media (min-width: 992px) {
+  .social-floats { bottom: 1rem; }
 }
 .social-floats .tg-float,
 .ig-float {

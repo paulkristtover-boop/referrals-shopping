@@ -67,8 +67,8 @@ export async function verifyByTxRef(txRef) {
 export function assertWebhookHash(req) {
   const secret = (process.env.FLW_SECRET_HASH || process.env.FLW_WEBHOOK_HASH || '').trim()
   if (!secret) {
-    console.warn('FLW_SECRET_HASH not set — accepting webhook without hash check')
-    return true
+    console.error('FLW_SECRET_HASH is not configured; webhook requests must not be accepted')
+    return false
   }
   const headers = req.headers || {}
   const header =

@@ -52,6 +52,7 @@ language sql
 security definer
 set search_path = public
 as $$
+  perform set_config('rs.internal_profile_update','on',true);
   update public.profiles set last_seen_at = now() where id = auth.uid();
 $$;
 

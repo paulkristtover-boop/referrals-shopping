@@ -31,10 +31,12 @@ begin
     raise exception 'Cannot approve status %', r.status;
   end if;
 
+  perform set_config('rs.internal_submission_update','on',true);
   update public.task_submissions
   set status = 'approved', reviewed_at = now()
   where id = p_submission_id;
 
+  perform set_config('rs.internal_profile_update','on',true);
   update public.profiles
   set balance = balance + r.reward_amount
   where id = r.user_id;

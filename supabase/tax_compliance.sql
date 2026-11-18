@@ -77,6 +77,7 @@ begin
     inv := c.invoice_number;
   end if;
 
+  perform set_config('rs.internal_campaign_update','on',true);
   update public.campaigns set
     tax_rate = coalesce(rate, 0),
     tax_amount = tax,
