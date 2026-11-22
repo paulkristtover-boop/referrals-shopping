@@ -3,10 +3,11 @@
    ═══════════════════════════════════════════ */
 
 :root {
-  /* Nigeria-forward palette: green + warm gold + deep navy AI accent */
+  /* Nigeria-forward palette: green + warm gold + teal AI accent */
   --rs-ng-green: #008751;
   --rs-ng-green-dark: #006b41;
   --rs-ng-gold: #e6b422;
+  --rs-ng-gold-soft: rgba(230, 180, 34, 0.14);
   --rs-primary: #008751;
   --rs-primary-dark: #006b41;
   --rs-primary-soft: rgba(0, 135, 81, 0.12);
@@ -15,15 +16,20 @@
   --rs-success: #008751;
   --rs-success-soft: rgba(0, 135, 81, 0.12);
   --rs-danger: #c41e3a;
+  --rs-danger-soft: rgba(196, 30, 58, 0.12);
   --rs-warning: #c9a227;
+  --rs-warning-soft: rgba(201, 162, 39, 0.14);
   --rs-radius: 1rem;
   --rs-radius-sm: 0.65rem;
-  --rs-shadow: 0 1px 3px rgba(15, 23, 42, 0.06), 0 8px 24px rgba(0, 107, 65, 0.06);
-  --rs-shadow-hover: 0 4px 12px rgba(15, 23, 42, 0.08), 0 16px 40px rgba(0, 135, 81, 0.12);
+  --rs-radius-lg: 1.25rem;
+  --rs-shadow: 0 1px 3px rgba(15, 23, 42, 0.06), 0 8px 24px rgba(0, 107, 65, 0.07);
+  --rs-shadow-hover: 0 6px 16px rgba(15, 23, 42, 0.09), 0 18px 42px rgba(0, 135, 81, 0.14);
   --rs-surface: var(--bs-body-bg);
   --rs-muted: var(--bs-secondary-color);
   --rs-border: color-mix(in srgb, var(--bs-border-color) 85%, transparent);
   --rs-font: "Plus Jakarta Sans", "Inter", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --rs-page-pad: clamp(0.75rem, 2.5vw, 1.25rem);
+  --rs-focus: 0 0 0 3px rgba(0, 135, 81, 0.28);
 }
 
 
@@ -127,7 +133,7 @@ a {
   border-radius: calc(var(--rs-radius) + 0.25rem);
   padding: clamp(2rem, 5vw, 3.25rem) clamp(1.25rem, 4vw, 2rem);
   margin-bottom: 1.5rem;
-  box-shadow: 0 20px 50px rgba(37, 99, 235, 0.28);
+  box-shadow: 0 20px 50px rgba(0, 107, 65, 0.28);
   position: relative;
   overflow: hidden;
 }
@@ -148,7 +154,7 @@ a {
 }
 
 .hero-section .btn-light {
-  color: #1e3a8a;
+  color: #006b41;
   font-weight: 700;
   border: none;
   box-shadow: 0 4px 14px rgba(0, 0, 0, 0.12);
@@ -234,7 +240,7 @@ a {
 .btn-primary {
   background: var(--rs-primary) !important;
   border-color: var(--rs-primary) !important;
-  box-shadow: 0 4px 14px rgba(37, 99, 235, 0.25);
+  box-shadow: 0 4px 14px rgba(0, 135, 81, 0.28);
 }
 
 .btn-primary:hover {
@@ -246,7 +252,7 @@ a {
 .btn-success {
   background: var(--rs-success) !important;
   border-color: var(--rs-success) !important;
-  box-shadow: 0 4px 14px rgba(22, 163, 74, 0.2);
+  box-shadow: 0 4px 14px rgba(0, 135, 81, 0.25);
 }
 
 .btn-outline-primary {
@@ -265,7 +271,7 @@ a {
 .form-control:focus,
 .form-select:focus {
   border-color: var(--rs-primary);
-  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.18);
+  box-shadow: 0 0 0 3px rgba(0, 135, 81, 0.22);
 }
 
 .form-label {
@@ -418,7 +424,7 @@ a {
 
 .admin-main {
   background:
-    radial-gradient(800px 400px at 100% 0%, rgba(37, 99, 235, 0.06), transparent),
+    radial-gradient(800px 400px at 100% 0%, rgba(0, 135, 81, 0.08), transparent),
     #f1f5f9;
   min-height: calc(100vh - 56px);
 }
@@ -829,10 +835,19 @@ a {
 
 /* Dashboard */
 .dash-hero {
-  padding: 1.15rem 1.25rem;
+  padding: 1.25rem 1.35rem;
   border-radius: var(--rs-radius);
-  background: linear-gradient(135deg, var(--rs-primary-soft), transparent 65%);
-  border: 1px solid var(--rs-border);
+  background:
+    linear-gradient(135deg, var(--rs-primary-soft), transparent 62%),
+    linear-gradient(200deg, var(--rs-ng-gold-soft), transparent 55%);
+  border: 1px solid color-mix(in srgb, var(--rs-primary) 22%, var(--rs-border));
+  box-shadow: var(--rs-shadow);
+}
+.dash-hero h1 {
+  letter-spacing: -0.03em;
+}
+.dash-hero .text-primary {
+  color: var(--rs-primary) !important;
 }
 
 /* Offline UX */
@@ -1339,7 +1354,7 @@ main .container-fluid {
   border-radius: 50%;
   border: 2px solid var(--bs-body-bg, #fff);
   margin-left: -10px;
-  background: linear-gradient(135deg, #2563eb, #7c3aed);
+  background: linear-gradient(135deg, #008751, #0f766e);
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -1348,7 +1363,7 @@ main .container-fluid {
   font-weight: 700;
 }
 .avatar-stack .av:first-child { margin-left: 0; }
-.avatar-stack .av.a2 { background: linear-gradient(135deg, #06b6d4, #2563eb); }
+.avatar-stack .av.a2 { background: linear-gradient(135deg, #0f766e, #008751); }
 .avatar-stack .av.a3 { background: linear-gradient(135deg, #f59e0b, #ef4444); }
 .avatar-stack .av.a4 { background: linear-gradient(135deg, #16a34a, #06b6d4); }
 
@@ -1357,12 +1372,12 @@ main .container-fluid {
   display: block;
   height: 4px;
   border-radius: 12px 12px 0 0;
-  background: linear-gradient(90deg, #2563eb, #7c3aed, #06b6d4);
+  background: linear-gradient(90deg, #008751, #0f766e, #e6b422);
   margin: -1px -1px 0;
 }
 
 .pattern-dots {
-  background-image: radial-gradient(rgba(37, 99, 235, 0.12) 1.5px, transparent 1.5px);
+  background-image: radial-gradient(rgba(0, 135, 81, 0.14) 1.5px, transparent 1.5px);
   background-size: 16px 16px;
 }
 
@@ -1502,8 +1517,8 @@ main .container-fluid {
   animation: pulseSoft 1.8s ease infinite;
 }
 @keyframes pulseSoft {
-  0%, 100% { box-shadow: 0 0 0 0 rgba(37, 99, 235, 0.35); }
-  50% { box-shadow: 0 0 0 6px rgba(37, 99, 235, 0); }
+  0%, 100% { box-shadow: 0 0 0 0 rgba(0, 135, 81, 0.35); }
+  50% { box-shadow: 0 0 0 6px rgba(0, 135, 81, 0); }
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -1909,4 +1924,118 @@ body:has(.has-bottom-nav) .rs-toast-stack {
   .admin-side .nav-link {
     width: 100%;
   }
+}
+
+
+/* Progress bars */
+.progress {
+  height: 8px;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--rs-primary) 10%, var(--bs-secondary-bg));
+  overflow: hidden;
+}
+.progress-bar {
+  border-radius: 999px;
+  background: linear-gradient(90deg, var(--rs-primary), var(--rs-ai));
+  transition: width 0.35s cubic-bezier(0.22, 1, 0.36, 1);
+}
+.progress-bar.bg-success,
+.progress-bar.bg-primary {
+  background: linear-gradient(90deg, var(--rs-primary), var(--rs-ai)) !important;
+}
+
+
+/* Unified focus ring */
+.btn:focus-visible,
+.form-control:focus,
+.form-select:focus,
+.nav-link:focus-visible,
+.bottom-tab:focus-visible,
+a:focus-visible {
+  outline: none;
+  box-shadow: var(--rs-focus) !important;
+}
+.btn-primary:focus-visible {
+  box-shadow: var(--rs-focus), 0 4px 14px rgba(0, 135, 81, 0.28) !important;
+}
+
+
+[data-bs-theme="dark"] {
+  --rs-shadow: 0 1px 3px rgba(0, 0, 0, 0.35), 0 8px 24px rgba(0, 135, 81, 0.12);
+  --rs-shadow-hover: 0 6px 18px rgba(0, 0, 0, 0.4), 0 18px 40px rgba(0, 135, 81, 0.18);
+  --rs-border: color-mix(in srgb, var(--bs-border-color) 70%, transparent);
+  --rs-primary-soft: rgba(0, 135, 81, 0.2);
+  --rs-ai-soft: rgba(15, 118, 110, 0.2);
+  --rs-ng-gold-soft: rgba(230, 180, 34, 0.12);
+}
+[data-bs-theme="dark"] .rs-card,
+[data-bs-theme="dark"] .stat-card,
+[data-bs-theme="dark"] .stat-tile,
+[data-bs-theme="dark"] .admin-panel {
+  background: color-mix(in srgb, var(--bs-body-bg) 92%, #0f766e 8%);
+}
+[data-bs-theme="dark"] .dash-hero {
+  border-color: color-mix(in srgb, var(--rs-primary) 35%, var(--rs-border));
+}
+[data-bs-theme="dark"] .empty-state {
+  background: color-mix(in srgb, var(--bs-body-bg) 80%, #0f172a);
+}
+
+
+.package-card {
+  border-radius: var(--rs-radius) !important;
+}
+.package-card-free {
+  box-shadow: 0 4px 18px rgba(0, 135, 81, 0.12);
+}
+.package-card .badge {
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+
+
+/* Subtle skeleton pulse for loading states */
+.skeleton {
+  background: linear-gradient(90deg,
+    color-mix(in srgb, var(--bs-secondary-bg) 80%, transparent) 25%,
+    color-mix(in srgb, var(--rs-primary) 8%, var(--bs-secondary-bg)) 50%,
+    color-mix(in srgb, var(--bs-secondary-bg) 80%, transparent) 75%);
+  background-size: 200% 100%;
+  animation: skeleton-shimmer 1.4s ease-in-out infinite;
+  border-radius: var(--rs-radius-sm);
+}
+@keyframes skeleton-shimmer {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .skeleton { animation: none; }
+}
+
+
+::selection {
+  background: rgba(0, 135, 81, 0.28);
+  color: inherit;
+}
+
+
+/* Notification bell dropdown */
+.notif-bell.dropdown-toggle::after {
+  display: none !important;
+}
+.notif-menu {
+  padding: 0 !important;
+}
+.notif-menu .dropdown-item {
+  white-space: normal;
+}
+.notif-item {
+  transition: background 0.12s ease;
+}
+.notif-item:hover {
+  background: var(--rs-primary-soft);
+}
+.notif-unread {
+  background: var(--rs-primary-soft) !important;
+  border-left: 3px solid var(--rs-primary);
 }

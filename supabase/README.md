@@ -18,7 +18,7 @@ Run in **Supabase → SQL Editor** in this order (skip any already applied):
 | 12 | `public_stats.sql` | Optional homepage stats (optional) |
 | 13 | `campaign_extras.sql` | Optional description + sample screenshot |
 | 14 | `platform_settings.sql` | Admin-editable deposit wallets |
-| 14 | `notifications.sql` | Optional (feature removed from UI) |
+| 14 | `notifications.sql` | In-app notification bell + admin event alerts |
 
 Also create a **Storage** bucket named `screenshots` (public read) for earn proofs.
 

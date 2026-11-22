@@ -8,6 +8,7 @@ import { BRAND, TG, IG, IG_HANDLE } from '../lib/brand'
 import { formatMoney } from '../lib/money'
 import { openWhatsAppUpdate } from '../lib/whatsapp'
 import { useToast } from '../contexts/ToastContext'
+import { notifyUser } from '../lib/notifications'
 
 type TabKey = 'overview' | 'campaigns' | 'submissions' | 'withdrawals' | 'packages' | 'users' | 'settings'
 
@@ -137,6 +138,9 @@ export default function Admin() {
 
   const payBankFlw = async (id: string) => {
     setErr(null)
+    const row = withdrawals.find((w) => String(w.id) === id)
+    const uid = String(row?.user_id || '')
+    const amount = Number(row?.amount || 0)
     try {
       const res = await fetch('/api/payments/flutterwave-transfer', {
         method: 'POST',
@@ -146,6 +150,17 @@ export default function Admin() {
       const j = await res.json()
       if (!res.ok) throw new Error(j.error || 'Transfer failed')
       flash('Flutterwave bank transfer initiated')
+      if (uid) {
+        void notifyUser({
+          userId: uid,
+          title: 'Bank payout started',
+          body: amount > 0
+            ? `We started a bank transfer of ₦${amount.toLocaleString()} via Flutterwave.`
+            : 'We started your bank payout via Flutterwave.',
+          type: 'payment',
+          link: '/wallet',
+        })
+      }
       void load()
     } catch (e) {
       setErr((e as Error).message)
@@ -158,12 +173,24 @@ export default function Admin() {
   }
 
   const approveCampaign = async (id: string) => {
+    const row = campaigns.find((c) => String(c.id) === id)
+    const ownerId = String(row?.user_id || '')
+    const title = String(row?.title || 'Your advert')
     const { error } = await supabase.rpc('admin_approve_campaign', { p_campaign_id: id })
     if (error) {
       await supabase.from('campaigns').update({ status: 'approved', approved_at: new Date().toISOString() }).eq('id', id)
       await supabase.from('tasks').insert({ campaign_id: id, reward_amount: 50, wait_seconds: 15, active: true })
     }
     flash('Campaign approved — tasks live')
+    if (ownerId) {
+      void notifyUser({
+        userId: ownerId,
+        title: 'Advert approved — tasks are live',
+        body: `"${title}" is now earning referrals from the Earn board.`,
+        type: 'success',
+        link: '/dashboard',
+      })
+    }
     try {
       const { data: sess } = await supabase.auth.getSession()
       const token = sess.session?.access_token
@@ -184,31 +211,78 @@ export default function Admin() {
   }
 
   const rejectCampaign = async (id: string) => {
+    const row = campaigns.find((c) => String(c.id) === id)
+    const ownerId = String(row?.user_id || '')
+    const title = String(row?.title || 'Your advert')
     await supabase.from('campaigns').update({ status: 'rejected' }).eq('id', id)
     flash('Campaign rejected')
+    if (ownerId) {
+      void notifyUser({
+        userId: ownerId,
+        title: 'Advert not approved',
+        body: `"${title}" was rejected. Open Promote to fix details or contact support.`,
+        type: 'warning',
+        link: '/promote',
+      })
+    }
     void load()
   }
 
   const approveSub = async (id: string) => {
+    const row = subs.find((s) => String(s.id) === id)
+    const earnerId = String(row?.user_id || '')
+    const reward = Number((row?.tasks as { reward_amount?: number } | undefined)?.reward_amount || 0)
     const { error } = await supabase.rpc('admin_approve_submission', { p_submission_id: id })
     if (error) {
       setErr(error.message + ' — ensure RPCs ran from schema.sql')
       return
     }
     flash('Submission approved & balance credited')
+    if (earnerId) {
+      void notifyUser({
+        userId: earnerId,
+        title: 'Proof approved — balance credited',
+        body: reward > 0 ? `Your earn proof was approved. ₦${reward.toLocaleString()} added to wallet.` : 'Your earn proof was approved.',
+        type: 'success',
+        link: '/wallet',
+      })
+    }
     void load()
   }
 
   const rejectSub = async (id: string) => {
+    const row = subs.find((s) => String(s.id) === id)
+    const earnerId = String(row?.user_id || '')
     await supabase.from('task_submissions').update({ status: 'rejected', reviewed_at: new Date().toISOString() }).eq('id', id)
     flash('Submission rejected')
+    if (earnerId) {
+      void notifyUser({
+        userId: earnerId,
+        title: 'Proof not accepted',
+        body: 'Your screenshot was rejected. Try again with a clearer proof that matches the task rules.',
+        type: 'warning',
+        link: '/earn',
+      })
+    }
     void load()
   }
 
   const payWithdrawal = async (id: string) => {
+    const row = withdrawals.find((w) => String(w.id) === id)
+    const uid = String(row?.user_id || '')
+    const amount = Number(row?.amount || 0)
     const { error } = await supabase.rpc('admin_mark_withdrawal_paid', { p_id: id })
     if (error) { await supabase.from('withdrawals').update({ status: 'paid', processed_at: new Date().toISOString() }).eq('id', id) }
     flash('Marked as paid')
+    if (uid) {
+      void notifyUser({
+        userId: uid,
+        title: 'Withdrawal paid',
+        body: amount > 0 ? `Your withdrawal of ₦${amount.toLocaleString()} was marked paid.` : 'Your withdrawal was marked paid.',
+        type: 'payment',
+        link: '/wallet',
+      })
+    }
     void load()
   }
 
@@ -224,6 +298,17 @@ export default function Admin() {
       setErr(error.message + ' — used fallback reject; prefer withdrawals_safe.sql')
     } else {
       flash('Withdrawal rejected — balance refunded')
+    }
+    if (userId) {
+      void notifyUser({
+        userId,
+        title: 'Withdrawal rejected',
+        body: amount > 0
+          ? `Your withdrawal of ₦${amount.toLocaleString()} was rejected. The amount was returned to your wallet.`
+          : 'Your withdrawal was rejected and returned to your wallet.',
+        type: 'warning',
+        link: '/wallet',
+      })
     }
     void load()
   }

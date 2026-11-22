@@ -9,6 +9,7 @@ import BottomTabBar from './BottomTabBar'
 import OfflineNotice from './OfflineNotice'
 import SlowConnection from './SlowConnection'
 import PageCoach from './PageCoach'
+import NotificationBell from './NotificationBell'
 
 import { TG, IG, IG_HANDLE, BRAND, BRAND_AI, BRAND_TAGLINE, CURRENCY_NOTE } from '../lib/brand'
 
@@ -51,6 +52,7 @@ export default function Layout() {
               <span className="fw-bold">Admin</span>
             </Navbar.Brand>
             <div className="d-flex align-items-center gap-2 ms-auto">
+              <NotificationBell variant="light" />
               <Button size="sm" variant="outline-light" onClick={toggle} className="d-none d-sm-inline-flex">
                 <i className={`bi ${theme === 'dark' ? 'bi-sun' : 'bi-moon'}`} />
               </Button>
@@ -108,6 +110,7 @@ export default function Layout() {
 
           {/* Mobile: compact top actions */}
           <div className="d-flex align-items-center gap-2 d-lg-none ms-auto me-1">
+            {user && <NotificationBell />}
             <Button size="sm" variant="outline-secondary" onClick={toggle}>
               <i className={`bi ${theme === 'dark' ? 'bi-sun' : 'bi-moon'}`} />
             </Button>
@@ -183,7 +186,8 @@ export default function Layout() {
               <a href={IG} target="_blank" rel="noreferrer" className="btn btn-sm btn-outline-danger" title="Instagram">
                 <i className="bi bi-instagram" />
               </a>
-                <Button size="sm" variant="outline-secondary" onClick={toggle}>
+              {user && <NotificationBell />}
+              <Button size="sm" variant="outline-secondary" onClick={toggle}>
                 <i className={`bi ${theme === 'dark' ? 'bi-sun' : 'bi-moon'}`} />
               </Button>
               {user ? (
