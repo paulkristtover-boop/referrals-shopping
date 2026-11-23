@@ -101,10 +101,6 @@ const GUIDES: Record<string, { title: string; steps: GuideStep[] }> = {
       { title: 'Security & billing', body: 'Change password, manage 2FA/sessions, and optional tax details for invoices.' },
     ],
   },
-      { title: 'Billing', body: 'Optional billing name and tax ID appear on invoices. Email cannot be edited here.' },
-      { title: 'Help again', body: 'Use “Show this page guide” any time. Guides also return on their own if you have not seen them for 14 days.' },
-    ],
-  },
   '/support': {
     title: 'Support',
     steps: [
