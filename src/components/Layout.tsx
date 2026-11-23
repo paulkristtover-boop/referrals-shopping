@@ -153,18 +153,6 @@ export default function Layout() {
               </NavItem>
               {user && !isAdmin && (
                 <>
-                  <NavItem to="/receipts" icon="bi-receipt">
-                    Receipts
-                  </NavItem>
-                  <NavItem to="/history" icon="bi-clock-history">
-                    History
-                  </NavItem>
-                  <NavItem to="/proofs" icon="bi-check2-square">
-                    Proofs
-                  </NavItem>
-                  <NavItem to="/invite" icon="bi-people">
-                    Invite
-                  </NavItem>
                   <NavItem to="/support" icon="bi-headset">
                     Support
                   </NavItem>

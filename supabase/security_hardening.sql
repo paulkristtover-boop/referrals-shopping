@@ -93,4 +93,3 @@ create policy withdrawals_no_client_insert on public.withdrawals
 
 -- Explicit grants keep public/anonymous access off private ledgers.
 revoke all on public.payment_orders from anon;
-revoke all on public.bill_payments from anon;

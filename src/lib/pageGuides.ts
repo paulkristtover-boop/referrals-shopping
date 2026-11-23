@@ -75,9 +75,9 @@ const GUIDES: Record<string, { title: string; steps: GuideStep[] }> = {
     ],
   },
   '/history': {
-    title: 'Confirm proofs',
+    title: 'Activity history',
     steps: [
-      { title: 'You review earners', body: 'Accept a clear proof or dispute it. Admin steps in on disputes. This is how your referral count moves.' },
+      { title: 'Your audit trail', body: 'Orders you cancelled, payments confirmed, and other account actions appear here for your records.' },
     ],
   },
   '/proofs': {

@@ -267,8 +267,12 @@ export default function Account() {
                 <span><i className="bi bi-receipt me-2 text-primary" />Receipts</span>
                 <i className="bi bi-chevron-right text-muted" />
               </ListGroup.Item>
-              <ListGroup.Item action as={Link} to="/history" className="d-flex justify-content-between align-items-center">
+              <ListGroup.Item action as={Link} to="/proofs" className="d-flex justify-content-between align-items-center">
                 <span><i className="bi bi-check2-square me-2 text-primary" />Confirm proofs</span>
+                <i className="bi bi-chevron-right text-muted" />
+              </ListGroup.Item>
+              <ListGroup.Item action as={Link} to="/history" className="d-flex justify-content-between align-items-center">
+                <span><i className="bi bi-clock-history me-2 text-primary" />Activity history</span>
                 <i className="bi bi-chevron-right text-muted" />
               </ListGroup.Item>
               <ListGroup.Item action as={Link} to="/invite" className="d-flex justify-content-between align-items-center">
