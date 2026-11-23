@@ -1,8 +1,8 @@
-import { useCallback, useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { Button, Dropdown, Spinner } from 'react-bootstrap'
 import { useAuth } from '../contexts/AuthContext'
-import { supabase, supabaseConfigured } from '../lib/supabase'
+import { supabaseConfigured } from '../lib/supabase'
 import {
   type AppNotification,
   fetchNotifications,
@@ -18,12 +18,15 @@ type Props = {
   className?: string
 }
 
+/**
+ * In-app notifications — polling only (no Supabase Realtime).
+ * Realtime postgres_changes was crashing the app under React remounts.
+ */
 export default function NotificationBell({ variant = 'default', className = '' }: Props) {
   const { user } = useAuth()
   const [items, setItems] = useState<AppNotification[]>([])
   const [loading, setLoading] = useState(false)
   const [open, setOpen] = useState(false)
-  const channelRef = useRef<ReturnType<typeof supabase.channel> | null>(null)
 
   const unread = items.filter((n) => !n.read_at).length
 
@@ -33,47 +36,24 @@ export default function NotificationBell({ variant = 'default', className = '' }
       return
     }
     setLoading(true)
-    const list = await fetchNotifications(40)
-    setItems(list)
-    setLoading(false)
+    try {
+      const list = await fetchNotifications(40)
+      setItems(list)
+    } catch {
+      /* keep previous list */
+    } finally {
+      setLoading(false)
+    }
   }, [user?.id])
 
   useEffect(() => {
+    if (!user) return
     void load()
-  }, [load])
-
-  // Realtime + soft poll fallback
-  useEffect(() => {
-    if (!user || !supabaseConfigured) return
-
-    const channel = supabase
-      .channel(`notif-${user.id}`)
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'notifications',
-          filter: `user_id=eq.${user.id}`,
-        },
-        () => {
-          void load()
-        },
-      )
-      .subscribe()
-
-    channelRef.current = channel
-
-    const poll = window.setInterval(() => void load(), 60_000)
-
-    return () => {
-      window.clearInterval(poll)
-      void supabase.removeChannel(channel)
-      channelRef.current = null
-    }
+    const poll = window.setInterval(() => void load(), 45_000)
+    return () => window.clearInterval(poll)
   }, [user?.id, load])
 
-  const onOpen = async (next: boolean) => {
+  const onOpen = (next: boolean) => {
     setOpen(next)
     if (next) void load()
   }
@@ -95,7 +75,7 @@ export default function NotificationBell({ variant = 'default', className = '' }
   const btnVariant = variant === 'light' ? 'outline-light' : 'outline-secondary'
 
   return (
-    <Dropdown show={open} onToggle={(next) => void onOpen(!!next)} align="end" className={className}>
+    <Dropdown show={open} onToggle={(next) => onOpen(!!next)} align="end" className={className}>
       <Dropdown.Toggle
         as={Button}
         size="sm"
@@ -138,7 +118,11 @@ export default function NotificationBell({ variant = 'default', className = '' }
                     <i className={`bi ${notifIcon(n.type)} text-primary mt-1 flex-shrink-0`} />
                     <div className="min-w-0 flex-grow-1">
                       <div className="fw-semibold small text-truncate">{n.title}</div>
-                      {n.body ? <div className="small text-muted" style={{ whiteSpace: 'pre-wrap' }}>{n.body}</div> : null}
+                      {n.body ? (
+                        <div className="small text-muted" style={{ whiteSpace: 'pre-wrap' }}>
+                          {n.body}
+                        </div>
+                      ) : null}
                       <div className="text-muted" style={{ fontSize: '0.7rem' }}>
                         {relativeTime(n.created_at)}
                       </div>
@@ -160,12 +144,7 @@ export default function NotificationBell({ variant = 'default', className = '' }
                 )
               }
               return (
-                <Dropdown.Item
-                  key={n.id}
-                  as="button"
-                  className="p-0 text-wrap"
-                  onClick={() => void onClickItem(n)}
-                >
+                <Dropdown.Item key={n.id} as="button" className="p-0 text-wrap" onClick={() => void onClickItem(n)}>
                   {body}
                 </Dropdown.Item>
               )
