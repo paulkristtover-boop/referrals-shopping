@@ -96,7 +96,11 @@ const GUIDES: Record<string, { title: string; steps: GuideStep[] }> = {
   '/account': {
     title: 'Account',
     steps: [
-      { title: 'Name', body: 'You can set your name once, then again every 14 days. Admins can always change theirs. A verified unlock lets you change once immediately.' },
+      { title: 'Username', body: 'Your public @handle appears on proofs and invites. Letters, numbers, underscore. First set is free; later changes wait 30 days.' },
+      { title: 'Display name', body: 'How we greet you. Locked for 14 days after each change unless an admin verifies you.' },
+      { title: 'Security & billing', body: 'Change password, manage 2FA/sessions, and optional tax details for invoices.' },
+    ],
+  },
       { title: 'Billing', body: 'Optional billing name and tax ID appear on invoices. Email cannot be edited here.' },
       { title: 'Help again', body: 'Use “Show this page guide” any time. Guides also return on their own if you have not seen them for 14 days.' },
     ],

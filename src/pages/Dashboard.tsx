@@ -151,7 +151,7 @@ export default function Dashboard() {
             <p className="small text-uppercase fw-semibold text-primary mb-1 letter-space">{BRAND}</p>
             <h1 className="mb-1 fw-bold">Your dashboard</h1>
             <p className="text-muted small mb-0">
-              Welcome{profile?.full_name ? `, ${profile.full_name}` : ''} — Promote orders become Earn tasks after approval; delivery follows confirmed proofs.
+              Welcome{profile?.username ? `, @${profile.username}` : profile?.full_name ? `, ${profile.full_name}` : ''} — Promote orders become Earn tasks after approval; delivery follows confirmed proofs.
             </p>
           </div>
           <div className="d-flex flex-wrap gap-2">

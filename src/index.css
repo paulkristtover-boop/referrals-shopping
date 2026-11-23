@@ -2039,3 +2039,43 @@ a:focus-visible {
   background: var(--rs-primary-soft) !important;
   border-left: 3px solid var(--rs-primary);
 }
+
+
+/* Account page */
+.account-page .account-hero {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 1rem;
+  padding: 1.15rem 1.25rem;
+  border-radius: var(--rs-radius, 1rem);
+  border: 1px solid var(--rs-border, rgba(0,0,0,.08));
+  background:
+    linear-gradient(135deg, rgba(0, 135, 81, 0.1), transparent 60%),
+    var(--bs-body-bg);
+  box-shadow: var(--rs-shadow, 0 1px 3px rgba(0,0,0,.06));
+}
+.account-avatar {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 800;
+  font-size: 1.35rem;
+  color: #fff;
+  background: linear-gradient(135deg, #008751, #0f766e);
+  flex-shrink: 0;
+}
+.account-handle {
+  font-weight: 700;
+  color: var(--rs-primary, #008751);
+  letter-spacing: -0.01em;
+}
+.account-id-chip {
+  font-size: 0.8rem;
+  padding: 0.15rem 0.45rem;
+  border-radius: 0.35rem;
+  background: color-mix(in srgb, var(--bs-secondary-bg) 80%, transparent);
+}

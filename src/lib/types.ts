@@ -2,6 +2,8 @@ export type Profile = {
   id: string
   email: string
   full_name: string | null
+  username?: string | null
+  username_changed_at?: string | null
   role: 'user' | 'admin'
   balance: number
   terms_accepted_at: string | null

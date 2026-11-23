@@ -50,3 +50,4 @@ Apply these after the numbered core migrations above:
 | 25 | `packages_smallbiz.sql` | Reconciles active package tiers/prices with the current app and sets the task reward baseline to ₦50 |
 | 27 | `security_hardening.sql` | Protects wallet balances, campaign approval/payment fields, submission reviews and payment-order mutations; run last |
 
+| 28 | `username.sql` | Public @username handles (unique, 30-day change cooldown) |
