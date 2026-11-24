@@ -51,3 +51,5 @@ Apply these after the numbered core migrations above:
 | 27 | `security_hardening.sql` | Protects wallet balances, campaign approval/payment fields, submission reviews and payment-order mutations; run last |
 
 | 28 | `username.sql` | Public @username handles (unique, 30-day change cooldown) |
+
+| 29 | `bet_codes.sql` | Public MSport-style booking codes (admin post; no sure-win claims) |

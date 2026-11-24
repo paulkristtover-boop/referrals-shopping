@@ -113,6 +113,14 @@ const GUIDES: Record<string, { title: string; steps: GuideStep[] }> = {
       { title: 'Read once', body: 'This page is the long version of Promote versus Earn, what counts as a referral, and how long delivery usually takes.' },
     ],
   },
+  '/codes': {
+    title: 'Booking codes',
+    steps: [
+      { title: 'What these are', body: 'Booking codes load selections on MSport. They are not fixed games or guaranteed wins. 18+ only.' },
+      { title: 'How to use', body: 'Copy a code, open MSport, paste into the booking-code field, check every leg, set your own stake.' },
+      { title: 'Affiliate', body: 'Open MSport may use our referral link. We may earn if you register or deposit.' },
+    ],
+  },
   '/faq': {
     title: 'FAQ',
     steps: [

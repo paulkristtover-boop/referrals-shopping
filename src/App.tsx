@@ -8,6 +8,7 @@ import Privacy from './pages/Privacy'
 import Refunds from './pages/Refunds'
 import Legal from './pages/Legal'
 import Faq from './pages/Faq'
+import Codes from './pages/Codes'
 import Support from './pages/Support'
 import Login from './pages/Login'
 import Register from './pages/Register'
@@ -68,6 +69,7 @@ export default function App() {
         <Route index element={<Home />} />
         <Route path="guide" element={<Guide />} />
         <Route path="faq" element={<Faq />} />
+        <Route path="codes" element={<Codes />} />
         <Route path="support" element={<Support />} />
         <Route path="terms" element={<Terms />} />
         <Route path="privacy" element={<Privacy />} />

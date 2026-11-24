@@ -151,6 +151,9 @@ export default function Layout() {
               <NavItem to="/faq" icon="bi-question-circle">
                 FAQ
               </NavItem>
+              <NavItem to="/codes" icon="bi-ticket-perforated">
+                Codes
+              </NavItem>
               {user && !isAdmin && (
                 <>
                   <NavItem to="/support" icon="bi-headset">

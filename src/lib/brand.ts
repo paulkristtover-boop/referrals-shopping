@@ -24,3 +24,11 @@ export const WA_GROUP =
   (typeof import.meta !== 'undefined' && (import.meta as { env?: Record<string, string> }).env?.VITE_WA_GROUP) ||
   ''
 export const WA_UPDATES_ENABLED = Boolean(WA_GROUP)
+
+
+/** MSport affiliate / register link (set VITE_MSPORT_AFFILIATE_URL in Vercel) */
+export const MSPORT_AFFILIATE_URL =
+  (typeof import.meta !== 'undefined' && (import.meta as { env?: Record<string, string> }).env?.VITE_MSPORT_AFFILIATE_URL) ||
+  'https://www.msport.com/ng'
+export const MSPORT_CODES_DISCLAIMER =
+  'Booking codes load selections only. They are not fixed games, sure tips, or guaranteed wins. 18+ only. Bet responsibly.'

@@ -5,12 +5,13 @@ import { supabase, supabaseConfigured } from '../lib/supabase'
 import type { Package } from '../lib/types'
 import { ListFilters, ListPagination, paginate } from '../components/ListControls'
 import { BRAND, TG, IG, IG_HANDLE } from '../lib/brand'
+import AdminBetCodes from '../components/AdminBetCodes'
 import { formatMoney } from '../lib/money'
 import { openWhatsAppUpdate } from '../lib/whatsapp'
 import { useToast } from '../contexts/ToastContext'
 import { notifyUser } from '../lib/notifications'
 
-type TabKey = 'overview' | 'campaigns' | 'submissions' | 'withdrawals' | 'packages' | 'users' | 'settings'
+type TabKey = 'overview' | 'campaigns' | 'submissions' | 'withdrawals' | 'packages' | 'users' | 'codes' | 'settings'
 
 export default function Admin() {
   const [tab, setTab] = useState<TabKey>('overview')
@@ -549,6 +550,7 @@ export default function Admin() {
               ['withdrawals', `Payouts${pendingW ? ` (${pendingW})` : ''}`],
               ['packages', 'Packages'],
               ['users', 'Users'],
+              ['codes', 'Codes'],
               ['settings', 'Settings'],
             ] as [TabKey, string][]
           ).map(([k, label]) => (
@@ -1112,6 +1114,13 @@ export default function Admin() {
             </Modal>
 
             </>
+          )}
+
+          {tab === 'codes' && (
+            <div>
+              <h2 className="h5 fw-bold mb-3">Booking codes</h2>
+              <AdminBetCodes />
+            </div>
           )}
 
           {tab === 'settings' && (
