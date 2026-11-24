@@ -1,8 +1,9 @@
 import { useCallback, useEffect, useState } from 'react'
-import { Alert, Badge, Button, Card, Form, Spinner } from 'react-bootstrap'
+import { Alert, Badge, Button, Card, Spinner } from 'react-bootstrap'
 import { Link } from 'react-router-dom'
 import { supabase, supabaseConfigured } from '../lib/supabase'
 import { BRAND, MSPORT_AFFILIATE_URL, MSPORT_CODES_DISCLAIMER } from '../lib/brand'
+import { useAuth } from '../contexts/AuthContext'
 
 type BetCode = {
   id: string
@@ -25,6 +26,7 @@ function todayLagos() {
 }
 
 export default function Codes() {
+  const { user } = useAuth()
   const [rows, setRows] = useState<BetCode[]>([])
   const [loading, setLoading] = useState(true)
   const [err, setErr] = useState<string | null>(null)
@@ -58,8 +60,8 @@ export default function Codes() {
     setLoading(false)
     if (error) {
       setErr(
-        error.message.includes('bet_codes') || error.message.includes('schema')
-          ? 'Codes table not ready — run supabase/bet_codes.sql'
+        error.message.includes('bet_codes') || error.message.includes('schema') || error.message.includes('relation')
+          ? 'Codes are not live in the database yet. Admin must run supabase/bet_codes.sql in Supabase SQL Editor.'
           : error.message,
       )
       setRows([])
@@ -86,36 +88,62 @@ export default function Codes() {
     <div className="page-enter codes-page">
       <div className="d-flex flex-wrap justify-content-between align-items-start gap-2 mb-2">
         <div>
-          <h1 className="fw-bold mb-1">Booking codes</h1>
+          <h1 className="fw-bold mb-1">Free booking codes</h1>
           <p className="text-muted small mb-0">
-            MSport-style booking codes shared on {BRAND}. Load on MSport, set your own stake.
+            Free MSport-style codes from {BRAND}. No payment. Use them on MSport, then join the marketplace to{' '}
+            <strong>Promote</strong> or <strong>Earn</strong> in Naira.
           </p>
         </div>
-        <Badge bg="secondary" className="align-self-start">
-          18+
+        <Badge bg="success" className="align-self-start">
+          Free · 18+
         </Badge>
       </div>
+
+      {/* Primary product funnel */}
+      <Card className="rs-card rs-card-static mb-3 border-primary">
+        <Card.Body className="py-3">
+          <div className="fw-semibold mb-1">While you’re here — use the platform</div>
+          <p className="small text-muted mb-2 mb-md-3">
+            Codes are a free extra. The main product is referral packages: promoters pay for volume, earners complete
+            tasks and withdraw ₦.
+          </p>
+          <div className="d-flex flex-wrap gap-2">
+            {!user ? (
+              <>
+                <Button as={Link} to="/register" variant="primary">
+                  Create free account
+                </Button>
+                <Button as={Link} to="/login" variant="outline-primary">
+                  Sign in
+                </Button>
+              </>
+            ) : (
+              <>
+                <Button as={Link} to="/earn" variant="primary">
+                  Earn tasks
+                </Button>
+                <Button as={Link} to="/promote" variant="outline-primary">
+                  Promote a link
+                </Button>
+                <Button as={Link} to="/dashboard" variant="outline-secondary">
+                  Dashboard
+                </Button>
+              </>
+            )}
+            <Button as={Link} to="/guide" variant="outline-secondary" size="sm" className="align-self-center">
+              How it works
+            </Button>
+          </div>
+        </Card.Body>
+      </Card>
 
       <Alert variant="warning" className="small">
         <strong>Not fixed games.</strong> {MSPORT_CODES_DISCLAIMER}
       </Alert>
 
-      <div className="d-flex flex-wrap gap-2 mb-3">
-        <Button
-          as="a"
-          href={MSPORT_AFFILIATE_URL}
-          target="_blank"
-          rel="noopener noreferrer sponsored"
-          variant="primary"
-        >
-          <i className="bi bi-box-arrow-up-right me-1" />
-          Open MSport
-        </Button>
-        <Button
-          size="sm"
-          variant={filter === 'today' ? 'dark' : 'outline-secondary'}
-          onClick={() => setFilter('today')}
-        >
+      <div className="d-flex flex-wrap gap-2 mb-3 align-items-center">
+        <span className="small text-muted me-1">Show:</span>
+        <Button size="sm" variant={filter === 'today' ? 'dark' : 'outline-secondary'} onClick={() => setFilter('today')}>
           Today
         </Button>
         <Button
@@ -130,11 +158,6 @@ export default function Codes() {
         </Button>
       </div>
 
-      <p className="small text-muted mb-3">
-        We may earn a commission if you register or deposit via the MSport button (affiliate disclosure).
-        Codes are for convenience only — always check selections before you stake.
-      </p>
-
       {err && <Alert variant="danger">{err}</Alert>}
 
       {loading ? (
@@ -144,8 +167,11 @@ export default function Codes() {
       ) : rows.length === 0 ? (
         <Card className="rs-card rs-card-static">
           <Card.Body className="text-center text-muted py-5">
-            <p className="mb-2">No codes posted for this filter yet.</p>
-            <p className="small mb-0">Check back later, or open MSport for the official booking-code list.</p>
+            <p className="mb-2">No free codes posted for this filter yet.</p>
+            <p className="small mb-3">Check back later — or start on the marketplace now.</p>
+            <Button as={Link} to={user ? '/earn' : '/register'} variant="primary" size="sm">
+              {user ? 'Browse Earn tasks' : 'Create free account'}
+            </Button>
           </Card.Body>
         </Card>
       ) : (
@@ -164,18 +190,18 @@ export default function Codes() {
                     {r.note ? <div className="small text-muted mt-1">{r.note}</div> : null}
                   </div>
                   <div className="d-flex flex-wrap gap-2">
-                    <Button size="sm" variant="outline-primary" onClick={() => void copy(r.code)}>
+                    <Button size="sm" variant="primary" onClick={() => void copy(r.code)}>
                       {copied === r.code ? 'Copied' : 'Copy code'}
                     </Button>
                     <Button
                       size="sm"
-                      variant="primary"
+                      variant="outline-secondary"
                       as="a"
                       href={MSPORT_AFFILIATE_URL}
                       target="_blank"
-                      rel="noopener noreferrer sponsored"
+                      rel="noopener noreferrer"
                     >
-                      Load on MSport
+                      Open MSport
                     </Button>
                   </div>
                 </div>
@@ -186,17 +212,26 @@ export default function Codes() {
       )}
 
       <Card className="rs-card rs-card-static mt-4">
-        <Card.Body className="small text-muted">
-          <strong className="text-body">How to use</strong>
-          <ol className="mb-2 ps-3">
-            <li>Copy a code above.</li>
-            <li>Open MSport (button), sign in, paste into the booking-code field.</li>
-            <li>Review every selection and odds, set your stake, then place only if you accept the risk.</li>
+        <Card.Body className="small">
+          <strong>How to use a code</strong>
+          <ol className="mb-3 ps-3 text-muted">
+            <li>Copy a free code above.</li>
+            <li>Open MSport, paste into the booking-code field.</li>
+            <li>Check every selection, set your own stake — nothing is guaranteed.</li>
           </ol>
-          <p className="mb-0">
-            Looking for referral volume instead?{' '}
-            <Link to="/promote">Promote packages</Link> or <Link to="/earn">Earn tasks</Link> on {BRAND}.
+          <strong>Why this page exists</strong>
+          <p className="text-muted mb-2">
+            Codes are free traffic and goodwill. The business is {BRAND}: buy referral packages or complete earn tasks and
+            withdraw in ₦.
           </p>
+          <div className="d-flex flex-wrap gap-2">
+            <Button as={Link} to={user ? '/promote' : '/register'} size="sm" variant="primary">
+              {user ? 'Promote' : 'Join free'}
+            </Button>
+            <Button as={Link} to={user ? '/earn' : '/guide'} size="sm" variant="outline-primary">
+              {user ? 'Earn' : 'Read the guide'}
+            </Button>
+          </div>
         </Card.Body>
       </Card>
     </div>
