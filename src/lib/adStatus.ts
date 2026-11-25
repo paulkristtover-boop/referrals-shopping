@@ -1,22 +1,10 @@
-/** User-facing campaign status — Ads Manager style, not internal jargon */
-
-export type AdStatusKey =
-  | 'draft'
-  | 'pending_payment'
-  | 'pending_approval'
-  | 'approved'
-  | 'completed'
-  | 'rejected'
-  | 'expired'
-  | 'cancelled'
-  | string
-
 export function adStatusLabel(status: string): string {
   const map: Record<string, string> = {
     draft: 'Draft',
     pending_payment: 'Needs payment',
     pending_approval: 'In review',
     approved: 'Active',
+    paused: 'Paused',
     completed: 'Completed',
     rejected: 'Rejected',
     expired: 'Ended',
@@ -31,6 +19,7 @@ export function adStatusVariant(status: string): string {
     pending_payment: 'warning',
     pending_approval: 'info',
     approved: 'success',
+    paused: 'secondary',
     completed: 'primary',
     rejected: 'danger',
     expired: 'secondary',
@@ -44,11 +33,12 @@ export function adStatusHint(status: string): string {
     draft: 'Finish setup to launch',
     pending_payment: 'Pay to start delivery',
     pending_approval: 'Admin checks payment',
-    approved: 'Earners can complete tasks',
+    approved: 'Live — earners can work',
+    paused: 'Hidden from Earn until you resume',
     completed: 'Target reached',
-    rejected: 'See support if needed',
+    rejected: 'Contact support if needed',
     expired: 'Payment window closed',
-    cancelled: 'Stopped by you or admin',
+    cancelled: 'Stopped',
   }
   return map[status] || ''
 }

@@ -134,6 +134,24 @@ export default function Dashboard() {
   const pg = paginate(filtered, page, pageSize)
 
 
+
+  const pauseAd = async (id: string) => {
+    const { error } = await supabase.rpc('pause_campaign', { p_campaign_id: id })
+    if (error) {
+      setError(error.message.includes('function') ? 'Run supabase/ad_pause_resume.sql' : error.message)
+      return
+    }
+    void load()
+  }
+  const resumeAd = async (id: string) => {
+    const { error } = await supabase.rpc('resume_campaign', { p_campaign_id: id })
+    if (error) {
+      setError(error.message.includes('function') ? 'Run supabase/ad_pause_resume.sql' : error.message)
+      return
+    }
+    void load()
+  }
+
   return (
     <div className="page-enter dash-ads-page">
       <div className="dash-hero home-hero mb-3">
@@ -231,6 +249,7 @@ export default function Dashboard() {
               { value: 'pending_payment', label: 'Needs payment' },
               { value: 'pending_approval', label: 'In review' },
               { value: 'approved', label: 'Active' },
+              { value: 'paused', label: 'Paused' },
               { value: 'completed', label: 'Completed' },
               { value: 'rejected', label: 'Rejected' },
               { value: 'draft', label: 'Draft' },
@@ -265,6 +284,12 @@ export default function Dashboard() {
                         <div className="small text-muted">{done.toLocaleString()} / {goal ? goal.toLocaleString() : '—'} delivered</div>
                       </div>
                       <div className="d-flex flex-column gap-1 align-items-stretch">
+                        {c.status === 'approved' && (
+                          <button type="button" className="btn btn-sm btn-outline-secondary" onClick={() => void pauseAd(c.id)}>Pause</button>
+                        )}
+                        {c.status === 'paused' && (
+                          <button type="button" className="btn btn-sm btn-primary" onClick={() => void resumeAd(c.id)}>Resume</button>
+                        )}
                         {(c.status === 'pending_payment' || c.status === 'draft') && (
                           <Link to="/promote" className="btn btn-sm btn-primary">Continue</Link>
                         )}

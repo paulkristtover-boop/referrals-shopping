@@ -1,7 +1,5 @@
 /**
- * Vercel Hobby-compatible API router.
- * Keep implementation modules in /server/api so Vercel deploys only this
- * catch-all entry point as a Serverless Function.
+ * Catch-all API router (backup). Prefer explicit /api/payments/*.js routes.
  */
 const routes = {
   'payments/check': () => import('../server/api/payments/check.js'),
@@ -16,14 +14,22 @@ const routes = {
 }
 
 export default async function handler(req, res) {
-  const rawPath = req.query?.path
-  const path = (Array.isArray(rawPath) ? rawPath : [rawPath])
-    .filter(Boolean)
-    .join('/')
-    .replace(/^\/+|\/+$/g, '')
+  res.setHeader('Access-Control-Allow-Origin', '*')
+  if (req.method === 'OPTIONS') return res.status(200).end()
+
+  let path = ''
+  const q = req.query?.path
+  if (Array.isArray(q)) path = q.filter(Boolean).join('/')
+  else if (typeof q === 'string') path = q
+  else if (req.url) {
+    path = String(req.url).split('?')[0].replace(/^\/api\//, '').replace(/^\//, '')
+  }
+  path = path.replace(/^\/+|\/+$/g, '')
 
   const load = routes[path]
-  if (!load) return res.status(404).json({ error: 'API route not found' })
+  if (!load) {
+    return res.status(404).json({ error: 'API route not found', path, hint: 'Use /api/payments/flutterwave-init etc.' })
+  }
 
   try {
     const module = await load()
@@ -34,7 +40,7 @@ export default async function handler(req, res) {
   } catch (error) {
     console.error(`API route failed: ${path}`, error)
     if (!res.headersSent) {
-      return res.status(500).json({ error: 'Internal server error' })
+      return res.status(500).json({ error: error.message || 'Internal server error' })
     }
   }
 }
