@@ -11,6 +11,7 @@ import { ListFilters, ListPagination, paginate } from '../components/ListControl
 import { BRAND } from '../lib/brand'
 import { formatMoney } from '../lib/money'
 import { CountUp, Reveal } from '../components/Animated'
+import PageHeader from '../components/PageHeader'
 
 function errMsg(e: unknown): string {
   if (!e) return 'Failed to load'
@@ -149,7 +150,7 @@ export default function Dashboard() {
         <div className="d-flex flex-wrap justify-content-between align-items-start gap-3">
           <div>
             <p className="small text-uppercase fw-semibold text-primary mb-1 letter-space">{BRAND}</p>
-            <h1 className="mb-1 fw-bold">Your dashboard</h1>
+            <PageHeader title="Home" lead="Your overview on Referrals Shopping." />
             <p className="text-muted small mb-0">
               Welcome{profile?.username ? `, @${profile.username}` : profile?.full_name ? `, ${profile.full_name}` : ''} — Promote orders become Earn tasks after approval; delivery follows confirmed proofs.
             </p>

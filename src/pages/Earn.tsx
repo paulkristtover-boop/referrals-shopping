@@ -6,6 +6,7 @@ import { supabase, supabaseConfigured } from '../lib/supabase'
 import type { Task } from '../lib/types'
 import { BRAND } from '../lib/brand'
 import { formatMoney } from '../lib/money'
+import PageHeader from '../components/PageHeader'
 
 type TaskRow = Task & { campaigns?: { title: string; target_url: string; status: string; user_id?: string } }
 
@@ -157,7 +158,7 @@ export default function Earn() {
 
   return (
     <div className="page-enter">
-      <h1 className="mb-2 fw-bold">Earn</h1>
+      <PageHeader title="Earn" lead="Complete live tasks from paid ads. Wait the timer, upload proof, get paid in ₦." />
       <p className="text-muted mb-3">
         You supply the actions that fill Promote orders. Open a task link, wait the timer, upload a clear screenshot.
         Poster or admin reviews proof → wallet credit. You cannot earn on your own adverts.

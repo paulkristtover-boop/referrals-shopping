@@ -1,16 +1,20 @@
 import type { ReactNode } from 'react'
 
-export default function EmptyState({ children, className = '' }: { children: ReactNode; className?: string }) {
+type Props = {
+  children: ReactNode
+  className?: string
+  icon?: string
+  title?: string
+}
+
+export default function EmptyState({ children, className = '', icon = 'bi-inbox', title }: Props) {
   return (
     <div className={`empty-state ${className}`.trim()}>
-      <img
-        className="empty-state-art"
-        src="/illustrations/empty.svg"
-        alt=""
-        width={200}
-        height={140}
-      />
-      <div>{children}</div>
+      <div className="feature-tile-icon mx-auto mb-2" style={{ width: '3rem', height: '3rem', fontSize: '1.35rem' }}>
+        <i className={`bi ${icon}`} aria-hidden />
+      </div>
+      {title ? <div className="fw-semibold text-body mb-1">{title}</div> : null}
+      <div className="small">{children}</div>
     </div>
   )
 }

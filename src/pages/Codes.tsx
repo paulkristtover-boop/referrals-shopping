@@ -4,6 +4,7 @@ import { Link } from 'react-router-dom'
 import { supabase, supabaseConfigured } from '../lib/supabase'
 import { BRAND, MSPORT_AFFILIATE_URL, MSPORT_CODES_DISCLAIMER } from '../lib/brand'
 import { useAuth } from '../contexts/AuthContext'
+import PageHeader from '../components/PageHeader'
 
 type BetCode = {
   id: string
@@ -88,12 +89,8 @@ export default function Codes() {
     <div className="page-enter codes-page">
       <div className="d-flex flex-wrap justify-content-between align-items-start gap-2 mb-2">
         <div>
-          <h1 className="fw-bold mb-1">Free booking codes</h1>
-          <p className="text-muted small mb-0">
-            Free MSport-style codes from {BRAND}. No payment. Use them on MSport, then join the marketplace to{' '}
-            <strong>Promote</strong> or <strong>Earn</strong> in Naira.
-          </p>
-        </div>
+          <PageHeader title="Free booking codes" lead="Free codes to engage — then run ads or Earn on the marketplace." />
+</div>
         <Badge bg="success" className="align-self-start">
           Free · 18+
         </Badge>

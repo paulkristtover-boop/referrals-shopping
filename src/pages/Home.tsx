@@ -37,8 +37,8 @@ export default function Home() {
   const isAdmin = profile?.role === 'admin'
 
   return (
-    <div className="page-enter">
-      <div className="hero-section text-center position-relative">
+    <div className="page-enter home-page">
+      <div className="hero home-hero-section text-center position-relative">
         <FloatBlobs />
         <div className="ng-flag-bar" aria-hidden />
         <div className="hero-with-art">

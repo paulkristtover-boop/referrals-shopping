@@ -25,6 +25,7 @@ import {
 import type { Campaign, Package } from '../lib/types'
 import EmptyState from '../components/EmptyState'
 import { useToast } from '../contexts/ToastContext'
+import PageHeader from '../components/PageHeader'
 
 type PayOrder = {
   id: string
@@ -669,7 +670,7 @@ export default function Promote() {
 
   return (
     <>
-      <h1 className="mb-2 fw-bold">Promote</h1>
+      <PageHeader title="My Ads" lead="Create small budgets and track delivery — like Facebook or Google ads, for referrals." />
       <p className="text-muted mb-3">
         Buy referral volume for sites, channels, bots, or groups. Your link becomes <strong>Earn tasks</strong> after payment and admin approval.
         <strong>Regular</strong> = signup only. <strong>Investment</strong> = signup + deposit. Minimum paid order ₦1,000. Pay with Flutterwave (₦) or crypto.

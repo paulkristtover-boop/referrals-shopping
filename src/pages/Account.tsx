@@ -6,6 +6,7 @@ import { supabase, supabaseConfigured } from '../lib/supabase'
 import { formatMoney } from '../lib/money'
 import { NAME_COOLDOWN_MS } from '../lib/pageGuides'
 import { BRAND } from '../lib/brand'
+import PageHeader from '../components/PageHeader'
 
 const USERNAME_COOLDOWN_MS = 30 * 24 * 60 * 60 * 1000
 
@@ -208,9 +209,8 @@ export default function Account() {
     <div className="page-enter account-page">
       <div className="d-flex flex-wrap justify-content-between align-items-start gap-2 mb-3">
         <div>
-          <h1 className="fw-bold mb-1">Account</h1>
-          <p className="text-muted small mb-0">Identity, billing, security, and shortcuts for {BRAND}.</p>
-        </div>
+          <PageHeader title="Account" lead="Profile, wallet, security, and settings." />
+</div>
         <Button size="sm" variant="outline-primary" onClick={() => window.dispatchEvent(new Event('rs-replay-guide'))}>
           <i className="bi bi-question-circle me-1" />
           Page guide

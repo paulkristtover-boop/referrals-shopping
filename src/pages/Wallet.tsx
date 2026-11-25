@@ -8,6 +8,7 @@ import { formatMoney } from '../lib/money'
 import EmptyState from '../components/EmptyState'
 import { useToast } from '../contexts/ToastContext'
 import { NG_BANKS_FALLBACK } from '../lib/ngBanks'
+import PageHeader from '../components/PageHeader'
 
 type W = {
   id: string
@@ -203,7 +204,7 @@ export default function Wallet() {
 
   return (
     <div className="page-enter">
-      <h1 className="mb-1 fw-bold">Wallet</h1>
+      <PageHeader title="Wallet" lead="Balance in ₦. Withdraw to Nigerian bank or crypto. Minimum ₦1,000." />
       <p className="text-muted mb-4">
         Balance in <strong>₦ Naira</strong> on {BRAND}. Withdraw to <strong>Nigerian bank</strong> (Flutterwave) or crypto.
         Minimum {formatMoney(MIN_NGN)}.
