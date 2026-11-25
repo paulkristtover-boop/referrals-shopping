@@ -567,9 +567,9 @@ export default function Promote() {
       }
       const desc = description.trim() || null
 
-      // Free Starter — one per account, no crypto payment
+      // Free trial — one per account, no crypto payment
       if (isFree) {
-        if (freeUsed) throw new Error('You already used your Free Starter (50 referrals). Choose a paid amount.')
+        if (freeUsed) throw new Error('You already used your free trial. Choose a paid plan.')
         const { error: freeErr } = await supabase.rpc('claim_free_starter', {
           p_title: title,
           p_target_url: url,
@@ -581,7 +581,7 @@ export default function Promote() {
           const { error: e2 } = await supabase.rpc('claim_free_starter', { p_title: title, p_target_url: url })
           if (e2) throw new Error(freeErr.message)
         }
-        setMsg('Free Starter activated — import { useEffect, useState, useRef } from 'react'
+        setMsg('Free trial activated — import { useEffect, useState, useRef } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import { Alert, Button, Card, Form, Spinner, Badge } from 'react-bootstrap'
 import { ListFilters, ListPagination, paginate } from '../components/ListControls'
@@ -1150,9 +1150,9 @@ export default function Promote() {
       }
       const desc = description.trim() || null
 
-      // Free Starter — one per account, no crypto payment
+      // Free trial — one per account, no crypto payment
       if (isFree) {
-        if (freeUsed) throw new Error('You already used your Free Starter (50 referrals). Choose a paid amount.')
+        if (freeUsed) throw new Error('You already used your free trial. Choose a paid plan.')
         const { error: freeErr } = await supabase.rpc('claim_free_starter', {
           p_title: title,
           p_target_url: url,
@@ -1285,12 +1285,12 @@ export default function Promote() {
       </p>
       {!freeUsed && packages.some((x) => Number(x.price_usd) === 0) && (
         <Alert variant="info" className="py-2">
-          <i className="bi bi-gift me-1" /> Free Starter available — 50 referrals, regular sites only, once per account.
+          <i className="bi bi-gift me-1" /> Free trial available — 5 signup results, once per account (signup ads only).
         </Alert>
       )}
       {freeUsed && (
         <Alert variant="secondary" className="py-2 small">
-          Free Starter already used on this account. Upgrade with a paid package for more volume.
+          Free trial already used on this account. Upgrade with a paid package for more volume.
         </Alert>
       )}
       {err && (
@@ -1313,7 +1313,7 @@ export default function Promote() {
                   type="button"
                   size="sm"
                   variant={refCategory === 'regular' ? 'primary' : 'outline-primary'}
-                  onClick={() => { setRefCategory('regular'); setReferralCount(25) }}
+                  onClick={() => { setRefCategory('regular'); setReferralCount(20) }}
                 >
                   Signup only
                 </Button>
@@ -1321,7 +1321,7 @@ export default function Promote() {
                   type="button"
                   size="sm"
                   variant={refCategory === 'gambling' ? 'primary' : 'outline-primary'}
-                  onClick={() => { setRefCategory('gambling'); setReferralCount(25) }}
+                  onClick={() => { setRefCategory('gambling'); setReferralCount(20) }}
                 >
                   Signup + deposit
                 </Button>
@@ -1430,14 +1430,14 @@ export default function Promote() {
               </Form.Group>
             )}
             {isFree && (
-              <p className="small text-muted">No payment needed for Free Starter. One claim per account.</p>
+              <p className="small text-muted">No payment needed for Free trial. One claim per account.</p>
             )}
             <div className="d-flex flex-wrap gap-2">
               <Button type="submit" disabled={creating || (isFree && freeUsed) || (!isFree && effectivePrice < MIN_ORDER_NGN)} variant={isFree ? 'success' : 'primary'}>
                 {creating
                   ? 'Working…'
                   : isFree
-                    ? 'Claim Free Starter (50 referrals)'
+                    ? 'Start free trial (5 results)'
                     : payMethod === 'flutterwave'
                       ? 'Pay with Flutterwave'
                       : 'Create ad (crypto)'}
@@ -1727,12 +1727,12 @@ export default function Promote() {
       </p>
       {!freeUsed && packages.some((x) => Number(x.price_usd) === 0) && (
         <Alert variant="info" className="py-2">
-          <i className="bi bi-gift me-1" /> Free Starter available — 50 referrals, regular sites only, once per account.
+          <i className="bi bi-gift me-1" /> Free trial available — 5 signup results, once per account (signup ads only).
         </Alert>
       )}
       {freeUsed && (
         <Alert variant="secondary" className="py-2 small">
-          Free Starter already used on this account. Upgrade with a paid package for more volume.
+          Free trial already used on this account. Upgrade with a paid package for more volume.
         </Alert>
       )}
       {err && (
@@ -1755,7 +1755,7 @@ export default function Promote() {
                   type="button"
                   size="sm"
                   variant={refCategory === 'regular' ? 'primary' : 'outline-primary'}
-                  onClick={() => { setRefCategory('regular'); setReferralCount(25) }}
+                  onClick={() => { setRefCategory('regular'); setReferralCount(20) }}
                 >
                   Signup only
                 </Button>
@@ -1763,7 +1763,7 @@ export default function Promote() {
                   type="button"
                   size="sm"
                   variant={refCategory === 'gambling' ? 'primary' : 'outline-primary'}
-                  onClick={() => { setRefCategory('gambling'); setReferralCount(25) }}
+                  onClick={() => { setRefCategory('gambling'); setReferralCount(20) }}
                 >
                   Signup + deposit
                 </Button>
@@ -1872,14 +1872,14 @@ export default function Promote() {
               </Form.Group>
             )}
             {isFree && (
-              <p className="small text-muted">No payment needed for Free Starter. One claim per account.</p>
+              <p className="small text-muted">No payment needed for Free trial. One claim per account.</p>
             )}
             <div className="d-flex flex-wrap gap-2">
               <Button type="submit" disabled={creating || (isFree && freeUsed) || (!isFree && effectivePrice < MIN_ORDER_NGN)} variant={isFree ? 'success' : 'primary'}>
                 {creating
                   ? 'Working…'
                   : isFree
-                    ? 'Claim Free Starter (50 referrals)'
+                    ? 'Start free trial (5 results)'
                     : payMethod === 'flutterwave'
                       ? 'Pay with Flutterwave'
                       : 'Create ad (crypto)'}

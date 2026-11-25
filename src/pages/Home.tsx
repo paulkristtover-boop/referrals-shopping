@@ -27,7 +27,7 @@ const TRUST = [
   { icon: 'bi-person-plus', label: 'Regular = signup only' },
   { icon: 'bi-safe2', label: 'Gambling = + deposit' },
   { icon: 'bi-currency-bitcoin', label: 'TRX · SOL · TON' },
-  { icon: 'bi-gift', label: 'Free Starter 50' },
+  { icon: 'bi-gift', label: 'Free trial 5' },
   { icon: 'bi-shield-check', label: '70% active target' },
 ]
 
