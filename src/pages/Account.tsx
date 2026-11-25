@@ -206,16 +206,17 @@ export default function Account() {
   const initial = (profile?.full_name || profile?.username || user.email || '?').slice(0, 1).toUpperCase()
 
   return (
-    <div className="page-enter account-page">
-      <div className="d-flex flex-wrap justify-content-between align-items-start gap-2 mb-3">
-        <div>
-          <PageHeader title="Account" lead="Profile, wallet, security, and settings." />
-</div>
-        <Button size="sm" variant="outline-primary" onClick={() => window.dispatchEvent(new Event('rs-replay-guide'))}>
-          <i className="bi bi-question-circle me-1" />
-          Page guide
-        </Button>
-      </div>
+    <div className="page-enter account-page fx-account">
+      <PageHeader
+        title="Account"
+        lead="Identity · wallet · security — your control center."
+        actions={
+          <Button size="sm" variant="outline-primary" className="fx-btn-ghost" onClick={() => window.dispatchEvent(new Event('rs-replay-guide'))}>
+            <i className="bi bi-question-circle me-1" />
+            Guide
+          </Button>
+        }
+      />
 
       {err && (
         <Alert variant="danger" onClose={() => setErr(null)} dismissible>
@@ -229,8 +230,8 @@ export default function Account() {
       )}
 
       {/* Hero */}
-      <div className="account-hero mb-3">
-        <div className="account-avatar" aria-hidden>
+      <div className="account-hero fx-panel fx-glow mb-3">
+        <div className="account-avatar fx-avatar" aria-hidden>
           {initial}
         </div>
         <div className="min-w-0 flex-grow-1">
@@ -276,7 +277,7 @@ export default function Account() {
       </div>
 
       {/* Wallet merged into Account */}
-      <Card className="rs-card rs-card-static mb-3 border-primary">
+      <Card className="rs-card rs-card-static fx-panel fx-wallet mb-3">
         <Card.Body className="py-3">
           <div className="d-flex flex-wrap justify-content-between align-items-center gap-2">
             <div>
@@ -302,7 +303,7 @@ export default function Account() {
       <Row className="g-3 mb-3">
         {/* Identity */}
         <Col lg={6}>
-          <Card className="rs-card rs-card-static h-100">
+          <Card className="rs-card rs-card-static fx-panel h-100">
             <Card.Body>
               <h2 className="h5 fw-bold mb-1">
                 <i className="bi bi-person-badge me-2 text-primary" />
@@ -379,7 +380,7 @@ export default function Account() {
 
         {/* Security */}
         <Col lg={6}>
-          <Card className="rs-card rs-card-static h-100 mb-3">
+          <Card className="rs-card rs-card-static fx-panel h-100 mb-3">
             <Card.Body>
               <h2 className="h5 fw-bold mb-1">
                 <i className="bi bi-shield-lock me-2 text-primary" />
@@ -468,7 +469,7 @@ export default function Account() {
       </Row>
 
       {/* Shortcuts */}
-      <Card className="rs-card rs-card-static mb-3">
+      <Card className="rs-card rs-card-static fx-panel mb-3">
         <Card.Header className="fw-semibold bg-transparent">Shortcuts</Card.Header>
         <ListGroup variant="flush">
           {profile?.role !== 'admin' && (
@@ -543,7 +544,7 @@ export default function Account() {
         </ListGroup>
       </Card>
 
-      <Card className="rs-card rs-card-static border-danger mb-4">
+      <Card className="rs-card rs-card-static fx-panel fx-danger mb-4">
         <Card.Body>
           <h2 className="h5 fw-bold text-danger mb-2">
             <i className="bi bi-box-arrow-right me-2" />

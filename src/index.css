@@ -2558,3 +2558,275 @@ a:focus-visible {
     transform: none;
   }
 }
+
+/* ═══════════════════════════════════════════
+   FUTURISTIC THEME — glass · glow · grid
+   ═══════════════════════════════════════════ */
+
+:root {
+  --fx-cyan: #22d3ee;
+  --fx-mint: #34d399;
+  --fx-violet: #a78bfa;
+  --fx-glow: 0 0 24px rgba(0, 135, 81, 0.35), 0 0 48px rgba(34, 211, 238, 0.12);
+  --fx-glass: color-mix(in srgb, var(--bs-body-bg) 55%, transparent);
+  --fx-grid: rgba(0, 135, 81, 0.06);
+}
+
+body {
+  background-color: var(--bs-body-bg);
+  background-image:
+    linear-gradient(var(--fx-grid) 1px, transparent 1px),
+    linear-gradient(90deg, var(--fx-grid) 1px, transparent 1px),
+    radial-gradient(ellipse 80% 50% at 50% -20%, rgba(0, 135, 81, 0.18), transparent 55%),
+    radial-gradient(ellipse 60% 40% at 100% 0%, rgba(34, 211, 238, 0.08), transparent 45%),
+    radial-gradient(ellipse 50% 30% at 0% 100%, rgba(230, 180, 34, 0.07), transparent 40%);
+  background-size:
+    48px 48px,
+    48px 48px,
+    auto,
+    auto,
+    auto;
+  background-attachment: fixed;
+}
+
+[data-bs-theme="dark"] body {
+  --fx-grid: rgba(52, 211, 153, 0.05);
+  background-image:
+    linear-gradient(var(--fx-grid) 1px, transparent 1px),
+    linear-gradient(90deg, var(--fx-grid) 1px, transparent 1px),
+    radial-gradient(ellipse 90% 55% at 50% -25%, rgba(0, 135, 81, 0.28), transparent 55%),
+    radial-gradient(ellipse 50% 40% at 100% 10%, rgba(34, 211, 238, 0.12), transparent 50%),
+    radial-gradient(ellipse 40% 30% at 0% 90%, rgba(167, 139, 250, 0.08), transparent 45%);
+  background-size: 40px 40px, 40px 40px, auto, auto, auto;
+  background-attachment: fixed;
+}
+
+/* Glass panels */
+.fx-panel,
+.account-page .rs-card,
+.fx-account .rs-card {
+  background:
+    linear-gradient(145deg, color-mix(in srgb, var(--bs-body-bg) 78%, transparent), color-mix(in srgb, var(--bs-body-bg) 92%, transparent)) !important;
+  backdrop-filter: blur(16px) saturate(1.4);
+  -webkit-backdrop-filter: blur(16px) saturate(1.4);
+  border: 1px solid color-mix(in srgb, var(--rs-primary) 22%, var(--rs-border)) !important;
+  box-shadow:
+    0 4px 24px rgba(15, 23, 42, 0.06),
+    inset 0 1px 0 rgba(255, 255, 255, 0.06) !important;
+  border-radius: 1.15rem !important;
+  position: relative;
+  overflow: hidden;
+}
+
+.fx-panel::before,
+.account-hero.fx-panel::before {
+  content: "";
+  position: absolute;
+  inset: 0 0 auto 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(52, 211, 153, 0.55), rgba(34, 211, 238, 0.4), transparent);
+  pointer-events: none;
+  z-index: 1;
+}
+
+.fx-glow {
+  box-shadow: var(--fx-glow), inset 0 1px 0 rgba(255, 255, 255, 0.08) !important;
+}
+
+.fx-wallet {
+  background:
+    linear-gradient(135deg, rgba(0, 135, 81, 0.14), rgba(34, 211, 238, 0.06) 50%, transparent),
+    color-mix(in srgb, var(--bs-body-bg) 80%, transparent) !important;
+  border-color: color-mix(in srgb, var(--rs-primary) 40%, transparent) !important;
+}
+
+.fx-wallet .fs-3 {
+  background: linear-gradient(90deg, #008751, #0d9488, #22d3ee);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent !important;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.03em;
+}
+
+.fx-danger {
+  border-color: color-mix(in srgb, var(--rs-danger) 35%, var(--rs-border)) !important;
+}
+
+/* Account hero */
+.account-hero {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 1rem;
+  padding: 1.15rem 1.25rem;
+}
+
+.fx-avatar,
+.account-avatar {
+  width: 3.5rem;
+  height: 3.5rem;
+  border-radius: 1rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 800;
+  font-size: 1.35rem;
+  color: #fff;
+  background: linear-gradient(145deg, #00a86b, #0f766e 55%, #0891b2);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--rs-primary) 25%, transparent), 0 8px 20px rgba(0, 135, 81, 0.35);
+  flex-shrink: 0;
+}
+
+.account-handle {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  color: var(--fx-mint);
+  text-shadow: 0 0 12px rgba(52, 211, 153, 0.35);
+}
+
+.account-id-chip {
+  font-family: ui-monospace, monospace;
+  border: 1px solid color-mix(in srgb, var(--rs-primary) 25%, transparent);
+  background: color-mix(in srgb, var(--rs-primary) 10%, transparent);
+  border-radius: 0.4rem;
+  padding: 0.15rem 0.45rem;
+}
+
+/* Futuristic inputs */
+.fx-account .form-control,
+.fx-account .form-select,
+.fx-account .input-group-text {
+  background: color-mix(in srgb, var(--bs-body-bg) 70%, transparent) !important;
+  border-color: color-mix(in srgb, var(--rs-primary) 18%, var(--bs-border-color)) !important;
+  border-radius: 0.75rem !important;
+}
+.fx-account .form-control:focus {
+  border-color: var(--fx-cyan) !important;
+  box-shadow: 0 0 0 3px rgba(34, 211, 238, 0.2), 0 0 20px rgba(0, 135, 81, 0.15) !important;
+}
+.fx-account .input-group .form-control {
+  border-top-left-radius: 0 !important;
+  border-bottom-left-radius: 0 !important;
+}
+.fx-account .input-group-text {
+  border-top-right-radius: 0 !important;
+  border-bottom-right-radius: 0 !important;
+  color: var(--fx-mint);
+}
+
+/* Primary CTAs with neon edge */
+.btn-primary {
+  position: relative;
+  background: linear-gradient(135deg, #00b36a 0%, #008751 45%, #0f766e 100%) !important;
+  border: 1px solid color-mix(in srgb, #34d399 50%, transparent) !important;
+  box-shadow:
+    0 0 16px rgba(0, 135, 81, 0.35),
+    inset 0 1px 0 rgba(255, 255, 255, 0.2) !important;
+  text-shadow: 0 1px 0 rgba(0, 0, 0, 0.15);
+}
+.btn-primary:hover {
+  box-shadow:
+    0 0 28px rgba(52, 211, 153, 0.45),
+    inset 0 1px 0 rgba(255, 255, 255, 0.25) !important;
+  filter: brightness(1.05);
+}
+
+.fx-btn-ghost {
+  border-color: color-mix(in srgb, var(--rs-primary) 40%, transparent) !important;
+  backdrop-filter: blur(8px);
+}
+
+/* Shortcuts list — rail style */
+.fx-account .list-group-item {
+  background: transparent !important;
+  border-color: color-mix(in srgb, var(--rs-border) 80%, transparent) !important;
+  padding: 0.85rem 1rem;
+  transition: background 0.15s, padding-left 0.15s;
+}
+.fx-account .list-group-item:hover {
+  background: color-mix(in srgb, var(--rs-primary) 8%, transparent) !important;
+  padding-left: 1.15rem;
+}
+.fx-account .list-group-item i.bi {
+  filter: drop-shadow(0 0 6px rgba(52, 211, 153, 0.4));
+}
+
+/* Section titles with scan line */
+.fx-account .h5.fw-bold {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  letter-spacing: -0.02em;
+}
+.fx-account .h5.fw-bold .bi {
+  color: var(--fx-mint);
+  filter: drop-shadow(0 0 8px rgba(52, 211, 153, 0.5));
+}
+
+/* Bottom nav futuristic */
+.bottom-tab-bar {
+  border: 1px solid color-mix(in srgb, var(--rs-primary) 30%, transparent) !important;
+  box-shadow:
+    0 8px 32px rgba(0, 0, 0, 0.12),
+    0 0 24px rgba(0, 135, 81, 0.15),
+    inset 0 1px 0 rgba(255, 255, 255, 0.08) !important;
+}
+.bottom-tab.active {
+  background: linear-gradient(180deg, rgba(0, 135, 81, 0.2), rgba(34, 211, 238, 0.08)) !important;
+  box-shadow: 0 0 16px rgba(0, 135, 81, 0.2);
+}
+.bottom-tab.active .bottom-tab-icon {
+  filter: drop-shadow(0 0 6px rgba(52, 211, 153, 0.7));
+}
+
+/* Top nav */
+.rs-navbar.top-nav {
+  border-bottom: 1px solid color-mix(in srgb, var(--rs-primary) 15%, transparent) !important;
+  box-shadow: 0 0 40px rgba(0, 135, 81, 0.06);
+}
+
+/* Page header accent */
+.page-header h1 {
+  background: linear-gradient(105deg, var(--bs-body-color) 0%, var(--bs-body-color) 40%, #0f766e 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+}
+[data-bs-theme="dark"] .page-header h1 {
+  background: linear-gradient(105deg, #f8fafc 0%, #a7f3d0 55%, #22d3ee 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+/* Cards globally slightly glass */
+.rs-card {
+  backdrop-filter: blur(10px);
+}
+
+/* Floating status badges */
+.badge.text-bg-secondary {
+  background: color-mix(in srgb, #64748b 35%, transparent) !important;
+  border: 1px solid rgba(148, 163, 184, 0.35);
+  backdrop-filter: blur(6px);
+}
+
+/* Subtle noise overlay on account only */
+.fx-account::after {
+  content: "";
+  pointer-events: none;
+  position: fixed;
+  inset: 0;
+  opacity: 0.035;
+  z-index: 0;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+.fx-account > * {
+  position: relative;
+  z-index: 1;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .btn-primary:hover {
+    filter: none;
+  }
+}
