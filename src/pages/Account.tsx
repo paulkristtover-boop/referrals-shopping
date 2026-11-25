@@ -275,6 +275,30 @@ export default function Account() {
         </div>
       </div>
 
+      {/* Wallet merged into Account */}
+      <Card className="rs-card rs-card-static mb-3 border-primary">
+        <Card.Body className="py-3">
+          <div className="d-flex flex-wrap justify-content-between align-items-center gap-2">
+            <div>
+              <div className="text-muted small text-uppercase" style={{ letterSpacing: '0.04em' }}>
+                Wallet balance
+              </div>
+              <div className="fs-3 fw-bold text-success lh-1">{formatMoney(profile?.balance || 0)}</div>
+              <div className="small text-muted mt-1">Withdraw to Nigerian bank or crypto from here.</div>
+            </div>
+            <div className="d-flex flex-wrap gap-2">
+              <Button as={Link} to="/wallet" variant="primary" size="sm">
+                <i className="bi bi-wallet2 me-1" />
+                Open wallet
+              </Button>
+              <Button as={Link} to="/wallet" variant="outline-primary" size="sm">
+                Withdraw
+              </Button>
+            </div>
+          </div>
+        </Card.Body>
+      </Card>
+
       <Row className="g-3 mb-3">
         {/* Identity */}
         <Col lg={6}>

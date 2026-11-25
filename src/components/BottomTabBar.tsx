@@ -6,7 +6,6 @@ type Tab = { to: string; icon: string; label: string; end?: boolean }
 export default function BottomTabBar() {
   const { user, profile } = useAuth()
 
-  // Guests: free codes as primary engagement entry
   if (!user) {
     const guestTabs: Tab[] = [
       { to: '/', icon: 'bi-house', label: 'Home', end: true },
@@ -27,12 +26,12 @@ export default function BottomTabBar() {
     return <TabBar tabs={adminTabs} />
   }
 
-  // Members: Codes is its own tab (free engagement → Earn/Promote)
+  // Members: My Ads replaces Wallet tab; wallet lives under Account
   const tabs: Tab[] = [
     { to: '/dashboard', icon: 'bi-speedometer2', label: 'Home' },
     { to: '/codes', icon: 'bi-ticket-perforated', label: 'Codes' },
     { to: '/earn', icon: 'bi-cash-coin', label: 'Earn' },
-    { to: '/wallet', icon: 'bi-wallet2', label: 'Wallet' },
+    { to: '/promote', icon: 'bi-megaphone', label: 'My Ads' },
     { to: '/account', icon: 'bi-person-circle', label: 'Account' },
   ]
   return <TabBar tabs={tabs} />

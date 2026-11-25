@@ -41,7 +41,7 @@ const GUIDES: Record<string, { title: string; steps: GuideStep[] }> = {
     ],
   },
   '/promote': {
-    title: 'Promote',
+    title: 'My Ads',
     steps: [
       { title: 'Create an order', body: 'Pick Regular or Investment, choose how many referrals, paste your link, then pay with Flutterwave or crypto.' },
       { title: 'After you pay', body: 'Admin approves the link. It becomes Earn tasks. You confirm proofs. Delivery follows real completions, not a fixed clock.' },

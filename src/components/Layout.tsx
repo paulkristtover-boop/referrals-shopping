@@ -130,13 +130,10 @@ export default function Layout() {
                     Dashboard
                   </NavItem>
                   <NavItem to="/promote" icon="bi-megaphone">
-                    Promote
+                    My Ads
                   </NavItem>
                   <NavItem to="/earn" icon="bi-cash-coin">
                     Earn
-                  </NavItem>
-                  <NavItem to="/wallet" icon="bi-wallet2">
-                    Wallet
                   </NavItem>
                 </>
               )}
