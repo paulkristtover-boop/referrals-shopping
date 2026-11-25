@@ -4,7 +4,7 @@ import Logo from '../components/Logo'
 import { useAuth } from '../contexts/AuthContext'
 import { BRAND, BRAND_TAGLINE, BRAND_SUB, BRAND_AI, TG, IG, IG_HANDLE, CURRENCY_NOTE } from '../lib/brand'
 import { formatMoney } from '../lib/money'
-import { REGULAR_PACKAGES, INVESTMENT_PACKAGES, FREE_STARTER_REFS } from '../lib/pricing'
+import { REGULAR_PACKAGES, INVESTMENT_PACKAGES, FREE_STARTER_REFS, perReferralNgn } from '../lib/pricing'
 import { FloatBlobs, Reveal, Stagger } from '../components/Animated'
 
 const REGULAR_PACKS = [
@@ -173,6 +173,7 @@ export default function Home() {
                 <div className="small text-muted mb-2">referrals</div>
                 <div className="fw-bold mb-1">{p.name}</div>
                 <div className="package-price mb-2">{p.free ? <span className="text-success">₦0</span> : formatMoney(p.price)}</div>
+                <div className="small text-muted mb-2">{p.free ? 'Once per account' : `~${formatMoney(perReferralNgn(p.price, p.refs))} / referral`}</div>
                 <div className="small text-muted mt-auto">No deposit required</div>
               </Card.Body>
             </Card>
@@ -190,6 +191,7 @@ export default function Home() {
                 <div className="small text-muted mb-2">referrals</div>
                 <div className="fw-bold mb-1">{p.name}</div>
                 <div className="package-price mb-2">{formatMoney(p.price)}</div>
+                <div className="small text-muted mb-2">~{formatMoney(perReferralNgn(p.price, p.refs))} / referral</div>
                 <div className="small text-muted mt-auto">Must deposit</div>
               </Card.Body>
             </Card>

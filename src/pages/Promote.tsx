@@ -7,6 +7,7 @@ import ShareOrder from '../components/ShareOrder'
 import { useAuth } from '../contexts/AuthContext'
 import { deposits as envDeposits, loadDeposits, supabase, supabaseConfigured } from '../lib/supabase'
 import { formatMoney } from '../lib/money'
+import PackagePicker from '../components/PackagePicker'
 import {
   type RefCategory,
   REGULAR_PACKAGES,
@@ -16,6 +17,9 @@ import {
   priceForReferrals,
   isFreeStarter,
   nameForReferrals,
+  orderSummaryLine,
+  perReferralNgn,
+  categoryHint,
 } from '../lib/pricing'
 import type { Campaign, Package } from '../lib/types'
 import EmptyState from '../components/EmptyState'
@@ -692,8 +696,9 @@ export default function Promote() {
         <Card.Body>
           <h5 className="fw-bold">New order</h5>
           <Form onSubmit={create}>
+            {/* 1 · What counts as a referral */}
             <Form.Group className="mb-3">
-              <Form.Label>Type</Form.Label>
+              <Form.Label className="fw-semibold">1. What should count?</Form.Label>
               <div className="d-flex flex-wrap gap-2">
                 <Button
                   type="button"
@@ -701,7 +706,7 @@ export default function Promote() {
                   variant={refCategory === 'regular' ? 'primary' : 'outline-primary'}
                   onClick={() => { setRefCategory('regular'); setReferralCount(1000) }}
                 >
-                  Regular (signup only)
+                  Signup only
                 </Button>
                 <Button
                   type="button"
@@ -709,63 +714,47 @@ export default function Promote() {
                   variant={refCategory === 'gambling' ? 'primary' : 'outline-primary'}
                   onClick={() => { setRefCategory('gambling'); setReferralCount(1000) }}
                 >
-                  Investment / deposit
+                  Signup + deposit
                 </Button>
               </div>
-              <Form.Text className="text-muted">Sites, channels, bots, and groups</Form.Text>
+              <Form.Text className="text-muted d-block mt-1">{categoryHint(refCategory)}</Form.Text>
             </Form.Group>
 
+            {/* 2 · Package grid — price at a glance */}
             <Form.Group className="mb-3">
-              <Form.Label>How many referrals?</Form.Label>
-              <div className="d-flex flex-wrap gap-2 mb-2">
-                {refCategory === 'regular' && (
-                  <Button
-                    type="button"
-                    size="sm"
-                    variant={referralCount === FREE_STARTER_REFS ? 'success' : 'outline-success'}
-                    disabled={freeUsed}
-                    onClick={() => setReferralCount(FREE_STARTER_REFS)}
-                  >
-                    Free 50{freeUsed ? ' (used)' : ''}
-                  </Button>
-                )}
-                {(refCategory === 'regular' ? REGULAR_PACKAGES : INVESTMENT_PACKAGES).map((pkg) => (
-                  <Button
-                    key={pkg.referrals}
-                    type="button"
-                    size="sm"
-                    variant={referralCount === pkg.referrals ? 'primary' : 'outline-secondary'}
-                    onClick={() => setReferralCount(pkg.referrals)}
-                  >
-                    {pkg.name} · {pkg.referrals.toLocaleString()}
-                  </Button>
-                ))}
-              </div>
-              <Form.Control
-                type="number"
-                min={refCategory === 'regular' ? FREE_STARTER_REFS : 1000}
-                step={100}
-                value={referralCount}
-                onChange={(e) => setReferralCount(Math.max(0, parseInt(e.target.value, 10) || 0))}
+              <Form.Label className="fw-semibold">2. How many referrals?</Form.Label>
+              <PackagePicker
+                category={refCategory}
+                packages={refCategory === 'regular' ? REGULAR_PACKAGES : INVESTMENT_PACKAGES}
+                selectedRefs={referralCount}
+                onSelect={setReferralCount}
+                freeUsed={freeUsed}
+                showFree={refCategory === 'regular'}
               />
-              <Form.Text className="text-muted">
-                Or type a custom amount. Paid orders: minimum {formatMoney(MIN_ORDER_NGN)}.
-              </Form.Text>
             </Form.Group>
 
-            <Alert variant={isFree ? 'success' : 'light'} className="py-2 border">
-              <div className="d-flex justify-content-between align-items-center flex-wrap gap-2">
-                <span>
-                  <strong>{nameForReferrals(referralCount, refCategory)}</strong>
-                  {' · '}
-                  <strong>{referralCount.toLocaleString()}</strong> referrals ·{' '}
-                  {refCategory === 'gambling' ? 'deposit type' : 'signup only'}
-                </span>
-                <span className="fs-5 fw-bold text-primary">
-                  {isFree ? 'FREE' : formatMoney(effectivePrice)}
-                </span>
+            {/* Glance summary */}
+            <div className="order-glance" role="status">
+              <div className="order-glance-item">
+                <span>Referrals</span>
+                <strong>{referralCount.toLocaleString()}</strong>
               </div>
-            </Alert>
+              <div className="order-glance-item">
+                <span>You pay</span>
+                <strong className="text-primary">{isFree ? 'FREE' : formatMoney(effectivePrice)}</strong>
+              </div>
+              <div className="order-glance-item">
+                <span>Per referral</span>
+                <strong>
+                  {isFree || !referralCount
+                    ? '—'
+                    : formatMoney(perReferralNgn(effectivePrice, referralCount))}
+                </strong>
+              </div>
+            </div>
+            <p className="small text-muted mb-3">
+              {orderSummaryLine(referralCount, isFree ? 0 : effectivePrice, refCategory)}. Your link becomes Earn tasks after payment + admin approval.
+            </p>
             <Form.Group className="mb-3">
               <Form.Label>Title</Form.Label>
               <Form.Control value={title} onChange={(e) => setTitle(e.target.value)} required placeholder="e.g. My app invite" />
@@ -893,19 +882,23 @@ export default function Promote() {
           <Card key={c.id} className="rs-card rs-card-static mb-3">
             <Card.Body>
               <div className="d-flex justify-content-between flex-wrap gap-2">
-                <div>
+                <div className="min-w-0 flex-grow-1">
                   <strong>{c.title}</strong>
-                  <div className="small text-muted">
-                    {formatMoney(c.paid_amount || 0)} · {(c.crypto_chain || '').toUpperCase()}
+                  <div className="advert-status-row text-muted">
+                    <span>{formatMoney(c.paid_amount || 0)}</span>
+                    <span>·</span>
+                    <span>{(c.packages as { category?: string } | undefined)?.category === 'gambling' ? 'Deposit refs' : 'Signup refs'}</span>
+                    <span>·</span>
+                    <span>{Number((c as { referrals_delivered?: number }).referrals_delivered || 0).toLocaleString()} / {(c.packages as { referrals?: number } | undefined)?.referrals?.toLocaleString?.() || '—'}</span>
                   </div>
-                  <a href={c.target_url} target="_blank" rel="noreferrer" className="small">
+                  <a href={c.target_url} target="_blank" rel="noreferrer" className="small text-break">
                     Open link
                   </a>
                 </div>
                 <OrderTimeline
                   status={c.status}
                   delivered={Number((c as { referrals_delivered?: number }).referrals_delivered || 0)}
-                  goal={undefined}
+                  goal={Number((c.packages as { referrals?: number } | undefined)?.referrals || 0) || undefined}
                 />
               </div>
               {order && (c.status === 'pending_payment' || order.status === 'awaiting_payment') && order.crypto_chain !== 'ngn_flw' && (

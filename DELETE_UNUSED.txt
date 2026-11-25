@@ -1,0 +1,4 @@
+Delete these if still present (no longer used):
+  supabase/bill_payments.sql
+  supabase/public_stats.sql
+  supabase/drafts_and_ngn.sql

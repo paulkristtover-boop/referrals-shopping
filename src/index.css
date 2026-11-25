@@ -2079,3 +2079,93 @@ a:focus-visible {
   border-radius: 0.35rem;
   background: color-mix(in srgb, var(--bs-secondary-bg) 80%, transparent);
 }
+
+
+/* —— Package picker (at-a-glance pricing) —— */
+.package-picker-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(118px, 1fr));
+  gap: 0.6rem;
+}
+.pkg-tile {
+  text-align: left;
+  border: 1.5px solid var(--rs-border, rgba(0,0,0,.1));
+  border-radius: 0.85rem;
+  padding: 0.75rem 0.7rem;
+  background: var(--bs-body-bg);
+  transition: border-color .15s, box-shadow .15s, transform .12s;
+  cursor: pointer;
+}
+.pkg-tile:hover:not(:disabled) {
+  border-color: var(--rs-primary, #008751);
+  transform: translateY(-1px);
+}
+.pkg-tile-active {
+  border-color: var(--rs-primary, #008751);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--rs-primary, #008751) 22%, transparent);
+  background: color-mix(in srgb, var(--rs-primary, #008751) 6%, var(--bs-body-bg));
+}
+.pkg-tile-disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+.pkg-tile-refs {
+  font-size: 1.25rem;
+  font-weight: 800;
+  line-height: 1.1;
+  letter-spacing: -0.02em;
+}
+.pkg-tile-label {
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--bs-secondary-color);
+  margin-bottom: 0.35rem;
+}
+.pkg-tile-price {
+  font-weight: 700;
+  font-size: 0.95rem;
+}
+.pkg-tile-unit {
+  font-size: 0.72rem;
+  color: var(--bs-secondary-color);
+}
+.order-glance {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.5rem;
+  padding: 0.85rem 1rem;
+  border-radius: 0.85rem;
+  background: color-mix(in srgb, var(--rs-primary, #008751) 8%, var(--bs-body-bg));
+  border: 1px solid color-mix(in srgb, var(--rs-primary, #008751) 18%, transparent);
+  margin-bottom: 1rem;
+}
+.order-glance-item strong {
+  display: block;
+  font-size: 1.05rem;
+}
+.order-glance-item span {
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  color: var(--bs-secondary-color);
+}
+.advert-status-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem 0.75rem;
+  align-items: center;
+  font-size: 0.85rem;
+}
+.advert-progress-wrap {
+  height: 6px;
+  border-radius: 99px;
+  background: var(--bs-secondary-bg);
+  overflow: hidden;
+  margin-top: 0.35rem;
+}
+.advert-progress-bar {
+  height: 100%;
+  background: linear-gradient(90deg, #008751, #0f766e);
+  border-radius: 99px;
+}
