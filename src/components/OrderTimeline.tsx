@@ -1,21 +1,23 @@
 import { Badge } from 'react-bootstrap'
+import { adStatusLabel, adStatusVariant } from '../lib/adStatus'
 
 const STEPS = [
   { key: 'pending_payment', label: 'Pay' },
-  { key: 'pending_approval', label: 'Confirm' },
-  { key: 'approved', label: 'Promoting' },
+  { key: 'pending_approval', label: 'Review' },
+  { key: 'approved', label: 'Active' },
   { key: 'completed', label: 'Done' },
 ] as const
 
 function stepIndex(status: string): number {
-  if (status === 'rejected' || status === 'expired') return -1
+  if (status === 'rejected' || status === 'expired' || status === 'cancelled') return -1
   if (status === 'completed') return 3
   if (status === 'approved') return 2
   if (status === 'pending_approval') return 1
-  if (status === 'pending_payment') return 0
+  if (status === 'pending_payment' || status === 'draft') return 0
   return 0
 }
 
+/** Compact pipeline: Pay → Review → Active → Done */
 export default function OrderTimeline({
   status,
   delivered,
@@ -26,13 +28,13 @@ export default function OrderTimeline({
   goal?: number
 }) {
   const idx = stepIndex(status)
-  const failed = status === 'rejected' || status === 'expired'
+  const failed = status === 'rejected' || status === 'expired' || status === 'cancelled'
 
   return (
     <div className="order-timeline">
       {failed ? (
-        <Badge bg="danger" className="badge-status">
-          {status}
+        <Badge bg={adStatusVariant(status)} className="badge-status">
+          {adStatusLabel(status)}
         </Badge>
       ) : (
         <div className="d-flex align-items-center gap-1 flex-wrap">
@@ -41,12 +43,8 @@ export default function OrderTimeline({
             const active = idx === i && status !== 'completed'
             return (
               <span key={s.key} className="d-inline-flex align-items-center gap-1">
-                {i > 0 && <span className="text-muted">→</span>}
-                <span
-                  className={`order-step ${done ? 'done' : ''} ${active ? 'active' : ''}`}
-                >
-                  {s.label}
-                </span>
+                {i > 0 && <span className="text-muted small">→</span>}
+                <span className={`order-step ${done ? 'done' : ''} ${active ? 'active' : ''}`}>{s.label}</span>
               </span>
             )
           })}
@@ -54,7 +52,7 @@ export default function OrderTimeline({
       )}
       {typeof goal === 'number' && goal > 0 && (status === 'approved' || status === 'completed') && (
         <div className="small text-muted mt-1">
-          Delivered {Number(delivered || 0).toLocaleString()} / {goal.toLocaleString()}
+          {Number(delivered || 0).toLocaleString()} / {goal.toLocaleString()} delivered
         </div>
       )}
     </div>

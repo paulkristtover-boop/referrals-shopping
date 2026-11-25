@@ -1,17 +1,16 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { Card, Row, Col, Table, Spinner, Alert, Badge, ProgressBar } from 'react-bootstrap'
+import { Card, Row, Col, Spinner, Alert, Badge, ProgressBar, Button } from 'react-bootstrap'
 import { useAuth } from '../contexts/AuthContext'
 import { supabase, supabaseConfigured } from '../lib/supabase'
 import type { Campaign, Package, Submission } from '../lib/types'
 import FirstSessionGuide from '../components/FirstSessionGuide'
-import OrderTimeline from '../components/OrderTimeline'
 import ShareOrder from '../components/ShareOrder'
 import { ListFilters, ListPagination, paginate } from '../components/ListControls'
 import { BRAND } from '../lib/brand'
 import { formatMoney } from '../lib/money'
-import { CountUp, Reveal } from '../components/Animated'
 import PageHeader from '../components/PageHeader'
+import { adStatusLabel, adStatusVariant, adStatusHint } from '../lib/adStatus'
 
 function errMsg(e: unknown): string {
   if (!e) return 'Failed to load'
@@ -22,26 +21,16 @@ function errMsg(e: unknown): string {
 }
 
 function statusBadge(status: string) {
-  const s = status.replace(/_/g, ' ')
-  const map: Record<string, string> = {
-    pending_payment: 'warning',
-    pending_approval: 'info',
-    approved: 'success',
-    rejected: 'danger',
-    expired: 'secondary',
-    pending: 'warning',
-    paid: 'success',
-  }
   return (
-    <Badge bg={map[status] || 'secondary'} className="badge-status">
-      {s}
+    <Badge bg={adStatusVariant(status)} className="badge-status">
+      {adStatusLabel(status)}
     </Badge>
   )
 }
 
 function ruleLabel(cat?: string) {
-  if (cat === 'gambling') return 'Account + deposit'
-  return 'Signup only'
+  if (cat === 'gambling') return 'Deposit'
+  return 'Signup'
 }
 
 type CampRow = Campaign & {
@@ -144,277 +133,152 @@ export default function Dashboard() {
   })
   const pg = paginate(filtered, page, pageSize)
 
+
   return (
-    <div className="page-enter">
-      <div className="dash-hero mb-4">
-        <div className="d-flex flex-wrap justify-content-between align-items-start gap-3">
-          <div>
-            <p className="small text-uppercase fw-semibold text-primary mb-1 letter-space">{BRAND}</p>
-            <PageHeader title="Home" lead="Your overview on Referrals Shopping." />
-            <p className="text-muted small mb-0">
-              Welcome{profile?.username ? `, @${profile.username}` : profile?.full_name ? `, ${profile.full_name}` : ''} — Promote orders become Earn tasks after approval; delivery follows confirmed proofs.
-            </p>
-          </div>
-          <div className="d-flex flex-wrap gap-2">
-            <Link to="/promote" className="btn btn-primary btn-sm">
-              <i className="bi bi-shop me-1" />
-              Promote
-            </Link>
-            <Link to="/earn" className="btn btn-success btn-sm">
-              <i className="bi bi-cash-coin me-1" />
-              Earn
-            </Link>
-            <Link to="/account" className="btn btn-outline-secondary btn-sm">
-              <i className="bi bi-person-circle me-1" />
-              Account
-            </Link>
-          </div>
-        </div>
+    <div className="page-enter dash-ads-page">
+      <div className="dash-hero home-hero mb-3">
+        <PageHeader
+          title="Home"
+          lead="Wallet, active ads, and quick actions — manage campaigns under My Ads."
+          actions={
+            <div className="d-flex flex-wrap gap-2">
+              <Link to="/promote" className="btn btn-primary btn-sm">
+                <i className="bi bi-megaphone me-1" />
+                My Ads
+              </Link>
+              <Link to="/earn" className="btn btn-outline-primary btn-sm">
+                <i className="bi bi-cash-coin me-1" />
+                Earn
+              </Link>
+            </div>
+          }
+        />
+        <p className="text-muted small mb-0">
+          Hi{profile?.username ? ` @${profile.username}` : profile?.full_name ? `, ${profile.full_name}` : ''} — pay a small budget, get approval, earners deliver signups or deposits.
+        </p>
       </div>
 
       <FirstSessionGuide />
 
       {error && (
         <Alert variant="warning">
-          <strong>Could not load data:</strong> {error}
+          <strong>Could not load:</strong> {error}
         </Alert>
       )}
 
-      <Row className="g-3 mb-4">
-        <Col xs={6} md={4} lg={2}>
-          <div className="stat-card h-100">
-            <div className="text-muted small">Wallet</div>
+      {/* KPI row — 4 max, clear */}
+      <Row className="g-2 g-md-3 mb-4">
+        <Col xs={6} md={3}>
+          <div className="stat-card h-100 fx-panel">
+            <div className="text-muted small">Balance</div>
             <div className="stat-value">{formatMoney(profile?.balance || 0)}</div>
-            <Link to="/wallet" className="small">
-              Withdraw →
-            </Link>
+            <Link to="/account" className="small">Wallet in Account →</Link>
           </div>
         </Col>
-        <Col xs={6} md={4} lg={2}>
-          <div className="stat-card h-100">
-            <div className="text-muted small">Live adverts</div>
+        <Col xs={6} md={3}>
+          <div className="stat-card h-100 fx-panel">
+            <div className="text-muted small">Active ads</div>
             <div className="stat-value">{activeAds}</div>
-            <span className="small text-muted">Approved</span>
+            <span className="small text-muted">Running now</span>
           </div>
         </Col>
-        <Col xs={6} md={4} lg={2}>
-          <div className="stat-card h-100">
-            <div className="text-muted small">Need payment</div>
+        <Col xs={6} md={3}>
+          <div className="stat-card h-100 fx-panel">
+            <div className="text-muted small">Action needed</div>
             <div className="stat-value">{awaitingPay}</div>
-            <Link to="/promote" className="small">
-              Pay now →
-            </Link>
+            <Link to="/promote" className="small">Review in My Ads →</Link>
           </div>
         </Col>
-        <Col xs={6} md={4} lg={2}>
-          <div className="stat-card h-100">
-            <div className="text-muted small">Referrals ordered</div>
-            <div className="stat-value">{totalOrdered.toLocaleString()}</div>
-            <span className="small text-muted">Across packages</span>
-          </div>
-        </Col>
-        <Col xs={6} md={4} lg={2}>
-          <div className="stat-card h-100">
+        <Col xs={6} md={3}>
+          <div className="stat-card h-100 fx-panel">
             <div className="text-muted small">Delivered</div>
             <div className="stat-value">{totalDelivered.toLocaleString()}</div>
-            <span className="small text-muted">Marked by admin</span>
-          </div>
-        </Col>
-        <Col xs={6} md={4} lg={2}>
-          <div className="stat-card h-100">
-            <div className="text-muted small">Free Starter</div>
-            <div className="stat-value" style={{ fontSize: '1.15rem' }}>
-              {freeUsed ? 'Used' : 'Available'}
-            </div>
-            <span className="small text-muted">{freeUsed ? '50 regular claimed' : '50 signup-only'}</span>
+            <span className="small text-muted">of {totalOrdered.toLocaleString()} ordered</span>
           </div>
         </Col>
       </Row>
 
-      <Row className="g-3 mb-4">
-        <Col md={12}>
-          <Alert variant="light" className="border h-100 mb-0 py-3">
-            <strong className="d-block mb-1">{BRAND} referral rules</strong>
-            <span className="small text-muted">
-              <Badge bg="primary" className="me-1">
-                Regular
-              </Badge>
-              counts when someone <em>creates an account</em> via your link (no deposit).
-              <Badge bg="danger" className="ms-2 me-1">
-                Gambling
-              </Badge>
-              counts when they <em>sign up and deposit</em>.
-            </span>
-          </Alert>
-        </Col>
-        
-      </Row>
-
+      {/* Ads overview — cards only, no spreadsheet */}
       <div className="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-2">
-        <h2 className="h4 fw-bold mb-0">
-          <i className="bi bi-badge-ad me-2 text-primary" />
-          My referral adverts
-        </h2>
+        <h2 className="h5 fw-bold mb-0">Your ads</h2>
         <Link to="/promote" className="btn btn-primary btn-sm">
           <i className="bi bi-plus-lg me-1" />
-          New package order
+          Create ad
         </Link>
       </div>
-
-      {campaigns.length > 0 && (
-        <ListFilters
-          search={search}
-          onSearch={setSearch}
-          placeholder="Title, URL, package…"
-          status={status}
-          onStatus={setStatus}
-          statusOptions={[
-            { value: 'all', label: 'All statuses' },
-            { value: 'pending_payment', label: 'Awaiting payment' },
-            { value: 'pending_approval', label: 'Payment submitted' },
-            { value: 'approved', label: 'Promoting' },
-            { value: 'completed', label: 'Completed' },
-            { value: 'rejected', label: 'Rejected' },
-            { value: 'expired', label: 'Expired' },
-          ]}
-          pageSize={pageSize}
-          onPageSize={setPageSize}
-        />
-      )}
+      <p className="small text-muted mb-3">
+        Each ad = budget + your link. Status is simple: Needs payment → In review → Active → Completed.
+      </p>
 
       {campaigns.length === 0 ? (
-        <div className="empty-state mb-4">
-          <p className="mb-1 fw-semibold">No referral packages ordered yet</p>
-          <p className="small text-muted mb-3">Start with Free Starter (50 signup-only) or a paid {BRAND} package.</p>
-          <Link to="/promote" className="btn btn-primary btn-sm">
-            Promote
-          </Link>
-        </div>
+        <Card className="rs-card rs-card-static fx-panel mb-4">
+          <Card.Body className="text-center py-4">
+            <p className="mb-2 fw-semibold">No ads yet</p>
+            <p className="small text-muted mb-3">Start with a free trial or a small ₦800+ budget.</p>
+            <Link to="/promote" className="btn btn-primary btn-sm">Create your first ad</Link>
+          </Card.Body>
+        </Card>
       ) : (
         <>
-          <div className="d-none d-md-block mb-2">
-            <Card className="rs-card rs-card-static">
-              <Table responsive hover className="mb-0 align-middle">
-                <thead>
-                  <tr>
-                    <th>Advert</th>
-                    <th>Package</th>
-                    <th>Rule</th>
-                    <th>Progress</th>
-                    <th>Status</th>
-                    <th></th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {pg.slice.map((c) => {
-                    const goal = c.packages?.referrals || 0
-                    const done = Number(c.referrals_delivered || 0)
-                    const pct =
-                      goal > 0 ? Math.min(100, Math.round((done / goal) * 100)) : c.status === 'approved' ? 5 : 0
-                    const isGamble = c.packages?.category === 'gambling'
-                    return (
-                      <tr key={c.id}>
-                        <td>
-                          <div className="fw-semibold">{c.title}</div>
-                          <a
-                            href={c.target_url}
-                            target="_blank"
-                            rel="noreferrer"
-                            className="small text-truncate d-inline-block"
-                            style={{ maxWidth: 220 }}
-                          >
-                            {c.target_url}
-                          </a>
-                        </td>
-                        <td>
-                          <div className="fw-semibold small">{c.packages?.name || '—'}</div>
-                          <div className="text-muted small">
-                            {goal ? `${goal.toLocaleString()} refs` : ''}
-                            {c.paid_amount != null ? ` · ${formatMoney(c.paid_amount)}` : ''}
-                          </div>
-                        </td>
-                        <td>
-                          <Badge bg={isGamble ? 'danger' : 'primary'} className="badge-status">
-                            {ruleLabel(c.packages?.category)}
-                          </Badge>
-                        </td>
-                        <td style={{ minWidth: 130 }}>
-                          <div className="small mb-1">
-                            {done.toLocaleString()}/{goal ? goal.toLocaleString() : '—'}
-                          </div>
-                          <ProgressBar now={pct} style={{ height: 7 }} variant={pct >= 100 ? 'success' : 'primary'} />
-                        </td>
-                        <td>
-                          <OrderTimeline
-                            status={c.status}
-                            delivered={Number(c.referrals_delivered || 0)}
-                            goal={c.packages?.referrals}
-                          />
-                        </td>
-                        <td className="text-nowrap">
-                          <ShareOrder
-                            order={{
-                              title: c.title,
-                              targetUrl: c.target_url,
-                                                            packageName: c.packages?.name,
-                            }}
-                          />
-                          {(c.status === 'pending_payment' || c.status === 'pending_approval') && (
-                            <Link to="/promote" className="btn btn-sm btn-outline-primary ms-1">
-                              Pay
-                            </Link>
-                          )}
-                        </td>
-                      </tr>
-                    )
-                  })}
-                </tbody>
-              </Table>
-            </Card>
-          </div>
-
-          <div className="d-md-none">
+          <ListFilters
+            search={search}
+            onSearch={(v) => { setSearch(v); setPage(1) }}
+            searchPlaceholder="Search ads…"
+            status={status}
+            onStatus={(v) => { setStatus(v); setPage(1) }}
+            statusOptions={[
+              { value: 'all', label: 'All' },
+              { value: 'pending_payment', label: 'Needs payment' },
+              { value: 'pending_approval', label: 'In review' },
+              { value: 'approved', label: 'Active' },
+              { value: 'completed', label: 'Completed' },
+              { value: 'rejected', label: 'Rejected' },
+              { value: 'draft', label: 'Draft' },
+            ]}
+            pageSize={pageSize}
+            onPageSize={(n) => { setPageSize(n); setPage(1) }}
+          />
+          <div className="d-flex flex-column gap-2 mb-2">
             {pg.slice.map((c) => {
-              const goal = c.packages?.referrals || 0
+              const goal = Number(c.packages?.referrals || 0)
               const done = Number(c.referrals_delivered || 0)
-              const pct = goal > 0 ? Math.min(100, Math.round((done / goal) * 100)) : c.status === 'approved' ? 5 : 0
+              const pct = goal ? Math.min(100, Math.round((done / goal) * 100)) : 0
               const isGamble = c.packages?.category === 'gambling'
               return (
-                <Card key={c.id} className={`rs-card rs-card-static mb-2 ${isGamble ? 'package-card-deposit' : ''}`}>
+                <Card key={c.id} className="rs-card rs-card-static fx-panel ad-manage-card">
                   <Card.Body className="py-3">
-                    <div className="d-flex justify-content-between gap-2 mb-1">
-                      <strong>{c.title}</strong>
-                      <OrderTimeline
-                      status={c.status}
-                      delivered={Number(c.referrals_delivered || 0)}
-                      goal={c.packages?.referrals}
-                    />
-                    </div>
-                    <div className="d-flex flex-wrap gap-2 align-items-center mb-2">
-                      <span className="fw-semibold small">{c.packages?.name || 'Package'}</span>
-                      <Badge bg={isGamble ? 'danger' : 'primary'} className="badge-status">
-                        {ruleLabel(c.packages?.category)}
-                      </Badge>
-                      <span className="small text-muted">
-                        {goal ? `${goal.toLocaleString()} refs` : ''}
-                        {c.paid_amount != null ? ` · ${formatMoney(c.paid_amount)}` : ''}
-                      </span>
-                    </div>
-                    <ProgressBar now={pct} className="mb-1" style={{ height: 7 }} />
-                    <div className="small text-muted mb-1">
-                      {done.toLocaleString()}/{goal ? goal.toLocaleString() : '—'} delivered
-                    </div>
-                    <div className="d-flex flex-wrap justify-content-between align-items-center gap-2 mt-2">
-                      <a href={c.target_url} className="small" target="_blank" rel="noreferrer">
-                        Open referral link
-                      </a>
-                      <ShareOrder
-                        order={{
-                          title: c.title,
-                          targetUrl: c.target_url,
-                                                    packageName: c.packages?.name,
-                        }}
-                      />
+                    <div className="d-flex flex-wrap justify-content-between gap-2 align-items-start">
+                      <div className="min-w-0 flex-grow-1">
+                        <div className="d-flex flex-wrap align-items-center gap-2 mb-1">
+                          <strong className="text-truncate">{c.title || 'Untitled ad'}</strong>
+                          {statusBadge(c.status)}
+                        </div>
+                        <div className="small text-muted mb-2">
+                          <Badge bg={isGamble ? 'danger' : 'primary'} className="badge-status me-1">
+                            {ruleLabel(c.packages?.category)}
+                          </Badge>
+                          {goal ? `${goal.toLocaleString()} results` : '—'}
+                          {c.paid_amount != null ? ` · ${formatMoney(Number(c.paid_amount))}` : ''}
+                          {adStatusHint(c.status) ? ` · ${adStatusHint(c.status)}` : ''}
+                        </div>
+                        <ProgressBar now={pct} style={{ height: 6 }} className="mb-1" />
+                        <div className="small text-muted">{done.toLocaleString()} / {goal ? goal.toLocaleString() : '—'} delivered</div>
+                      </div>
+                      <div className="d-flex flex-column gap-1 align-items-stretch">
+                        {(c.status === 'pending_payment' || c.status === 'draft') && (
+                          <Link to="/promote" className="btn btn-sm btn-primary">Continue</Link>
+                        )}
+                        {c.status === 'approved' && (
+                          <a href={c.target_url} target="_blank" rel="noreferrer" className="btn btn-sm btn-outline-primary">Open link</a>
+                        )}
+                        <ShareOrder
+                          order={{
+                            title: c.title,
+                            targetUrl: c.target_url,
+                            packageName: c.packages?.name,
+                          }}
+                        />
+                      </div>
                     </div>
                   </Card.Body>
                 </Card>
@@ -425,43 +289,21 @@ export default function Dashboard() {
         </>
       )}
 
-      <h2 className="h4 fw-bold mt-4 mb-2">
-        <i className="bi bi-clipboard-check me-2 text-success" />
-        Recent earn proofs
-      </h2>
+      <div className="d-flex flex-wrap justify-content-between align-items-center gap-2 mt-4 mb-2">
+        <h2 className="h5 fw-bold mb-0">Recent proofs</h2>
+        <Link to="/earn" className="small">Browse earn →</Link>
+      </div>
       {subs.length === 0 ? (
-        <div className="empty-state">
-          No submissions yet. Complete tasks for {BRAND} advertisers — <Link to="/earn">browse earn</Link>
-        </div>
+        <p className="small text-muted">No proofs yet. Complete tasks on Earn to get paid.</p>
       ) : (
-        <Card className="rs-card rs-card-static">
-          <Table size="sm" responsive className="mb-0">
-            <thead>
-              <tr>
-                <th>When</th>
-                <th>Status</th>
-                <th>Proof</th>
-              </tr>
-            </thead>
-            <tbody>
-              {subs.slice(0, 8).map((s) => (
-                <tr key={s.id}>
-                  <td className="small">{new Date(s.created_at).toLocaleString()}</td>
-                  <td>{statusBadge(s.status)}</td>
-                  <td>
-                    {s.screenshot_url ? (
-                      <a href={s.screenshot_url} target="_blank" rel="noreferrer" className="small">
-                        View
-                      </a>
-                    ) : (
-                      '—'
-                    )}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </Table>
-        </Card>
+        <div className="d-flex flex-column gap-2">
+          {subs.slice(0, 5).map((s) => (
+            <div key={s.id} className="fx-panel rs-card rs-card-static px-3 py-2 d-flex justify-content-between align-items-center gap-2">
+              <span className="small text-truncate">{(s as { tasks?: { campaigns?: { title?: string } } }).tasks?.campaigns?.title || 'Task'}</span>
+              {statusBadge(String((s as { status?: string }).status || ''))}
+            </div>
+          ))}
+        </div>
       )}
     </div>
   )

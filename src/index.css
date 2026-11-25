@@ -2830,3 +2830,17 @@ body {
     filter: none;
   }
 }
+
+/* Ads Manager cards */
+.ad-manage-card .progress {
+  border-radius: 99px;
+  background: color-mix(in srgb, var(--rs-primary) 12%, var(--bs-secondary-bg));
+}
+.ad-manage-card .progress-bar {
+  background: linear-gradient(90deg, #008751, #0d9488);
+}
+.dash-ads-page .stat-value {
+  font-size: 1.35rem;
+  font-weight: 800;
+  letter-spacing: -0.03em;
+}

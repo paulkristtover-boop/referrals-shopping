@@ -26,6 +26,7 @@ import type { Campaign, Package } from '../lib/types'
 import EmptyState from '../components/EmptyState'
 import { useToast } from '../contexts/ToastContext'
 import PageHeader from '../components/PageHeader'
+import { adStatusLabel, adStatusVariant } from '../lib/adStatus'
 
 type PayOrder = {
   id: string
@@ -696,7 +697,7 @@ export default function Promote() {
 
       <Card className="rs-card rs-card-static mb-4">
         <Card.Body>
-          <h5 className="fw-bold">New ad</h5>
+          <h5 className="fw-bold">Create ad</h5>
           <Form onSubmit={create}>
             {/* 1 · What counts as a referral */}
             <Form.Group className="mb-3">
@@ -845,7 +846,7 @@ export default function Promote() {
         </Card.Body>
       </Card>
 
-      <h4 className="fw-bold">Your ads</h4>
+      <h4 className="fw-bold">Manage ads</h4>
       {campaigns.length > 0 && (
         <ListFilters
           search={search}
