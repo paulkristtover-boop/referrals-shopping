@@ -8,7 +8,7 @@ import { REGULAR_PACKAGES, INVESTMENT_PACKAGES, FREE_STARTER_REFS, perReferralNg
 import { FloatBlobs, Reveal, Stagger } from '../components/Animated'
 
 const REGULAR_PACKS = [
-  { name: 'Free Starter', refs: FREE_STARTER_REFS, price: 0, free: true },
+  { name: 'Free trial', refs: FREE_STARTER_REFS, price: 0, free: true },
   ...REGULAR_PACKAGES.map((p) => ({
     name: p.name,
     refs: p.referrals,
@@ -81,7 +81,7 @@ export default function Home() {
           ) : (
             <>
               <Link to="/promote" className="btn btn-light btn-lg fw-semibold">
-                Shop referrals
+                Run an ad
               </Link>
               <Link to="/earn" className="btn btn-outline-light btn-lg">
                 Earn
@@ -157,10 +157,10 @@ export default function Home() {
       </Row></Stagger>
 
       <Reveal>
-        <h2 className="text-center fw-bold mb-1">{BRAND} packages</h2>
+        <h2 className="text-center fw-bold mb-1">{BRAND} ad budgets</h2>
         <p className="text-center text-muted small mb-3">For sites, channels, bots, and groups</p>
       </Reveal>
-      <p className="text-center text-muted mb-4">Signup-only vs deposit packages — clear pricing</p>
+      <p className="text-center text-muted mb-4">Start from ₦800 — pay per result, like Facebook or Google ads</p>
 
       <h3 className="h6 text-uppercase text-muted fw-bold mb-3">Regular — signup only</h3>
       <Row className="g-3 mb-4">
@@ -204,7 +204,7 @@ export default function Home() {
           to={loggedIn && !isAdmin ? '/promote' : '/register?intent=promote'}
           className="btn btn-primary btn-lg px-4"
         >
-          Shop referrals
+          Run an ad
         </Link>
         <div className="mt-3 d-flex justify-content-center flex-wrap gap-3">
           <Link to="/guide" className="small">

@@ -1,4 +1,4 @@
-import { Badge, Button } from 'react-bootstrap'
+import { Badge } from 'react-bootstrap'
 import {
   type RefCategory,
   type Tier,
@@ -38,8 +38,8 @@ export default function PackagePicker({
             onClick={() => onSelect(FREE_STARTER_REFS)}
           >
             <div className="pkg-tile-refs">{FREE_STARTER_REFS}</div>
-            <div className="pkg-tile-label">referrals</div>
-            <div className="pkg-tile-price text-success">Free</div>
+            <div className="pkg-tile-label">results</div>
+            <div className="pkg-tile-price text-success">Free trial</div>
             <div className="pkg-tile-unit">once per account</div>
             {freeUsed && <Badge bg="secondary">Used</Badge>}
           </button>
@@ -55,16 +55,17 @@ export default function PackagePicker({
               onClick={() => onSelect(p.referrals)}
             >
               <div className="pkg-tile-refs">{p.referrals.toLocaleString()}</div>
-              <div className="pkg-tile-label">referrals</div>
+              <div className="pkg-tile-label">results</div>
               <div className="pkg-tile-price">{formatMoney(p.priceNgn)}</div>
-              <div className="pkg-tile-unit">~{formatMoney(per)} / ref</div>
+              <div className="pkg-tile-unit">~{formatMoney(per)} / result</div>
             </button>
           )
         })}
       </div>
       <div className="small text-muted mt-2">
         <strong>{categoryLabel(category)}</strong>
-        {category === 'gambling' ? ' · higher price because deposit is harder' : ' · lower price · signup only'}
+        {' · '}
+        start small like a daily ad budget — top up anytime
       </div>
     </div>
   )

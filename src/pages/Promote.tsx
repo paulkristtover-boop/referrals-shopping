@@ -20,6 +20,7 @@ import {
   orderSummaryLine,
   perReferralNgn,
   categoryHint,
+  economicsHint,
 } from '../lib/pricing'
 import type { Campaign, Package } from '../lib/types'
 import EmptyState from '../components/EmptyState'
@@ -260,7 +261,7 @@ export default function Promote() {
   const [walletDeposits, setWalletDeposits] = useState(envDeposits)
   const [packageId, setPackageId] = useState('')
   const [refCategory, setRefCategory] = useState<RefCategory>('regular')
-  const [referralCount, setReferralCount] = useState(1000)
+  const [referralCount, setReferralCount] = useState(25)
   const [title, setTitle] = useState('')
   const [url, setUrl] = useState('')
   const [description, setDescription] = useState('')
@@ -694,17 +695,17 @@ export default function Promote() {
 
       <Card className="rs-card rs-card-static mb-4">
         <Card.Body>
-          <h5 className="fw-bold">New order</h5>
+          <h5 className="fw-bold">New ad</h5>
           <Form onSubmit={create}>
             {/* 1 · What counts as a referral */}
             <Form.Group className="mb-3">
-              <Form.Label className="fw-semibold">1. What should count?</Form.Label>
+              <Form.Label className="fw-semibold">1. Result type (like ad objective)</Form.Label>
               <div className="d-flex flex-wrap gap-2">
                 <Button
                   type="button"
                   size="sm"
                   variant={refCategory === 'regular' ? 'primary' : 'outline-primary'}
-                  onClick={() => { setRefCategory('regular'); setReferralCount(1000) }}
+                  onClick={() => { setRefCategory('regular'); setReferralCount(25) }}
                 >
                   Signup only
                 </Button>
@@ -712,7 +713,7 @@ export default function Promote() {
                   type="button"
                   size="sm"
                   variant={refCategory === 'gambling' ? 'primary' : 'outline-primary'}
-                  onClick={() => { setRefCategory('gambling'); setReferralCount(1000) }}
+                  onClick={() => { setRefCategory('gambling'); setReferralCount(25) }}
                 >
                   Signup + deposit
                 </Button>
@@ -722,7 +723,7 @@ export default function Promote() {
 
             {/* 2 · Package grid — price at a glance */}
             <Form.Group className="mb-3">
-              <Form.Label className="fw-semibold">2. How many referrals?</Form.Label>
+              <Form.Label className="fw-semibold">2. Budget size (results)</Form.Label>
               <PackagePicker
                 category={refCategory}
                 packages={refCategory === 'regular' ? REGULAR_PACKAGES : INVESTMENT_PACKAGES}
@@ -753,7 +754,7 @@ export default function Promote() {
               </div>
             </div>
             <p className="small text-muted mb-3">
-              {orderSummaryLine(referralCount, isFree ? 0 : effectivePrice, refCategory)}. Your link becomes Earn tasks after payment + admin approval.
+              {orderSummaryLine(referralCount, isFree ? 0 : effectivePrice, refCategory)}. {economicsHint(refCategory)}. Link goes live as Earn tasks after payment + approval.
             </p>
             <Form.Group className="mb-3">
               <Form.Label>Title</Form.Label>
@@ -831,7 +832,7 @@ export default function Promote() {
                     ? 'Claim Free Starter (50 referrals)'
                     : payMethod === 'flutterwave'
                       ? 'Pay with Flutterwave'
-                      : 'Create order (crypto)'}
+                      : 'Create ad (crypto)'}
               </Button>
               {!isFree && (
                 <Button type="button" variant="outline-secondary" disabled={creating || !packageId || !title || !url} onClick={() => void saveDraft()}>
@@ -843,7 +844,7 @@ export default function Promote() {
         </Card.Body>
       </Card>
 
-      <h4 className="fw-bold">Your orders</h4>
+      <h4 className="fw-bold">Your ads</h4>
       {campaigns.length > 0 && (
         <ListFilters
           search={search}
@@ -981,7 +982,7 @@ export default function Promote() {
           </>
         )
       })()}
-      {campaigns.length === 0 && <EmptyState>No orders yet.</EmptyState>}
+      {campaigns.length === 0 && <EmptyState>No ads yet — start with a small budget.</EmptyState>}
     </>
   )
 }

@@ -23,7 +23,7 @@ export default function Admin() {
   const [loading, setLoading] = useState(true)
   const [msg, setMsg] = useState<string | null>(null)
   const [err, setErr] = useState<string | null>(null)
-  const [pkgForm, setPkgForm] = useState({ name: '', category: 'regular', referrals: 1000, price_usd: 15000 })
+  const [pkgForm, setPkgForm] = useState({ name: '', category: 'regular', referrals: 50, price_usd: 3500 })
 
   const [showPkg, setShowPkg] = useState(false)
   const [search, setSearch] = useState('')
@@ -327,7 +327,7 @@ export default function Admin() {
     else {
       flash('Package added')
       setShowPkg(false)
-      setPkgForm({ name: '', category: 'regular', referrals: 1000, price_usd: 15000 })
+      setPkgForm({ name: '', category: 'regular', referrals: 50, price_usd: 3500 })
       void load()
     }
   }
@@ -787,7 +787,7 @@ export default function Admin() {
           {tab === 'packages' && (
             <>
               <div className="d-flex justify-content-between mb-3">
-                <h5 className="mb-0 fw-bold">{BRAND} packages</h5>
+                <h5 className="mb-0 fw-bold">Ad packages (micro budgets)</h5>
                 <Button size="sm" onClick={() => setShowPkg(true)}>+ Add package</Button>
               </div>
               <ListFilters
