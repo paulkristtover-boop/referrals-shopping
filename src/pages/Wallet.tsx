@@ -7,6 +7,7 @@ import { BRAND } from '../lib/brand'
 import { formatMoney } from '../lib/money'
 import EmptyState from '../components/EmptyState'
 import { useToast } from '../contexts/ToastContext'
+import { NG_BANKS_FALLBACK } from '../lib/ngBanks'
 
 type W = {
   id: string
@@ -86,15 +87,27 @@ export default function Wallet() {
     ;(async () => {
       try {
         const res = await fetch('/api/payments/flutterwave-banks')
-        const j = await res.json()
-        if (!res.ok) {
-          setBanksErr(j.error || 'Could not load banks')
+        const text = await res.text()
+        let j: { banks?: Bank[]; error?: string } = {}
+        try {
+          j = text ? JSON.parse(text) : {}
+        } catch {
+          // API returned HTML (e.g. Vercel 404 page) — use offline list
+          setBanks(NG_BANKS_FALLBACK)
+          setBanksErr(null)
           return
         }
-        setBanks(j.banks || [])
+        if (!res.ok) {
+          setBanks(NG_BANKS_FALLBACK)
+          setBanksErr(null)
+          return
+        }
+        const list = j.banks && j.banks.length ? j.banks : NG_BANKS_FALLBACK
+        setBanks(list)
         setBanksErr(null)
-      } catch (e) {
-        setBanksErr((e as Error).message)
+      } catch {
+        setBanks(NG_BANKS_FALLBACK)
+        setBanksErr(null)
       }
     })()
   }, [method])
