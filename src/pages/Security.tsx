@@ -3,6 +3,8 @@ import { Link, useSearchParams } from 'react-router-dom'
 import { Alert, Button, Card, Form, Spinner } from 'react-bootstrap'
 import { supabase, supabaseConfigured } from '../lib/supabase'
 import { useAuth } from '../contexts/AuthContext'
+import PageHeader from '../components/PageHeader'
+import { BRAND } from '../lib/brand'
 
 type AppSession = {
   id: string
@@ -128,8 +130,27 @@ export default function Security() {
 
   return (
     <div className="page-enter">
-      <h1 className="fw-bold mb-2">Security</h1>
-      <p className="text-muted mb-3">Sessions, sign-out controls, and two-factor authentication.</p>
+      <PageHeader
+        title="Security"
+        lead="Authenticator 2FA, device sessions, and how we keep account takeover harder."
+      />
+
+      <Alert variant="warning" className="mb-3">
+        <div className="fw-semibold mb-1">
+          <i className="bi bi-exclamation-triangle me-1" />
+          Watch for phishing
+        </div>
+        <p className="small mb-2">
+          When emails and names leak from other services, attackers send fake “reset password” or “verify account”
+          messages. <strong>{BRAND}</strong> will never ask for your password, 2FA codes, recovery phrases, or
+          bank details by email, WhatsApp, or Telegram.
+        </p>
+        <ul className="small mb-0 ps-3">
+          <li>Enable authenticator 2FA below (stronger than email alone).</li>
+          <li>Sign out unknown devices in Sessions.</li>
+          <li>Only log in and pay on this official site.</li>
+        </ul>
+      </Alert>
 
       {err && (
         <Alert variant="danger" dismissible onClose={() => setErr(null)}>

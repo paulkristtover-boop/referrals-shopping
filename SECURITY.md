@@ -29,3 +29,8 @@ Vercel sets `X-Frame-Options`, CSP (allows Flutterwave checkout + Supabase), `no
 
 ## SQL order
 See `supabase/README.md`. Critical: `fix_rls.sql`, `naira_drafts_poster.sql`, `payment_orders_unique.sql`.
+
+## Phishing (user guidance)
+
+We will never ask for passwords, 2FA codes, or seed phrases by email or chat.
+Prefer authenticator MFA over email-only recovery. Review active sessions regularly.

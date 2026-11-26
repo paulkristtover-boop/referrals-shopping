@@ -386,7 +386,7 @@ export default function Account() {
                 <i className="bi bi-shield-lock me-2 text-primary" />
                 Security
               </h2>
-              <p className="small text-muted mb-3">Password and device sessions.</p>
+              <p className="small text-muted mb-3">Password and device sessions. Enable 2FA — we never ask for codes by email.</p>
               <Form onSubmit={(e) => void changePassword(e)} className="mb-3">
                 <Form.Group className="mb-2">
                   <Form.Label>New password</Form.Label>
