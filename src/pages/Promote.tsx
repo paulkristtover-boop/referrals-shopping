@@ -144,6 +144,7 @@ function PaymentPanel({
     <div className="pay-box mt-3">
       <div className="d-flex justify-content-between flex-wrap gap-2 mb-3">
         <strong>Send exact amount ({chain})</strong>
+          <span className="d-block small text-muted mt-1">Exact amount only — underpay fails; rates can move after the timer ends.</span>
         {left > 0 ? (
           <Badge bg="warning" text="dark" className="d-flex align-items-center gap-1">
             <span className="spinner-grow spinner-grow-sm" style={{ width: 8, height: 8 }} />
@@ -667,7 +668,7 @@ export default function Promote() {
         status: 'awaiting_payment',
       })
 
-      setMsg(`Order ${formatMoney(effectivePrice)}. Send exactly ${Number(quote.amount_crypto).toFixed(6)} ${chain.toUpperCase()} within 15 minutes.`)
+      setMsg(`Order ${formatMoney(effectivePrice)}. Send exactly ${Number(quote.amount_crypto).toFixed(6)} ${chain.toUpperCase()} within 15 minutes. Crypto amount is locked for this window — after it expires, get a fresh quote.`)
       setTitle('')
       setUrl('')
       setDescription('')
@@ -697,7 +698,7 @@ export default function Promote() {
       <PageHeader title="My Ads" lead="Create small budgets and track delivery — like Facebook or Google ads, for referrals." />
       <p className="text-muted mb-3">
         Buy referral volume for sites, channels, bots, or groups. Your link becomes <strong>Earn tasks</strong> after payment and admin approval.
-        <strong>Regular</strong> = signup only. <strong>Investment</strong> = signup + deposit. Minimum paid order ₦1,000. Pay with Flutterwave (₦) or crypto.
+        <strong>Regular</strong> = signup only. <strong>Investment</strong> = signup + deposit. Minimum paid order ₦1,500. Prefer Flutterwave (stable ₦). Crypto (TRX/SOL/TON) is optional — amounts move with the market.
         Confirm earner proofs under <strong>Proofs</strong>. Prices are ₦ as shown. <a href="/terms">Terms</a> · <a href="/refunds">Refunds</a>.
       </p>
       {!freeUsed && packages.some((x) => Number(x.price_usd) === 0) && (
@@ -835,6 +836,13 @@ export default function Promote() {
                   Card, bank transfer, USSD via Flutterwave. Payment is verified on our servers.
                 </Form.Text>
               </Form.Group>
+            )}
+            {payMethod === 'crypto' && !isFree && (
+              <Alert variant="warning" className="py-2 small mb-2">
+                <strong>Markets swing.</strong> Crypto prices can drop several percent in a day.
+                Your budget is still in <strong>₦</strong>; the TRX/SOL/TON amount is quoted and locked for about 15 minutes.
+                Prefer Flutterwave for a fixed naira payment if you are not actively trading.
+              </Alert>
             )}
             {payMethod === 'crypto' && !isFree && (
               <Form.Group className="mb-3">
