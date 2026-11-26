@@ -120,6 +120,13 @@ export default function Dashboard() {
   const freeUsed = !!profile?.free_starter_used_at
   const totalOrdered = campaigns.reduce((sum, c) => sum + Number(c.packages?.referrals || 0), 0)
   const totalDelivered = campaigns.reduce((sum, c) => sum + Number(c.referrals_delivered || 0), 0)
+  const deliveryRate = totalOrdered > 0 ? Math.round((totalDelivered / totalOrdered) * 100) : 0
+  const paidVolume = campaigns.reduce((sum, c) => {
+    const st = String(c.status)
+    if (st === 'draft' || st === 'cancelled' || st === 'pending_payment') return sum
+    return sum + Number(c.paid_amount || 0)
+  }, 0)
+  const proofsApproved = subs.filter((s) => String((s as { status?: string }).status) === 'approved').length
 
   const q = search.trim().toLowerCase()
   const filtered = campaigns.filter((c) => {
@@ -157,7 +164,7 @@ export default function Dashboard() {
       <div className="dash-hero home-hero mb-3">
         <PageHeader
           title="Home"
-          lead="Wallet, active ads, and quick actions — manage campaigns under My Ads."
+          lead="Wallet, active ads, and quick actions — real delivery matters more than ad count — manage under My Ads."
           actions={
             <div className="d-flex flex-wrap gap-2">
               <Link to="/promote" className="btn btn-primary btn-sm">
@@ -209,9 +216,9 @@ export default function Dashboard() {
         </Col>
         <Col xs={6} md={3}>
           <div className="stat-card h-100 fx-panel">
-            <div className="text-muted small">Delivered</div>
-            <div className="stat-value">{totalDelivered.toLocaleString()}</div>
-            <span className="small text-muted">of {totalOrdered.toLocaleString()} ordered</span>
+            <div className="text-muted small">Delivery rate</div>
+            <div className="stat-value">{deliveryRate}%</div>
+            <span className="small text-muted">{totalDelivered.toLocaleString()} / {totalOrdered.toLocaleString()} · paid {formatMoney(paidVolume)}</span>
           </div>
         </Col>
       </Row>

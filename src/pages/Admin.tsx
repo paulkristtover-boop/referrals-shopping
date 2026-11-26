@@ -486,9 +486,26 @@ export default function Admin() {
     void openUserAccount(String(data.id))
   }
 
-    const pendingC = campaigns.filter((c) => c.status === 'pending_approval').length
+  const pendingC = campaigns.filter((c) => c.status === 'pending_approval').length
   const pendingS = subs.filter((s) => s.status === 'pending').length
   const pendingW = withdrawals.filter((w) => w.status === 'pending').length
+
+  // Real activity (not vanity signups): money in, delivery out, proofs, payouts
+  const activeAds = campaigns.filter((c) => c.status === 'approved').length
+  const orderedRefs = campaigns.reduce((s, c) => {
+    const pkg = c.packages as { referrals?: number } | undefined
+    return s + Number(pkg?.referrals || 0)
+  }, 0)
+  const deliveredRefs = campaigns.reduce((s, c) => s + Number(c.referrals_delivered || 0), 0)
+  const deliveryRate = orderedRefs > 0 ? Math.round((deliveredRefs / orderedRefs) * 100) : 0
+  const paidAdVolume = campaigns.reduce((s, c) => {
+    const st = String(c.status)
+    if (st === 'draft' || st === 'cancelled' || st === 'pending_payment') return s
+    return s + Number(c.paid_amount || 0)
+  }, 0)
+  const proofsApproved = subs.filter((s) => s.status === 'approved').length
+  const proofsPending = pendingS
+  const withdrawalsPaid = withdrawals.filter((w) => w.status === 'paid').length
 
   if (loading) {
     return (
@@ -514,29 +531,63 @@ export default function Admin() {
       {msg && <Alert variant="success" onClose={() => setMsg(null)} dismissible>{msg}</Alert>}
       {err && <Alert variant="danger" onClose={() => setErr(null)} dismissible>{err}</Alert>}
 
-      <Row className="g-3 mb-4">
+      <p className="small text-muted mb-2">
+        <strong>Real activity</strong> — paid ads, delivery, proofs, payouts. User count alone is not health.
+      </p>
+      <Row className="g-2 g-md-3 mb-2">
+        <Col xs={6} md={3}>
+          <div className="stat-card h-100">
+            <div className="text-muted small">Ad volume (₦)</div>
+            <div className="stat-value">{formatMoney(paidAdVolume)}</div>
+            <span className="small text-muted">Paid / approved budgets</span>
+          </div>
+        </Col>
+        <Col xs={6} md={3}>
+          <div className="stat-card h-100">
+            <div className="text-muted small">Delivery rate</div>
+            <div className="stat-value">{deliveryRate}%</div>
+            <span className="small text-muted">{deliveredRefs.toLocaleString()} / {orderedRefs.toLocaleString()} refs</span>
+          </div>
+        </Col>
+        <Col xs={6} md={3}>
+          <div className="stat-card h-100">
+            <div className="text-muted small">Proofs done</div>
+            <div className="stat-value">{proofsApproved}</div>
+            <span className="small text-muted">{proofsPending} waiting review</span>
+          </div>
+        </Col>
+        <Col xs={6} md={3}>
+          <div className="stat-card h-100">
+            <div className="text-muted small">Payouts paid</div>
+            <div className="stat-value">{withdrawalsPaid}</div>
+            <span className="small text-muted">{pendingW} pending · {activeAds} live ads</span>
+          </div>
+        </Col>
+      </Row>
+      <Row className="g-2 g-md-3 mb-4">
         <Col xs={6} md={3}>
           <div className="stat-card">
-            <div className="text-muted small">Pending campaigns</div>
+            <div className="text-muted small">Queue: ads</div>
             <div className="stat-value">{pendingC}</div>
           </div>
         </Col>
         <Col xs={6} md={3}>
           <div className="stat-card">
-            <div className="text-muted small">Pending proofs</div>
+            <div className="text-muted small">Queue: proofs</div>
             <div className="stat-value">{pendingS}</div>
           </div>
         </Col>
         <Col xs={6} md={3}>
           <div className="stat-card">
-            <div className="text-muted small">Pending withdrawals</div>
+            <div className="text-muted small">Queue: payouts</div>
             <div className="stat-value">{pendingW}</div>
           </div>
         </Col>
         <Col xs={6} md={3}>
           <div className="stat-card">
-            <div className="text-muted small">Users</div>
+            <div className="text-muted small">Accounts</div>
             <div className="stat-value">{users.length}</div>
+            <span className="small text-muted">Vanity only</span>
           </div>
         </Col>
       </Row>
@@ -564,6 +615,20 @@ export default function Admin() {
         <div className="admin-panel">
           {tab === 'overview' && (
             <>
+            <Card className="rs-card rs-card-static mb-4 border-primary">
+              <Card.Body>
+                <h5 className="fw-bold mb-1">Marketplace pulse</h5>
+                <p className="small text-muted mb-3">
+                  Nigeria ops rule: signups without delivery or payouts are empty growth. Steer on ₦ volume, delivery %, proofs, and paid withdrawals.
+                </p>
+                <ul className="small mb-0">
+                  <li>Live ads: <strong>{activeAds}</strong></li>
+                  <li>Delivery: <strong>{deliveredRefs.toLocaleString()}</strong> of <strong>{orderedRefs.toLocaleString()}</strong> ({deliveryRate}%)</li>
+                  <li>Ad budgets recognized: <strong>{formatMoney(paidAdVolume)}</strong></li>
+                  <li>Earner proofs approved: <strong>{proofsApproved}</strong> · payouts completed: <strong>{withdrawalsPaid}</strong></li>
+                </ul>
+              </Card.Body>
+            </Card>
 
             <Card className="rs-card rs-card-static mb-4">
               <Card.Body>
