@@ -28,6 +28,42 @@ import { useToast } from '../contexts/ToastContext'
 import PageHeader from '../components/PageHeader'
 import { adStatusLabel, adStatusVariant } from '../lib/adStatus'
 
+
+/** Ready-to-ship ad starters — clear offer, Nigeria-friendly */
+const AD_STARTERS: { label: string; title: string; description: string }[] = [
+  {
+    label: 'App signup',
+    title: 'Join our app — free account',
+    description: 'Create an account with my link. No deposit required for this campaign.',
+  },
+  {
+    label: 'Telegram / channel',
+    title: 'Join our Telegram channel',
+    description: 'Open the link and join the channel. Screenshot the join confirmation.',
+  },
+  {
+    label: 'WhatsApp group',
+    title: 'Join our WhatsApp community',
+    description: 'Tap the invite, join the group, keep the chat open for the wait timer.',
+  },
+  {
+    label: 'Betting signup',
+    title: 'Register on our betting site',
+    description: 'Sign up with my link. Deposit campaigns need a funded account proof.',
+  },
+  {
+    label: 'Fintech / wallet',
+    title: 'Open a free wallet account',
+    description: 'Register with my referral link. Complete signup; deposit only if the ad requires it.',
+  },
+  {
+    label: 'Course / lead',
+    title: 'Get free access — register here',
+    description: 'Fill the form or create an account via my link. One account per person.',
+  },
+]
+
+
 type PayOrder = {
   id: string
   campaign_id: string | null
@@ -695,7 +731,7 @@ export default function Promote() {
 
   return (
     <>
-      <PageHeader title="My Ads" lead="Create small budgets and track delivery — like Facebook or Google ads, for referrals." />
+      <PageHeader title="My Ads" lead="Ship clear offers, small ₦ budgets, track real delivery — not vanity clicks." />
       <p className="text-muted mb-3">
         Buy referral volume for sites, channels, bots, or groups. Your link becomes <strong>Earn tasks</strong> after payment and admin approval.
         <strong>Regular</strong> = signup only. <strong>Investment</strong> = signup + deposit. Minimum paid order ₦1,500. Prefer Flutterwave (stable ₦). Crypto (TRX/SOL/TON) is optional — amounts move with the market.
@@ -784,7 +820,25 @@ export default function Promote() {
             </p>
             <Form.Group className="mb-3">
               <Form.Label>Title</Form.Label>
-              <Form.Control value={title} onChange={(e) => setTitle(e.target.value)} required placeholder="e.g. My app invite" />
+              <Form.Control value={title} onChange={(e) => setTitle(e.target.value)} required placeholder="e.g. Join our app — free account" maxLength={80} />
+              <Form.Text className="text-muted d-block mb-2">Clear titles convert better. Pick a starter or write your own.</Form.Text>
+              <div className="d-flex flex-wrap gap-1 mb-2">
+                {AD_STARTERS.map((s) => (
+                  <Button
+                    key={s.label}
+                    type="button"
+                    size="sm"
+                    variant="outline-secondary"
+                    className="rounded-pill"
+                    onClick={() => {
+                      setTitle(s.title)
+                      if (!description.trim()) setDescription(s.description)
+                    }}
+                  >
+                    {s.label}
+                  </Button>
+                ))}
+              </div>
             </Form.Group>
             <Form.Group className="mb-3">
               <Form.Label>Target URL</Form.Label>
