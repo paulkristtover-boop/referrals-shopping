@@ -208,7 +208,7 @@ function PaymentPanel({
           <div className="small text-muted mt-1">Scan to get address</div>
         </div>
         <div className="col">
-          <div className="small text-muted">Crypto amount (must match exactly — order priced in ₦)</div>
+          <div className="small text-muted">Crypto amount (exact match only — priced in ₦; do not wait until after the timer if markets are moving)</div>
           <div className="d-flex flex-wrap align-items-center gap-2 mb-3">
             <span className="pay-code">{amountStr} {chain}</span>
             <CopyBtn value={amountStr} label="Copy amount" />
@@ -704,7 +704,7 @@ export default function Promote() {
         status: 'awaiting_payment',
       })
 
-      setMsg(`Order ${formatMoney(effectivePrice)}. Send exactly ${Number(quote.amount_crypto).toFixed(6)} ${chain.toUpperCase()} within 15 minutes. Crypto amount is locked for this window — after it expires, get a fresh quote.`)
+      setMsg(`Order ${formatMoney(effectivePrice)}. Send exactly ${Number(quote.amount_crypto).toFixed(6)} ${chain.toUpperCase()} within 15 minutes. If the market moves, do not send an old amount — expire and get a fresh quote, or switch to Flutterwave (₦).`)
       setTitle('')
       setUrl('')
       setDescription('')
@@ -734,7 +734,7 @@ export default function Promote() {
       <PageHeader title="My Ads" lead="Ship clear offers, small ₦ budgets, track real delivery — not vanity clicks." />
       <p className="text-muted mb-3">
         Buy referral volume for sites, channels, bots, or groups. Your link becomes <strong>Earn tasks</strong> after payment and admin approval.
-        <strong>Regular</strong> = signup only. <strong>Investment</strong> = signup + deposit. Minimum paid order ₦1,500. Prefer Flutterwave (stable ₦). Crypto (TRX/SOL/TON) is optional — amounts move with the market.
+        <strong>Regular</strong> = signup only. <strong>Investment</strong> = signup + deposit. Minimum paid order ₦1,500. Prefer Flutterwave (stable ₦). Crypto is optional — around big expiry days prices can get shaky; use a fresh quote or pay in naira.
         Confirm earner proofs under <strong>Proofs</strong>. Prices are ₦ as shown. <a href="/terms">Terms</a> · <a href="/refunds">Refunds</a>.
       </p>
       {!freeUsed && packages.some((x) => Number(x.price_usd) === 0) && (
@@ -893,9 +893,10 @@ export default function Promote() {
             )}
             {payMethod === 'crypto' && !isFree && (
               <Alert variant="warning" className="py-2 small mb-2">
-                <strong>Markets swing.</strong> Crypto prices can drop several percent in a day.
-                Your budget is still in <strong>₦</strong>; the TRX/SOL/TON amount is quoted and locked for about 15 minutes.
-                Prefer Flutterwave for a fixed naira payment if you are not actively trading.
+                <strong>Markets can turn fast.</strong> Large bitcoin options and crowded trades often make prices shaky
+                into Fridays and weekends. Your ad budget is still in <strong>₦</strong>; the TRX/SOL/TON amount is
+                quoted and locked for about <strong>15 minutes</strong> only.
+                Prefer <strong>Flutterwave (₦)</strong> for a fixed naira checkout if you are not actively trading.
               </Alert>
             )}
             {payMethod === 'crypto' && !isFree && (
