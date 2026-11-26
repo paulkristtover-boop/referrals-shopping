@@ -24,7 +24,7 @@ export default function Admin() {
   const [loading, setLoading] = useState(true)
   const [msg, setMsg] = useState<string | null>(null)
   const [err, setErr] = useState<string | null>(null)
-  const [pkgForm, setPkgForm] = useState({ name: '', category: 'regular', referrals: 50, price_usd: 3500 })
+  const [pkgForm, setPkgForm] = useState({ name: '', category: 'regular', referrals: 20, price_usd: 1500 })
 
   const [showPkg, setShowPkg] = useState(false)
   const [search, setSearch] = useState('')
@@ -328,7 +328,7 @@ export default function Admin() {
     else {
       flash('Package added')
       setShowPkg(false)
-      setPkgForm({ name: '', category: 'regular', referrals: 50, price_usd: 3500 })
+      setPkgForm({ name: '', category: 'regular', referrals: 20, price_usd: 1500 })
       void load()
     }
   }
@@ -519,13 +519,22 @@ export default function Admin() {
     <div className="page-enter">
       <div className="admin-shell d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
         <div>
-          <p className="small text-uppercase mb-1 opacity-75 fw-semibold">CMS</p>
+          <p className="small text-uppercase mb-1 opacity-75 fw-semibold">Ops CMS</p>
           <h1 className="fw-bold mb-0 h3">{BRAND} Admin</h1>
-          <p className="small mb-0 opacity-90">Approve links · delivery · proofs · payouts · packages · compliance</p>
+          <p className="small mb-0 opacity-90">
+            ₦ volume → approve ads → delivery → proofs → payouts. Queues first; vanity users last.
+          </p>
         </div>
-        <Button size="sm" variant="outline-secondary" onClick={() => void load()}>
-          <i className="bi bi-arrow-clockwise me-1" />Refresh
-        </Button>
+        <div className="d-flex flex-wrap gap-2">
+          {pendingC + pendingS + pendingW > 0 && (
+            <span className="badge text-bg-warning align-self-center">
+              {pendingC + pendingS + pendingW} in queue
+            </span>
+          )}
+          <Button size="sm" variant="outline-secondary" onClick={() => void load()}>
+            <i className="bi bi-arrow-clockwise me-1" />Refresh
+          </Button>
+        </div>
       </div>
 
       {msg && <Alert variant="success" onClose={() => setMsg(null)} dismissible>{msg}</Alert>}
@@ -594,15 +603,34 @@ export default function Admin() {
 
       <div className="admin-layout">
         <Nav className="admin-nav admin-side">
+          <div className="small text-uppercase text-muted px-2 mb-1 fw-semibold">Daily ops</div>
           {(
             [
-              ['overview', 'Overview'],
-              ['campaigns', `Adverts${pendingC ? ` (${pendingC})` : ''}`],
-              ['submissions', `Proofs${pendingS ? ` (${pendingS})` : ''}`],
-              ['withdrawals', `Payouts${pendingW ? ` (${pendingW})` : ''}`],
-              ['packages', 'Packages'],
-              ['users', 'Users'],
-              ['codes', 'Codes'],
+              ['overview', 'Pulse'],
+              ['campaigns', `Ads${pendingC ? ` · ${pendingC}` : ''}`],
+              ['submissions', `Proofs${pendingS ? ` · ${pendingS}` : ''}`],
+              ['withdrawals', `Payouts${pendingW ? ` · ${pendingW}` : ''}`],
+            ] as [TabKey, string][]
+          ).map(([k, label]) => (
+            <Nav.Link key={k} active={tab === k} onClick={() => setTab(k)}>
+              {label}
+            </Nav.Link>
+          ))}
+          <div className="small text-uppercase text-muted px-2 mt-3 mb-1 fw-semibold">Catalog & growth</div>
+          {(
+            [
+              ['packages', 'Packages ₦'],
+              ['codes', 'Free codes'],
+            ] as [TabKey, string][]
+          ).map(([k, label]) => (
+            <Nav.Link key={k} active={tab === k} onClick={() => setTab(k)}>
+              {label}
+            </Nav.Link>
+          ))}
+          <div className="small text-uppercase text-muted px-2 mt-3 mb-1 fw-semibold">Accounts & policy</div>
+          {(
+            [
+              ['users', 'Accounts'],
               ['settings', 'Settings'],
             ] as [TabKey, string][]
           ).map(([k, label]) => (
@@ -615,61 +643,105 @@ export default function Admin() {
         <div className="admin-panel">
           {tab === 'overview' && (
             <>
-            <Card className="rs-card rs-card-static mb-4 border-primary">
+            <Card className="rs-card rs-card-static mb-3 border-primary">
+              <Card.Body>
+                <h5 className="fw-bold mb-1">Today&apos;s operating order</h5>
+                <ol className="small mb-3 ps-3">
+                  <li><strong>Ads</strong> — confirm Flutterwave/crypto payment, then approve only safe links (no scams).</li>
+                  <li><strong>Delivery</strong> — set delivered count from real earner proofs, not guesses.</li>
+                  <li><strong>Proofs</strong> — approve fair screenshots; reject self-referrals / fakes.</li>
+                  <li><strong>Payouts</strong> — pay verified bank requests; keep earner trust.</li>
+                  <li><strong>Packages / codes</strong> — micro ₦ packs + free engagement codes (not sure-wins).</li>
+                </ol>
+                <p className="small text-muted mb-0">
+                  Nigeria rule: empty signups without delivery or payouts are not growth. Pulse cards above track money and work.
+                </p>
+              </Card.Body>
+            </Card>
+
+            <Row className="g-2 mb-3">
+              <Col md={4}>
+                <Card className="rs-card rs-card-static h-100">
+                  <Card.Body>
+                    <div className="fw-semibold mb-2">Queue · Ads</div>
+                    <div className="display-6 fw-bold">{pendingC}</div>
+                    <p className="small text-muted mb-2">Waiting payment review / approval</p>
+                    <Button size="sm" variant={pendingC ? 'primary' : 'outline-secondary'} onClick={() => setTab('campaigns')}>
+                      Open ads
+                    </Button>
+                  </Card.Body>
+                </Card>
+              </Col>
+              <Col md={4}>
+                <Card className="rs-card rs-card-static h-100">
+                  <Card.Body>
+                    <div className="fw-semibold mb-2">Queue · Proofs</div>
+                    <div className="display-6 fw-bold">{pendingS}</div>
+                    <p className="small text-muted mb-2">Earner screenshots to review</p>
+                    <Button size="sm" variant={pendingS ? 'primary' : 'outline-secondary'} onClick={() => setTab('submissions')}>
+                      Open proofs
+                    </Button>
+                  </Card.Body>
+                </Card>
+              </Col>
+              <Col md={4}>
+                <Card className="rs-card rs-card-static h-100">
+                  <Card.Body>
+                    <div className="fw-semibold mb-2">Queue · Payouts</div>
+                    <div className="display-6 fw-bold">{pendingW}</div>
+                    <p className="small text-muted mb-2">Bank withdrawals pending</p>
+                    <Button size="sm" variant={pendingW ? 'primary' : 'outline-secondary'} onClick={() => setTab('withdrawals')}>
+                      Open payouts
+                    </Button>
+                  </Card.Body>
+                </Card>
+              </Col>
+            </Row>
+
+            <Card className="rs-card rs-card-static mb-3">
               <Card.Body>
                 <h5 className="fw-bold mb-1">Marketplace pulse</h5>
-                <p className="small text-muted mb-3">
-                  Nigeria ops rule: signups without delivery or payouts are empty growth. Steer on ₦ volume, delivery %, proofs, and paid withdrawals.
-                </p>
                 <ul className="small mb-0">
                   <li>Live ads: <strong>{activeAds}</strong></li>
-                  <li>Delivery: <strong>{deliveredRefs.toLocaleString()}</strong> of <strong>{orderedRefs.toLocaleString()}</strong> ({deliveryRate}%)</li>
+                  <li>Delivery: <strong>{deliveredRefs.toLocaleString()}</strong> / <strong>{orderedRefs.toLocaleString()}</strong> ({deliveryRate}%)</li>
                   <li>Ad budgets recognized: <strong>{formatMoney(paidAdVolume)}</strong></li>
-                  <li>Earner proofs approved: <strong>{proofsApproved}</strong> · payouts completed: <strong>{withdrawalsPaid}</strong></li>
+                  <li>Proofs approved: <strong>{proofsApproved}</strong> · payouts paid: <strong>{withdrawalsPaid}</strong></li>
                 </ul>
               </Card.Body>
             </Card>
 
-            <Card className="rs-card rs-card-static mb-4">
+            <Card className="rs-card rs-card-static mb-3">
               <Card.Body>
-                <h5 className="fw-bold">Compliance checklist</h5>
-                <p className="small text-muted">Keep these current for a lawful marketplace posture.</p>
+                <h5 className="fw-bold">Compliance & trust</h5>
                 <ul className="admin-check-list">
-                  <li><i className="bi bi-shield-check" /><span><Link to="/terms">Terms</Link>, <Link to="/privacy">Privacy</Link>, <Link to="/refunds">Refunds</Link> published on the site</span></li>
-                  <li><i className="bi bi-cash-stack" /><span>Tax settings: supplier name + tax ID (Settings tab)</span></li>
-                  <li><i className="bi bi-credit-card" /><span>Flutterwave keys + webhook live; only real payments marked paid</span></li>
-                  <li><i className="bi bi-link-45deg" /><span>Reject illegal or deceptive campaign links before approval</span></li>
-                  <li><i className="bi bi-people" /><span>Earn proofs reviewed fairly; no self-task abuse</span></li>
-                  <li><i className="bi bi-bank" /><span>Withdrawals: ₦ minimum enforced; bank payouts only to verified requests</span></li>
+                  <li><i className="bi bi-shield-check" /><span><Link to="/terms">Terms</Link>, <Link to="/privacy">Privacy</Link>, <Link to="/refunds">Refunds</Link> live</span></li>
+                  <li><i className="bi bi-credit-card" /><span>Flutterwave keys + webhook; only real ₦ payments approved</span></li>
+                  <li><i className="bi bi-link-45deg" /><span>Reject illegal / deceptive referral links</span></li>
+                  <li><i className="bi bi-people" /><span>Fair proof review · no self-task abuse</span></li>
+                  <li><i className="bi bi-eye-slash" /><span>Do not paste user email lists into public chats</span></li>
+                  <li><i className="bi bi-bank" /><span>Payouts: ₦ minimum · verified bank details only</span></li>
+                  <li><i className="bi bi-cash-stack" /><span>Tax ID / supplier name in Settings when required</span></li>
                 </ul>
               </Card.Body>
             </Card>
 
-            <div>
-              <h5 className="fw-bold mb-3">Quick actions</h5>
-              <p className="text-muted">
-                Run the marketplace: approve Promote links so Earn tasks go live; update delivery counts; review proofs and disputes; process withdrawals; manage packages. Delivery = completed earner tasks, not automatic magic.
-              </p>
-              <ul className="mb-3">
-                <li>Adverts waiting payment review: <strong>{pendingC}</strong></li>
-                <li>Proofs waiting: <strong>{pendingS}</strong></li>
-                <li>Payouts waiting: <strong>{pendingW}</strong></li>
-              </ul>
-              <div className="d-flex flex-wrap gap-2">
-                <a href={TG} target="_blank" rel="noreferrer" className="btn btn-sm btn-outline-primary">
-                  <i className="bi bi-telegram me-1" />Telegram
-                </a>
-                <a href={IG} target="_blank" rel="noreferrer" className="btn btn-sm btn-outline-danger">
-                  <i className="bi bi-instagram me-1" />{IG_HANDLE}
-                </a>
-                <a href="/legal" className="btn btn-sm btn-outline-secondary">Legal hub</a>
-              </div>
+            <div className="d-flex flex-wrap gap-2">
+              <a href={TG} target="_blank" rel="noreferrer" className="btn btn-sm btn-outline-primary">
+                <i className="bi bi-telegram me-1" />Telegram
+              </a>
+              <a href={IG} target="_blank" rel="noreferrer" className="btn btn-sm btn-outline-danger">
+                <i className="bi bi-instagram me-1" />{IG_HANDLE}
+              </a>
+              <Link to="/legal" className="btn btn-sm btn-outline-secondary">Legal hub</Link>
+              <Button size="sm" variant="outline-secondary" onClick={() => setTab('packages')}>Packages ₦</Button>
+              <Button size="sm" variant="outline-secondary" onClick={() => setTab('codes')}>Free codes</Button>
             </div>
             </>
           )}
 
           {tab === 'campaigns' && (
             <>
+            <p className="small text-muted mb-2">Approve only after payment is real. Pause abusive ads. Delivery count = completed earner work.</p>
             <ListFilters
               search={search}
               onSearch={setSearch}
@@ -853,7 +925,7 @@ export default function Admin() {
           {tab === 'packages' && (
             <>
               <div className="d-flex justify-content-between mb-3">
-                <h5 className="mb-0 fw-bold">Ad packages (micro budgets)</h5>
+                <h5 className="mb-0 fw-bold">Packages (₦ micro budgets)</h5>
                 <Button size="sm" onClick={() => setShowPkg(true)}>+ Add package</Button>
               </div>
               <ListFilters
@@ -931,6 +1003,7 @@ export default function Admin() {
 
           {tab === 'users' && (
             <>
+            <p className="small text-muted mb-2">Accounts for support and roles. Count is vanity — use Pulse for business health.</p>
             <Alert variant="light" className="border small mb-3">
               <strong>Admin invites are unique UUIDs (one-time).</strong> Generate a token, then promote a user with it.
               Direct “make admin” without a token is blocked after you run <code>invites_admin.sql</code>.
@@ -1184,7 +1257,8 @@ export default function Admin() {
 
           {tab === 'codes' && (
             <div>
-              <h2 className="h5 fw-bold mb-3">Booking codes</h2>
+              <h2 className="h5 fw-bold mb-3">Free engagement codes</h2>
+              <p className="small text-muted mb-3">MSport-style codes for traffic — free, no sure-win claims. Not primary revenue.</p>
               <AdminBetCodes />
             </div>
           )}

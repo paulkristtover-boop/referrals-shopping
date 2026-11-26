@@ -2844,3 +2844,8 @@ body {
   font-weight: 800;
   letter-spacing: -0.03em;
 }
+
+/* Admin CMS nav groups */
+.admin-nav .text-uppercase { letter-spacing: 0.04em; font-size: 0.65rem; }
+.admin-shell .badge { font-weight: 600; }
+
