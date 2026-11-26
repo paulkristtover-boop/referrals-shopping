@@ -734,7 +734,7 @@ export default function Promote() {
       <PageHeader title="My Ads" lead="Ship clear offers, small ₦ budgets, track real delivery — not vanity clicks." />
       <p className="text-muted mb-3">
         Buy referral volume for sites, channels, bots, or groups. Your link becomes <strong>Earn tasks</strong> after payment and admin approval.
-        <strong>Regular</strong> = signup only. <strong>Investment</strong> = signup + deposit. Minimum paid order ₦1,500. Prefer Flutterwave (stable ₦). Crypto is optional — around big expiry days prices can get shaky; use a fresh quote or pay in naira.
+        <strong>Regular</strong> = signup only. <strong>Investment</strong> = signup + deposit. Minimum paid order ₦1,500. Budgets in ₦. Naira (Flutterwave) is the default rail; crypto is optional for people who already hold TRX/SOL/TON.
         Confirm earner proofs under <strong>Proofs</strong>. Prices are ₦ as shown. <a href="/terms">Terms</a> · <a href="/refunds">Refunds</a>.
       </p>
       {!freeUsed && packages.some((x) => Number(x.price_usd) === 0) && (
@@ -865,7 +865,11 @@ export default function Promote() {
             </Form.Group>
             {!isFree && (
               <Form.Group className="mb-3">
-                <Form.Label>Payment method</Form.Label>
+                <Form.Label>Payment rails</Form.Label>
+                <p className="small text-muted mb-2">
+                  Ad budgets are always priced in <strong>₦</strong>. We use the rails that work for Nigerian advertisers —
+                  not a single stablecoin ideology. Primary: bank/card. Optional: on-chain if you already hold crypto.
+                </p>
                 <div className="d-flex flex-wrap gap-2 mb-2">
                   <Button
                     type="button"
@@ -874,7 +878,7 @@ export default function Promote() {
                     onClick={() => setPayMethod('flutterwave')}
                   >
                     <i className="bi bi-credit-card me-1" />
-                    Flutterwave (₦)
+                    Naira · Flutterwave
                   </Button>
                   <Button
                     type="button"
@@ -883,11 +887,13 @@ export default function Promote() {
                     onClick={() => setPayMethod('crypto')}
                   >
                     <i className="bi bi-currency-bitcoin me-1" />
-                    Crypto
+                    Crypto · TRX/SOL/TON
                   </Button>
                 </div>
                 <Form.Text className="text-muted d-block">
-                  Card, bank transfer, USSD via Flutterwave. Payment is verified on our servers.
+                  {payMethod === 'flutterwave'
+                    ? 'Card, bank transfer, USSD. Fixed ₦ amount. Verified on our servers.'
+                    : 'On-chain quote for the same ₦ budget. Volatile coins (not USDT/USDC). Exact amount + timer.'}
                 </Form.Text>
               </Form.Group>
             )}
@@ -901,12 +907,13 @@ export default function Promote() {
             )}
             {payMethod === 'crypto' && !isFree && (
               <Form.Group className="mb-3">
-                <Form.Label>Crypto chain</Form.Label>
+                <Form.Label>Chain (volatile, not stablecoin)</Form.Label>
                 <Form.Select value={chain} onChange={(e) => setChain(e.target.value as 'trx' | 'sol' | 'ton')}>
                   <option value="trx">TRX (Tron)</option>
                   <option value="sol">SOL (Solana)</option>
                   <option value="ton">TON</option>
                 </Form.Select>
+                <Form.Text className="text-muted">We are not pushing USDT or USDC — quote matches your ₦ budget on the chain you choose.</Form.Text>
               </Form.Group>
             )}
             {isFree && (
