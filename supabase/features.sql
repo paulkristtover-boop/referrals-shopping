@@ -30,7 +30,7 @@ create table if not exists public.payment_orders (
   crypto_chain text not null check (crypto_chain in ('trx','sol','ton')),
   pay_code text not null unique,
   tx_hash text,
-  status text not null default 'awaiting_payment' check (status in ('awaiting_payment','submitted','confirmed','expired','rejected')),
+  status text not null default 'awaiting_payment' check (status in ('awaiting_payment','submitted','confirmed','expired','rejected','cancelled')),
   created_at timestamptz not null default now(),
   confirmed_at timestamptz
 );
