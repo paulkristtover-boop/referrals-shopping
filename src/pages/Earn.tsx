@@ -158,7 +158,7 @@ export default function Earn() {
 
   return (
     <div className="page-enter">
-      <PageHeader title="Earn" lead="Complete live tasks from paid ads. Wait the timer, upload proof, get paid in ₦." />
+      <PageHeader title="Earn" lead="Only live (approved) ads appear here — unpaid or in-review ads are hidden. Complete live tasks from paid ads. Wait the timer, upload proof, get paid in ₦." />
       <p className="text-muted mb-3">
         You supply the actions that fill Promote orders. Open a task link, wait the timer, upload a clear screenshot.
         Poster or admin reviews proof → wallet credit. You cannot earn on your own adverts.
@@ -274,7 +274,7 @@ export default function Earn() {
         )
       })}
 
-      {tasks.length > 0 && pg.slice.length === 0 && <div className="empty-state">No tasks match your filters.</div>}
+      {tasks.length > 0 && pg.slice.length === 0 && <div className="empty-state">No live tasks match filters. Ads still paying or in admin review are not shown yet.</div>}
       {tasks.length > 0 && <ListPagination page={pg.page} totalPages={pg.totalPages} total={pg.total} onPage={setPage} />}
     </div>
   )

@@ -31,8 +31,8 @@ export function adStatusVariant(status: string): string {
 export function adStatusHint(status: string): string {
   const map: Record<string, string> = {
     draft: 'Finish setup to launch',
-    pending_payment: 'Pay to start delivery',
-    pending_approval: 'Admin checks payment',
+    pending_payment: 'Not live — pay first',
+    pending_approval: 'Not live — admin review',
     approved: 'Live — earners can work',
     paused: 'Hidden from Earn until you resume',
     completed: 'Target reached',

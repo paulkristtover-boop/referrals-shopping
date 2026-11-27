@@ -733,7 +733,7 @@ export default function Promote() {
     <>
       <PageHeader title="My Ads" lead="Ship clear offers, small ₦ budgets, track real delivery — not vanity clicks." />
       <p className="text-muted mb-3">
-        Buy referral volume for sites, channels, bots, or groups. Your link becomes <strong>Earn tasks</strong> after payment and admin approval.
+        Buy referral volume for sites, channels, bots, or groups. Your link is <strong>not live on Earn</strong> until payment clears <em>and</em> admin approves — same idea as infrastructure before lending opens.
         <strong>Regular</strong> = signup only. <strong>Investment</strong> = signup + deposit. Minimum paid order ₦1,500. Budgets in ₦. Naira (Flutterwave) is the default rail; crypto is optional for people who already hold TRX/SOL/TON.
         Confirm earner proofs under <strong>Proofs</strong>. Prices are ₦ as shown. <a href="/terms">Terms</a> · <a href="/refunds">Refunds</a>.
       </p>
@@ -758,6 +758,18 @@ export default function Promote() {
       <Card className="rs-card rs-card-static mb-4">
         <Card.Body>
           <h5 className="fw-bold">Create ad</h5>
+          <div className="small text-muted mb-3 d-flex flex-wrap gap-2 align-items-center">
+            <span className="badge text-bg-secondary">1. Setup</span>
+            <span className="text-muted">→</span>
+            <span className="badge text-bg-secondary">2. Pay ₦</span>
+            <span className="text-muted">→</span>
+            <span className="badge text-bg-secondary">3. Admin check</span>
+            <span className="text-muted">→</span>
+            <span className="badge text-bg-success">4. Live on Earn</span>
+          </div>
+          <p className="small text-muted mb-3">
+            Nothing to promote on Earn in steps 1–3. Free trial skips pay but still needs a real link; paid ads need Flutterwave/crypto first.
+          </p>
           <Form onSubmit={create}>
             {/* 1 · What counts as a referral */}
             <Form.Group className="mb-3">
@@ -816,7 +828,7 @@ export default function Promote() {
               </div>
             </div>
             <p className="small text-muted mb-3">
-              {orderSummaryLine(referralCount, isFree ? 0 : effectivePrice, refCategory)}. {economicsHint(refCategory)}. Link goes live as Earn tasks after payment + approval.
+              {orderSummaryLine(referralCount, isFree ? 0 : effectivePrice, refCategory)}. {economicsHint(refCategory)}. Not on Earn yet until: pay → admin approve → then earners can work.
             </p>
             <Form.Group className="mb-3">
               <Form.Label>Title</Form.Label>
@@ -951,8 +963,8 @@ export default function Promote() {
             { value: 'all', label: 'All statuses' },
             { value: 'draft', label: 'Drafts' },
             { value: 'cancelled', label: 'Cancelled' },
-            { value: 'pending_payment', label: 'Awaiting payment' },
-            { value: 'pending_approval', label: 'Checking / submitted' },
+            { value: 'pending_payment', label: 'Needs payment (not live)' },
+            { value: 'pending_approval', label: 'In review (not live)' },
             { value: 'approved', label: 'Active' },
             { value: 'paused', label: 'Paused' },
             { value: 'completed', label: 'Completed' },
